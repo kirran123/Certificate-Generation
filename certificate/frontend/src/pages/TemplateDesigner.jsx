@@ -84,6 +84,7 @@ export default function TemplateDesigner() {
   const [fields, setFields] = useState([]);
   const [qrCode, setQrCode] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [designLoading, setDesignLoading] = useState(false);
   const [selectedFieldId, setSelectedFieldId] = useState(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [genData, setGenData] = useState({ count: 0, skipped: 0, batchId: "" });
@@ -169,13 +170,15 @@ export default function TemplateDesigner() {
     return `#${norm(color.r || 0)}${norm(color.g || 0)}${norm(color.b || 0)}`;
   };
 
-  const handleImageUpload = async (e) => {
-    if (e.target.files && e.target.files[0]) {
-      const f = e.target.files[0];
-      setFile(f);
+  const handleImageUpload = async (e, droppedFile = null) => {
+    const fileToUpload = droppedFile || (e.target.files && e.target.files[0]);
+    if (fileToUpload) {
+      setFile(fileToUpload);
+      setDesignLoading(true);
+      setImgError(false);
 
       const formData = new FormData();
-      formData.append("image", f);
+      formData.append("image", fileToUpload);
 
       try {
         const token = sessionStorage.getItem('token');
@@ -189,12 +192,27 @@ export default function TemplateDesigner() {
             },
           },
         );
-        // Cloudinary returns full URL, local returns relative path
         const uploadedUrl = res.data.imageUrl;
         setImageUrl(uploadedUrl.startsWith('http') ? uploadedUrl : `${API_BASE}${uploadedUrl}`);
       } catch (err) {
         console.error(err);
+        alert("UPLOAD FAILED: " + (err.response?.data?.message || "Check your internet connection or file size."));
+      } finally {
+        setDesignLoading(false);
       }
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleImageUpload(null, e.dataTransfer.files[0]);
     }
   };
 
@@ -539,7 +557,17 @@ export default function TemplateDesigner() {
 
             <div className="space-y-4">
               <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-secondary)] ml-1 opacity-70">Certificate Design</label>
-              <label className="w-full group flex flex-col items-center justify-center space-y-2 p-8 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 rounded-[2.5rem] transition-all duration-500 hover:border-indigo-500/30 active:scale-95 cursor-pointer">
+              <label 
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+                className="w-full group flex flex-col items-center justify-center space-y-2 p-8 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 rounded-[2.5rem] transition-all duration-500 hover:border-indigo-500/30 active:scale-95 cursor-pointer relative overflow-hidden"
+              >
+                {designLoading && (
+                   <div className="absolute inset-0 bg-indigo-600/10 backdrop-blur-sm flex flex-col items-center justify-center z-10 animate-fade-in">
+                      <Loader2 className="w-8 h-8 text-indigo-400 animate-spin mb-2" />
+                      <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest">Importing...</span>
+                   </div>
+                )}
                 <div className="w-12 h-12 bg-indigo-600/10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-500 shadow-xl shadow-indigo-600/5">
                   <ImageIcon className="w-6 h-6 text-indigo-400" />
                 </div>
