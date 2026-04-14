@@ -6,7 +6,6 @@ const QRCode = require('qrcode');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { Resend } = require('resend');
 const archiver = require('archiver');
 const axios = require('axios');
 const Template = require('../models/Template');
@@ -368,7 +367,7 @@ router.post('/send-bulk', protect, async (req, res) => {
   const { certificateIds, subject, message, senderName, senderEmail } = req.body;
   
   // Create transporter
-  const resend = new Resend(process.env.RESEND_API_KEY);
+  const brevoApiKey = process.env.BREVO_API_KEY;
 
   try {
     const certs = await Certificate.find({ certificateId: { $in: certificateIds } });
@@ -385,13 +384,16 @@ router.post('/send-bulk', protect, async (req, res) => {
         }
 
         const pdfBuffer = fs.readFileSync(pdfPath);
+        const base64Pdf = pdfBuffer.toString('base64');
 
-        const data = await resend.emails.send({
-          from: `${senderName || 'DigiCertify'} <${senderEmail || 'onboarding@resend.dev'}>`,
-          to: cert.email,
+        const senderEmailFinal = senderEmail || 'digicertify00@gmail.com';
+        const senderNameFinal = senderName || 'DigiCertify';
+
+        const brevoPayload = {
+          sender: { name: senderNameFinal, email: senderEmailFinal },
+          to: [{ email: cert.email }],
           subject: subject || 'Your Certificate of Achievement',
-          text: message || 'Please find your certificate attached.',
-          html: `
+          htmlContent: `
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
               <h2 style="color: #4f46e5;">Your Certificate is Ready!</h2>
               <p>Hi ${cert.name},</p>
@@ -400,20 +402,23 @@ router.post('/send-bulk', protect, async (req, res) => {
                 <p style="margin: 0; font-size: 12px; color: #6b7280;">Certificate ID:</p>
                 <p style="margin: 0; font-weight: bold; font-family: monospace;">${cert.certificateId}</p>
               </div>
-              <p style="font-size: 14px; color: #374151;">Best Regards,<br/><strong>${senderName || 'DigiCertify Team'}</strong></p>
+              <p style="font-size: 14px; color: #374151;">Best Regards,<br/><strong>${senderNameFinal} Team</strong></p>
             </div>
           `,
-          attachments: [
+          attachment: [
             {
-              filename: `${cert.certificateId}.pdf`,
-              content: pdfBuffer,
+              content: base64Pdf,
+              name: `${cert.certificateId}.pdf`
             }
           ]
-        });
+        };
 
-        if (data.error) {
-            throw new Error(data.error.message);
-        }
+        const response = await axios.post('https://api.brevo.com/v3/smtp/email', brevoPayload, {
+            headers: {
+                'api-key': brevoApiKey,
+                'Content-Type': 'application/json'
+            }
+        });
         
         cert.status = 'Sent';
         await cert.save();

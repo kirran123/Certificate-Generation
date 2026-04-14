@@ -10,7 +10,6 @@ const xlsx = require('xlsx');
 const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
-const { Resend } = require('resend');
 
 const FormAutomation = require('../models/FormAutomation');
 const Template = require('../models/Template');
@@ -44,16 +43,16 @@ const getRelativePath = (url) => {
 // Removed local buildPDF - now using shared utility in utils/pdfGenerator.js
 
 const sendCertEmail = async (cert, template) => {
-  const resend = new Resend(process.env.RESEND_API_KEY);
+  const brevoApiKey = process.env.BREVO_API_KEY;
   const pdfPath = path.join(__dirname, '..', cert.pdfUrl);
   const pdfBuffer = fs.readFileSync(pdfPath);
+  const base64Pdf = pdfBuffer.toString('base64');
 
-  const data = await resend.emails.send({
-    from: `DigiCertify <onboarding@resend.dev>`,
-    to: cert.email,
+  const brevoPayload = {
+    sender: { name: 'DigiCertify', email: process.env.SMTP_USER || 'digicertify00@gmail.com' },
+    to: [{ email: cert.email }],
     subject: 'Your Certificate of Achievement',
-    text: `Hi ${cert.name}, your certificate is attached.`,
-    html: `
+    htmlContent: `
       <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;border:1px solid #eee;border-radius:10px;">
         <h2 style="color:#4f46e5;">Your Certificate is Ready! 🎉</h2>
         <p>Hi <strong>${cert.name}</strong>,</p>
@@ -64,11 +63,21 @@ const sendCertEmail = async (cert, template) => {
         </div>
         <p style="font-size:14px;color:#374151;">Best Regards,<br/><strong>DigiCertify Team</strong></p>
       </div>`,
-    attachments: [{ filename: `${cert.certificateId}.pdf`, content: pdfBuffer }]
-  });
+    attachment: [{ name: `${cert.certificateId}.pdf`, content: base64Pdf }]
+  };
 
-  if (data.error) {
-    throw new Error(data.error.message);
+  try {
+      await axios.post('https://api.brevo.com/v3/smtp/email', brevoPayload, {
+          headers: {
+              'api-key': brevoApiKey,
+              'Content-Type': 'application/json'
+          }
+      });
+  } catch (err) {
+      if (err.response && err.response.data) {
+          throw new Error(err.response.data.message || JSON.stringify(err.response.data));
+      }
+      throw err;
   }
 };
 
