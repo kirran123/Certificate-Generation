@@ -6,7 +6,7 @@ const QRCode = require('qrcode');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const archiver = require('archiver');
 const axios = require('axios');
 const Template = require('../models/Template');
@@ -368,19 +368,7 @@ router.post('/send-bulk', protect, async (req, res) => {
   const { certificateIds, subject, message, senderName, senderEmail } = req.body;
   
   // Create transporter
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.ethereal.email',
-    port: Number(process.env.SMTP_PORT) || 587,
-    secure: false, // TLS requires secure: false for port 587
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-    },
-    tls: {
-        rejectUnauthorized: false
-    },
-    family: 4 // Force IPv4 to prevent Render ENETUNREACH IPv6 timeout
-  });
+  const resend = new Resend(process.env.RESEND_API_KEY);
 
   try {
     const certs = await Certificate.find({ certificateId: { $in: certificateIds } });
@@ -396,8 +384,10 @@ router.post('/send-bulk', protect, async (req, res) => {
             throw new Error(`PDF not found on server (likely cleared by a recent app deployment). Please regenerate this certificate batch.`);
         }
 
-        await transporter.sendMail({
-          from: `"${senderName || 'DigiCertify'}" <${senderEmail || process.env.SMTP_USER || 'no-reply@digicertify.com'}>`,
+        const pdfBuffer = fs.readFileSync(pdfPath);
+
+        const data = await resend.emails.send({
+          from: `${senderName || 'DigiCertify'} <${senderEmail || 'onboarding@resend.dev'}>`,
           to: cert.email,
           subject: subject || 'Your Certificate of Achievement',
           text: message || 'Please find your certificate attached.',
@@ -413,18 +403,17 @@ router.post('/send-bulk', protect, async (req, res) => {
               <p style="font-size: 14px; color: #374151;">Best Regards,<br/><strong>${senderName || 'DigiCertify Team'}</strong></p>
             </div>
           `,
-          headers: {
-            'Precedence': 'bulk',
-            'X-Priority': '3 (Normal)',
-            'Importance': 'Normal'
-          },
           attachments: [
             {
               filename: `${cert.certificateId}.pdf`,
-              path: pdfPath
+              content: pdfBuffer,
             }
           ]
         });
+
+        if (data.error) {
+            throw new Error(data.error.message);
+        }
         
         cert.status = 'Sent';
         await cert.save();

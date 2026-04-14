@@ -10,7 +10,7 @@ const xlsx = require('xlsx');
 const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
 const FormAutomation = require('../models/FormAutomation');
 const Template = require('../models/Template');
@@ -44,19 +44,12 @@ const getRelativePath = (url) => {
 // Removed local buildPDF - now using shared utility in utils/pdfGenerator.js
 
 const sendCertEmail = async (cert, template) => {
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.ethereal.email',
-    port: Number(process.env.SMTP_PORT) || 587,
-    secure: false,
-    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-    tls: { rejectUnauthorized: false },
-    family: 4
-  });
-
+  const resend = new Resend(process.env.RESEND_API_KEY);
   const pdfPath = path.join(__dirname, '..', cert.pdfUrl);
+  const pdfBuffer = fs.readFileSync(pdfPath);
 
-  await transporter.sendMail({
-    from: `"DigiCertify" <${process.env.SMTP_USER || 'no-reply@digicertify.com'}>`,
+  const data = await resend.emails.send({
+    from: `DigiCertify <onboarding@resend.dev>`,
     to: cert.email,
     subject: 'Your Certificate of Achievement',
     text: `Hi ${cert.name}, your certificate is attached.`,
@@ -71,8 +64,12 @@ const sendCertEmail = async (cert, template) => {
         </div>
         <p style="font-size:14px;color:#374151;">Best Regards,<br/><strong>DigiCertify Team</strong></p>
       </div>`,
-    attachments: [{ filename: `${cert.certificateId}.pdf`, path: pdfPath }]
+    attachments: [{ filename: `${cert.certificateId}.pdf`, content: pdfBuffer }]
   });
+
+  if (data.error) {
+    throw new Error(data.error.message);
+  }
 };
 
 // ── Main polling function ──────────────────────────────────────────────────
