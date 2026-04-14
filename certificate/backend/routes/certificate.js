@@ -446,6 +446,63 @@ router.post('/send-bulk', protect, async (req, res) => {
   }
 });
 
+// ── Download single certificate (regenerate on-demand from DB) ────────────
+// This route never depends on the local disk — it regenerates the PDF from
+// the stored template + record data every time, solving the Render
+// ephemeral filesystem problem ("Cannot GET /uploads/certificates/…").
+router.get('/download/:certId', async (req, res) => {
+  try {
+    const cert = await Certificate.findOne({ certificateId: req.params.certId })
+      .populate('templateId');
+
+    if (!cert) return res.status(404).json({ message: 'Certificate not found.' });
+
+    const template = cert.templateId;
+    if (!template || !template.imageUrl) {
+      return res.status(404).json({ message: 'Template not found for this certificate. It may have been deleted.' });
+    }
+
+    const { getRelativePath } = require('../utils/pdfGenerator');
+    const cleanUrl = getRelativePath(template.imageUrl);
+    const templatePath = path.join(__dirname, '..', cleanUrl);
+
+    if (!fs.existsSync(templatePath)) {
+      return res.status(404).json({ message: 'Template image file not found on server. Please re-upload the template.' });
+    }
+
+    // Build the data object for re-rendering
+    const itemData = {
+      name: cert.name,
+      email: cert.email,
+      course: cert.course,
+      certificateId: cert.certificateId,
+      ...(cert.metadata ? Object.fromEntries(cert.metadata) : {})
+    };
+
+    const pdfBytes = await createCertificatePDF(
+      {
+        imageUrl: template.imageUrl,
+        layoutConfig: template.layoutConfig,
+        qrCode: template.qrCode,
+        showId: template.showId,
+        showQr: template.showQr
+      },
+      itemData,
+      cert.certificateId
+    );
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Length': pdfBytes.length,
+      'Content-Disposition': `attachment; filename="${cert.certificateId}.pdf"`,
+    });
+    res.send(Buffer.from(pdfBytes));
+  } catch (error) {
+    console.error('Download error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Download bulk certificates as ZIP
 router.get('/download-bulk', protect, async (req, res) => {
   try {

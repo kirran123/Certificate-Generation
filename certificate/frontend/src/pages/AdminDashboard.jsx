@@ -539,7 +539,7 @@ export default function AdminDashboard() {
                                     <td className="px-6 py-4"><span className="text-xs font-medium text-[var(--text-secondary)] bg-[var(--border-subtle)] border border-[var(--border-subtle)] px-3 py-1 rounded-full">{cert.templateId?.name || 'Standard'}</span></td>
                                     <td className="px-6 py-4 text-right">
                                       <div className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <a href={`${API_BASE}${cert.pdfUrl}`} target="_blank" rel="noreferrer" className="p-2 rounded-lg border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-indigo-500 hover:border-indigo-500/40 transition-all"><Download className="w-4 h-4" /></a>
+                                        <a href={`${API_BASE}/api/certificate/download/${cert.certificateId}`} download className="p-2 rounded-lg border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-indigo-500 hover:border-indigo-500/40 transition-all"><Download className="w-4 h-4" /></a>
                                       </div>
                                     </td>
                                   </tr>
