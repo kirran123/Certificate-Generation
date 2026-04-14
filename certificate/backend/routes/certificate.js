@@ -211,11 +211,17 @@ router.post('/preview', protect, async (req, res) => {
       return res.status(400).json({ message: 'No template image detected. Please upload an image first.' });
     }
 
-    const cleanUrl = getRelativePath(template.imageUrl);
-    const templatePath = path.join(__dirname, '..', cleanUrl);
+    // Logic to find the template image
+    let templatePath = '';
+    const isRemote = template.imageUrl && template.imageUrl.startsWith('http');
     
-    // Check if we have either the file OR the base64 backup
-    if (!fs.existsSync(templatePath) && !template.imageBase64) {
+    if (!isRemote) {
+        const cleanUrl = getRelativePath(template.imageUrl);
+        templatePath = path.join(__dirname, '..', cleanUrl);
+    }
+    
+    // Check if we have either the file OR the base64 backup OR it's remote
+    if (!isRemote && !fs.existsSync(templatePath) && !template.imageBase64) {
       console.error('Template image not found locally or in DB:', templatePath);
       return res.status(404).json({ message: `Template image file not found on server. Please re-upload the template or save it again to create a backup.` });
     }
@@ -464,10 +470,15 @@ router.get('/download/:certId', async (req, res) => {
     }
 
     const { getRelativePath } = require('../utils/pdfGenerator');
-    const cleanUrl = getRelativePath(template.imageUrl);
-    const templatePath = path.join(__dirname, '..', cleanUrl);
+    const isRemote = template.imageUrl && template.imageUrl.startsWith('http');
+    let templatePath = '';
+    
+    if (!isRemote) {
+        const cleanUrl = getRelativePath(template.imageUrl);
+        templatePath = path.join(__dirname, '..', cleanUrl);
+    }
 
-    if (!fs.existsSync(templatePath) && !template.imageBase64) {
+    if (!isRemote && !fs.existsSync(templatePath) && !template.imageBase64) {
       return res.status(404).json({ message: 'Template image file not found on server and no backup available. Please re-upload the template.' });
     }
 
@@ -528,10 +539,15 @@ router.get('/download-bulk', protect, async (req, res) => {
         // Sanitize folder name for file system safety
         batchFolderName = batchFolderName.replace(/[<>:"/\\|?*]/g, '_').trim();
 
-        const cleanUrl = getRelativePath(template.imageUrl);
-        const templatePath = path.join(__dirname, '..', cleanUrl);
+        const isRemote = template.imageUrl && template.imageUrl.startsWith('http');
+        let templatePath = '';
+        
+        if (!isRemote) {
+            const cleanUrl = getRelativePath(template.imageUrl);
+            templatePath = path.join(__dirname, '..', cleanUrl);
+        }
 
-        if (!fs.existsSync(templatePath) && !template.imageBase64) {
+        if (!isRemote && !fs.existsSync(templatePath) && !template.imageBase64) {
           console.warn(`Skipping ${cert.certificateId} - Template not found and no backup available.`);
           continue;
         }

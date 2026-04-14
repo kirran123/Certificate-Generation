@@ -153,7 +153,9 @@ export default function TemplateDesigner() {
             },
           },
         );
-        setImageUrl(`${API_BASE}${res.data.imageUrl}`);
+        // Cloudinary returns full URL, local returns relative path
+        const uploadedUrl = res.data.imageUrl;
+        setImageUrl(uploadedUrl.startsWith('http') ? uploadedUrl : `${API_BASE}${uploadedUrl}`);
       } catch (err) {
         console.error(err);
       }

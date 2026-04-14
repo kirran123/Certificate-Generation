@@ -10,6 +10,8 @@ const axios = require('axios');
  */
 const getRelativePath = (url) => {
   if (!url) return '';
+  // If it's already a full URL, don't try to strip it
+  if (url.startsWith('http')) return url;
   let clean = url.replace(/https?:\/\/[^/]+/, '');
   if (clean.startsWith('/')) clean = clean.substring(1);
   return clean;
