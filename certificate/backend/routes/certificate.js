@@ -214,9 +214,10 @@ router.post('/preview', protect, async (req, res) => {
     const cleanUrl = getRelativePath(template.imageUrl);
     const templatePath = path.join(__dirname, '..', cleanUrl);
     
-    if (!fs.existsSync(templatePath)) {
-      console.error('File not found at:', templatePath);
-      return res.status(404).json({ message: `Template image file not found on server: ${cleanUrl}` });
+    // Check if we have either the file OR the base64 backup
+    if (!fs.existsSync(templatePath) && !template.imageBase64) {
+      console.error('Template image not found locally or in DB:', templatePath);
+      return res.status(404).json({ message: `Template image file not found on server. Please re-upload the template or save it again to create a backup.` });
     }
 
     const pdfBytes = await createCertificatePDF(template, sampleData || {}, 'CERT000000');
@@ -466,8 +467,8 @@ router.get('/download/:certId', async (req, res) => {
     const cleanUrl = getRelativePath(template.imageUrl);
     const templatePath = path.join(__dirname, '..', cleanUrl);
 
-    if (!fs.existsSync(templatePath)) {
-      return res.status(404).json({ message: 'Template image file not found on server. Please re-upload the template.' });
+    if (!fs.existsSync(templatePath) && !template.imageBase64) {
+      return res.status(404).json({ message: 'Template image file not found on server and no backup available. Please re-upload the template.' });
     }
 
     // Build the data object for re-rendering
@@ -530,8 +531,8 @@ router.get('/download-bulk', protect, async (req, res) => {
         const cleanUrl = getRelativePath(template.imageUrl);
         const templatePath = path.join(__dirname, '..', cleanUrl);
 
-        if (!fs.existsSync(templatePath)) {
-          console.warn(`Skipping ${cert.certificateId} - Template not found: ${templatePath}`);
+        if (!fs.existsSync(templatePath) && !template.imageBase64) {
+          console.warn(`Skipping ${cert.certificateId} - Template not found and no backup available.`);
           continue;
         }
 
