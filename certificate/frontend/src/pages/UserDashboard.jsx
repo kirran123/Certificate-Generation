@@ -221,11 +221,6 @@ export default function UserDashboard() {
               <option value="sent">Sent</option>
               <option value="pending">Pending</option>
             </select>
-            {generatedCerts.length > 0 && (
-              <div className="flex items-center gap-2 px-4 py-2 rounded-xl border border-[var(--border-subtle)] text-[var(--text-secondary)] text-sm font-black uppercase tracking-widest opacity-30 select-none">
-                 Ready
-              </div>
-            )}
           </div>
         )}
       </div>
@@ -267,16 +262,13 @@ export default function UserDashboard() {
                     <div className="border-t border-[var(--border-subtle)] overflow-x-auto">
                       <table className="w-full text-left">
                         <thead><tr className="border-b border-[var(--border-subtle)] bg-[var(--border-subtle)]">
-                          {['Recipient', 'Certificate ID', 'Actions'].map(h => <th key={h} className="px-6 py-3 text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">{h}</th>)}
+                          {['Recipient', 'Certificate ID'].map(h => <th key={h} className="px-6 py-3 text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">{h}</th>)}
                         </tr></thead>
                         <tbody className="divide-y divide-[var(--border-subtle)]">
                           {certs.map(cert => (
                             <tr key={cert._id} className="hover:bg-[var(--border-subtle)] transition-colors">
                               <td className="px-6 py-4"><p className="font-semibold text-sm text-[var(--text-primary)]">{cert.name}</p><p className="text-xs text-[var(--text-secondary)]">{cert.email || '—'}</p></td>
                               <td className="px-6 py-4"><span className="font-mono text-xs text-[var(--text-secondary)] bg-[var(--border-subtle)] px-2 py-1 rounded-lg">{cert.certificateId}</span></td>
-                              <td className="px-6 py-4">
-                                <span className="text-[10px] font-black uppercase tracking-widest opacity-20 select-none">Protected</span>
-                              </td>
                             </tr>
                           ))}
                         </tbody>
@@ -389,7 +381,7 @@ export default function UserDashboard() {
                           <div className="overflow-x-auto">
                             <table className="w-full text-left">
                               <thead><tr className="border-b border-[var(--border-subtle)]">
-                                {['Name / Email', 'Certificate ID', 'Status', 'Actions'].map(h => <th key={h} className="px-6 py-3 text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">{h}</th>)}
+                                {['Name / Email', 'Certificate ID', 'Status'].map(h => <th key={h} className="px-6 py-3 text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">{h}</th>)}
                               </tr></thead>
                               <tbody className="divide-y divide-[var(--border-subtle)]">
                                 {filteredCerts.map(cert => (
@@ -401,12 +393,7 @@ export default function UserDashboard() {
                                       : cert.email ? <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-500/10 text-indigo-600 border border-indigo-500/20 text-xs font-semibold rounded-full"><div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />Ready</span>
                                       : <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 text-amber-600 border border-amber-500/20 text-xs font-semibold rounded-full"><div className="w-1.5 h-1.5 rounded-full bg-amber-500" />No Email</span>}
                                     </td>
-                                    <td className="px-6 py-4">
-                                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button onClick={e => { e.stopPropagation(); handleSendEmail(cert.certificateId); }} className="p-2 rounded-lg border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-emerald-500 hover:border-emerald-500/40 transition-all" title="Send Email"><Mail className="w-4 h-4" /></button>
-                                      </div>
-                                    </td>
-                                  </tr>
+                                    </tr>
                                 ))}
                               </tbody>
                             </table>

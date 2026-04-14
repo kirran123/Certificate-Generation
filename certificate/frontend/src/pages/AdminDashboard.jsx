@@ -184,8 +184,6 @@ export default function AdminDashboard() {
           <h1 className="text-3xl font-black text-[var(--text-primary)] tracking-tight">Control Center</h1>
           <p className="text-sm text-[var(--text-secondary)] mt-1">Monitor users, certificates, and email delivery.</p>
         </div>
-        <div className="shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-xl border border-[var(--border-subtle)] text-[var(--text-secondary)] text-sm font-black uppercase tracking-widest opacity-30 select-none">
-           Data Export Locked
         </div>
       </div>
 
@@ -536,19 +534,14 @@ export default function AdminDashboard() {
                           <div className="border-t border-[var(--border-subtle)] overflow-x-auto">
                             <table className="w-full text-left">
                               <thead><tr className="border-b border-[var(--border-subtle)] bg-[var(--border-subtle)]">
-                                {['Recipient', 'Template', 'Actions'].map((h, i) => <th key={h} className={`px-6 py-3 text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider ${i === 2 ? 'text-right' : ''}`}>{h}</th>)}
+                                {['Recipient', 'Template'].map((h, i) => <th key={h} className={`px-6 py-3 text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider`}>{h}</th>)}
                               </tr></thead>
                               <tbody className="divide-y divide-[var(--border-subtle)]">
                                 {certs.map(cert => (
                                   <tr key={cert._id} className="hover:bg-[var(--border-subtle)] transition-colors group">
                                     <td className="px-6 py-4"><p className="text-sm font-semibold text-[var(--text-primary)]">{cert.name}</p><span className="font-mono text-xs text-[var(--text-secondary)]">{cert.certificateId}</span></td>
                                     <td className="px-6 py-4"><span className="text-xs font-medium text-[var(--text-secondary)] bg-[var(--border-subtle)] border border-[var(--border-subtle)] px-3 py-1 rounded-full">{cert.templateId?.name || 'Standard'}</span></td>
-                                    <td className="px-6 py-4 text-right">
-                                      <div className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <span className="text-[9px] font-black uppercase tracking-widest text-[var(--text-secondary)] opacity-30 select-none">Protected</span>
-                                      </div>
-                                    </td>
-                                  </tr>
+                                    </tr>
                                 ))}
                               </tbody>
                             </table>
