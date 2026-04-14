@@ -86,7 +86,7 @@ export default function TemplateDesigner() {
     subject: "Certificate of Achievement",
     message: "Congratulations! Your certificate is attached.",
     senderName: "DigiCertify",
-    senderEmail: "digicertify00@gmail.com",
+    senderEmail: "onboarding@resend.dev",
   });
   const [selection, setSelection] = useState({}); // To store field -> excel header mapping
   const [showId, setShowId] = useState(true);
