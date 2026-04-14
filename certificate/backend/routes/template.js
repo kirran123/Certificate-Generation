@@ -73,7 +73,8 @@ router.post('/save-layout', protect, async (req, res) => {
        }
     }
 
-    const template = await Template.create({
+    let template;
+    const templateData = {
       name,
       imageUrl,
       imageBase64: base64Data,
@@ -81,7 +82,19 @@ router.post('/save-layout', protect, async (req, res) => {
       showId: showId !== undefined ? showId : true,
       showQr: showQr !== undefined ? showQr : true,
       createdBy: req.user._id
-    });
+    };
+
+    if (req.body.templateId) {
+      // Update existing
+      template = await Template.findOneAndUpdate(
+        { _id: req.body.templateId, createdBy: req.user._id },
+        { $set: templateData },
+        { new: true, upsert: true }
+      );
+    } else {
+      // Create new
+      template = await Template.create(templateData);
+    }
     res.status(201).json(template);
   } catch (error) {
     console.error('Save template error:', error);
@@ -89,11 +102,14 @@ router.post('/save-layout', protect, async (req, res) => {
   }
 });
 
-// Get all templates
-router.get('/', protect, async (req, res) => {
+// Get a single template by ID
+router.get('/:id', protect, async (req, res) => {
   try {
-    const templates = await Template.find({});
-    res.json(templates);
+    const template = await Template.findById(req.params.id);
+    if (!template) {
+      return res.status(404).json({ message: 'Template not found' });
+    }
+    res.json(template);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

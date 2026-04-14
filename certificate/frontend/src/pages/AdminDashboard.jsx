@@ -1,8 +1,8 @@
 import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
-import { Users, FileText, CheckCircle, XCircle, Download, Calendar, Mail, Search, Award, BarChart2, ChevronDown, ChevronUp, ShieldCheck, TrendingUp, Zap, MessageSquare, Trash2, PauseCircle, RefreshCw, Clock, CheckCircle2, AlertTriangle, Heart, Lightbulb } from 'lucide-react';
-import { useSearchParams } from 'react-router-dom';
+import { Users, FileText, CheckCircle, XCircle, Download, Calendar, Mail, Search, Award, BarChart2, ChevronDown, ChevronUp, ShieldCheck, TrendingUp, Zap, MessageSquare, Trash2, PauseCircle, RefreshCw, Clock, CheckCircle2, AlertTriangle, Heart, Lightbulb, PenTool } from 'lucide-react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 import { API_BASE } from '../apiConfig';
@@ -12,6 +12,7 @@ ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarEle
 export default function AdminDashboard() {
   const { user } = useContext(AuthContext);
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [stats, setStats] = useState({ users: 0, certificates: 0, sent: 0, failed: 0 });
   const [logs, setLogs] = useState([]);
   const [users, setUsers] = useState([]);
@@ -517,6 +518,11 @@ export default function AdminDashboard() {
                               {failed > 0 && <span className="flex items-center gap-1.5 text-red-500"><XCircle className="w-3.5 h-3.5" />{failed} Failed</span>}
                               {pending > 0 && <span className="text-[var(--text-secondary)]">{pending} Pending</span>}
                             </div>
+                            <button onClick={e => { e.stopPropagation(); navigate(`/designer?id=${certs[0].templateId?._id || certs[0].templateId}`); }}
+                               className="px-3 py-1.5 rounded-lg border border-indigo-500/30 text-indigo-500 hover:bg-indigo-500 hover:text-white text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center gap-2 group">
+                               <PenTool className="w-3.5 h-3.5" />
+                               <span>Edit Layout</span>
+                            </button>
                             <button onClick={e => { e.stopPropagation(); handleSendBatchEmails(certs); }}
                               disabled={pending === 0 && failed === 0}
                               className="flex items-center gap-2 px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-30 text-white text-xs font-semibold rounded-lg transition-all active:scale-95">

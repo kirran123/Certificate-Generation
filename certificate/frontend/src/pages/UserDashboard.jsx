@@ -352,6 +352,11 @@ export default function UserDashboard() {
                             {failed > 0 && <span className="flex items-center gap-1.5 text-red-500"><div className="w-1.5 h-1.5 rounded-full bg-red-500" />{failed} Failed</span>}
                             {pending > 0 && <span className="flex items-center gap-1.5 text-amber-500"><div className="w-1.5 h-1.5 rounded-full bg-amber-500" />{pending} Pending</span>}
                           </div>
+                          <button onClick={e => { e.stopPropagation(); navigate(`/designer?id=${certs[0].templateId?._id || certs[0].templateId}`); }}
+                            className="px-3 py-1.5 rounded-lg border border-indigo-500/30 text-indigo-500 hover:bg-indigo-500 hover:text-white text-xs font-black uppercase tracking-widest transition-all active:scale-95 flex items-center gap-2 group">
+                            <PenTool className="w-3.5 h-3.5" />
+                            <span>Edit Layout</span>
+                          </button>
                           <button onClick={e => { e.stopPropagation(); setSelectedBatchId(batchId); setShowMappingModal(true); }}
                             className="px-3 py-1.5 rounded-lg border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-xs font-medium transition-all">
                             Missing Emails?

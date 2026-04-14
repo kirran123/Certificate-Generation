@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { API_BASE } from "../apiConfig";
 import { Rnd } from "react-rnd";
@@ -28,7 +28,9 @@ import {
   Italic,
   Underline,
   Zap,
-  Trash2
+  Zap,
+  Trash2,
+  XCircle
 } from "lucide-react";
 
 // ── Small helper component: manual field name entry ──────────────────────
@@ -74,7 +76,10 @@ export default function TemplateDesigner() {
     "Certificate Batch " + new Date().toLocaleDateString(),
   );
   const [file, setFile] = useState(null);
+  const [searchParams] = useSearchParams();
+  const templateIdFromUrl = searchParams.get("id");
   const [imageUrl, setImageUrl] = useState("");
+  const [imgError, setImgError] = useState(false);
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   const [fields, setFields] = useState([]);
   const [qrCode, setQrCode] = useState(null);
@@ -107,6 +112,37 @@ export default function TemplateDesigner() {
   const [autoEmailCol, setAutoEmailCol] = useState('');
   const [autoActivating, setAutoActivating] = useState(false);
   const [autoSuccess, setAutoSuccess] = useState(false);
+
+  useEffect(() => {
+    const fetchTemplate = async () => {
+      if (templateIdFromUrl) {
+        setSaving(true);
+        const token = sessionStorage.getItem('token');
+        try {
+          const res = await axios.get(`${API_BASE}/api/template/${templateIdFromUrl}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          const t = res.data;
+          setTemplateName(t.name);
+          // Handle imageUrl correctly on load
+          const finalUrl = t.imageUrl.startsWith('http') ? t.imageUrl : `${API_BASE}${t.imageUrl}`;
+          setImageUrl(finalUrl);
+          setFields(t.layoutConfig?.fields || []);
+          setQrCode(t.qrCode || null);
+          setShowId(t.showId !== undefined ? t.showId : true);
+          setShowQr(t.showQr !== undefined ? t.showQr : true);
+          setSavedTemplateId(t._id);
+          localStorage.setItem("lastSavedTemplateId", t._id);
+        } catch (err) {
+          console.error("Failed to load template:", err);
+          alert("Failed to load design template. Showing blank editor.");
+        } finally {
+          setSaving(false);
+        }
+      }
+    };
+    fetchTemplate();
+  }, [templateIdFromUrl]);
 
   // ── Auto-redirect after success ──────────────────────────────────────────
   useEffect(() => {
@@ -228,6 +264,7 @@ export default function TemplateDesigner() {
       const res = await axios.post(
         `${API_BASE}/api/template/save-layout`,
         {
+          templateId: savedTemplateId || templateIdFromUrl, // Pass ID if editing
           name: templateName || "My Template",
           imageUrl: imageUrl.replace(API_BASE, ""),
           layoutConfig,
@@ -902,10 +939,26 @@ export default function TemplateDesigner() {
                   src={imageUrl}
                   alt="Template"
                   ref={imgRef}
-                  onLoad={handleImageLoad}
-                  className="max-w-none block"
+                  onLoad={(e) => { setImgError(false); handleImageLoad(e); }}
+                  onError={() => setImgError(true)}
+                  crossOrigin="anonymous"
+                  className={`max-w-none block ${imgError ? 'opacity-20 grayscale' : ''}`}
                   draggable={false}
                 />
+
+                {imgError && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm p-10 text-center">
+                    <div className="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center mb-4 border border-red-500/20">
+                      <XCircle className="w-8 h-8 text-red-500" />
+                    </div>
+                    <h3 className="text-lg font-black text-white mb-2 uppercase tracking-tight">Image Load Failed</h3>
+                    <p className="text-zinc-400 text-xs max-w-xs mb-6 font-medium">We couldn't reach the background image. Please try re-uploading.</p>
+                    <label htmlFor="bg-re-upload" className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest cursor-pointer transition-all active:scale-95 shadow-xl shadow-indigo-600/20">
+                       Select New Background
+                    </label>
+                    <input type="file" id="bg-re-upload" className="hidden" accept="image/*" onChange={handleImageUpload} />
+                  </div>
+                )}
 
                 {fields.map((f, i) => {
                   if (f.key === "certificateId" && !showId) return null;
