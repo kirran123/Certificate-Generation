@@ -105,7 +105,6 @@ export default function TemplateDesigner() {
   const [savedTemplateId, setSavedTemplateId] = useState('');
   const [autoNameCol, setAutoNameCol] = useState('');
   const [autoEmailCol, setAutoEmailCol] = useState('');
-  const [autoBatchName, setAutoBatchName] = useState(`Form Auto – ${new Date().toLocaleDateString('en-GB')}`);
   const [autoActivating, setAutoActivating] = useState(false);
   const [autoSuccess, setAutoSuccess] = useState(false);
 
@@ -275,7 +274,7 @@ export default function TemplateDesigner() {
         templateId: actualTemplateId,
         nameColumn: finalNameCol,
         emailColumn: finalEmailCol,
-        batchId: autoBatchName
+        batchId: batchName || "Automation Batch"
       }, { headers: { Authorization: `Bearer ${token}` } });
       setAutoSuccess(true);
       setSaving("auto_success");
@@ -1068,7 +1067,16 @@ export default function TemplateDesigner() {
                    <div className="p-10 border-b border-white/5 flex justify-between items-center bg-white/5">
                       <div>
                          <h1 className="text-3xl font-black text-[var(--text-primary)] tracking-tighter mb-1">Send Certificates</h1>
-                         <p className="text-xs text-[var(--text-secondary)] font-black uppercase tracking-[0.2em] opacity-50">Batch Settings • <span className="text-indigo-400">{batchName}</span></p>
+                         <div className="flex items-center space-x-2 mt-2">
+                           <span className="text-[10px] text-[var(--text-secondary)] font-black uppercase tracking-[0.2em] opacity-50">Batch ID:</span>
+                           <input
+                             type="text"
+                             className="bg-transparent border-b border-indigo-500/30 text-indigo-400 text-xs font-black uppercase tracking-[0.1em] focus:outline-none focus:border-indigo-500 transition-all w-64 placeholder:text-indigo-400/30"
+                             value={batchName}
+                             onChange={(e) => setBatchName(e.target.value)}
+                             placeholder="Enter custom batch name..."
+                           />
+                         </div>
                       </div>
                       <button onClick={() => setSaving(false)} className="p-4 bg-white/5 hover:bg-white/10 rounded-2xl text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-white/5 transition-all outline-none">
                          <X className="w-6 h-6" />
