@@ -387,7 +387,7 @@ router.post('/send-bulk', protect, async (req, res) => {
         const pdfBuffer = fs.readFileSync(pdfPath);
 
         const data = await resend.emails.send({
-          from: `${senderName || 'DigiCertify'} <onboarding@resend.dev>`,
+          from: `${senderName || 'DigiCertify'} <${senderEmail || 'onboarding@resend.dev'}>`,
           to: cert.email,
           subject: subject || 'Your Certificate of Achievement',
           text: message || 'Please find your certificate attached.',

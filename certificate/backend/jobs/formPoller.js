@@ -49,7 +49,7 @@ const sendCertEmail = async (cert, template) => {
   const pdfBuffer = fs.readFileSync(pdfPath);
 
   const data = await resend.emails.send({
-    from: `DigiCertify <onboarding@resend.dev>`,
+    from: `DigiCertify <${process.env.SMTP_USER || 'onboarding@resend.dev'}>`,
     to: cert.email,
     subject: 'Your Certificate of Achievement',
     text: `Hi ${cert.name}, your certificate is attached.`,
