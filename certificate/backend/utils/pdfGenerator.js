@@ -3,7 +3,6 @@ const QRCode = require('qrcode');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
-const axios = require('axios');
 
 /**
  * Helper: Extract relative path from a full URL
@@ -37,28 +36,21 @@ async function createCertificatePDF(template, data, certId) {
   let templateBytes;
   
   try {
-    if (template.imageUrl && template.imageUrl.startsWith('http')) {
-      // Fetch from Cloudinary or other remote URL
-      const response = await axios.get(template.imageUrl, { responseType: 'arraybuffer' });
-      templateBytes = Buffer.from(response.data);
+    // Load from local filesystem
+    const cleanUrl = getRelativePath(template.imageUrl);
+    const templatePath = path.join(__dirname, '..', cleanUrl);
+    
+    if (fs.existsSync(templatePath)) {
+      templateBytes = fs.readFileSync(templatePath);
+    } else if (template.imageBase64) {
+      console.log(`[PDF Generator] Local file missing. Using Base64 backup for ${certId}.`);
+      templateBytes = Buffer.from(template.imageBase64, 'base64');
     } else {
-      // Load from local filesystem
-      const cleanUrl = getRelativePath(template.imageUrl);
-      const templatePath = path.join(__dirname, '..', cleanUrl);
-      
-      if (fs.existsSync(templatePath)) {
-        templateBytes = fs.readFileSync(templatePath);
-      } else if (template.imageBase64) {
-        console.log(`[PDF Generator] Local file missing. Using Base64 backup for ${certId}.`);
-        templateBytes = Buffer.from(template.imageBase64, 'base64');
-      } else {
-        throw new Error(`Template file not found locally and no Base64 backup exists.`);
-      }
+      throw new Error(`Template file not found locally and no Base64 backup exists.`);
     }
   } catch (err) {
-    // If remote fetch fails, try Base64 fallback
+    // Final fallback
     if (template.imageBase64) {
-      console.warn(`[PDF Generator] Remote fetch failed for ${certId}. Using Base64 fallback.`, err.message);
       templateBytes = Buffer.from(template.imageBase64, 'base64');
     } else {
       throw new Error(`Failed to load template image: ${err.message}`);

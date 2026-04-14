@@ -4,19 +4,17 @@ const path = require('path');
 const fs = require('fs');
 const Template = require('../models/Template');
 const { protect, admin } = require('../middleware/auth');
-
-const { uploadCloudinary } = require('../utils/cloudinaryConfig');
 const axios = require('axios');
 
 const router = express.Router();
 
-// Ensure local upload directories exist (keep for fallback/other uses)
+// Ensure local upload directories exist
 const uploadDir = path.join(__dirname, '../uploads');
 const templatesDir = path.join(uploadDir, 'templates');
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
-if (!fs.existsSync(templatesDir)) fs.mkdirSync(templatesDir);
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+if (!fs.existsSync(templatesDir)) fs.mkdirSync(templatesDir, { recursive: true });
 
-// Configure local multer for legacy support or non-Cloudinary uses
+// Configure local multer storage
 const storage = multer.diskStorage({
   destination(req, file, cb) {
     cb(null, 'uploads/templates/');
@@ -40,30 +38,30 @@ const uploadLocal = multer({
   }
 });
 
-// Update upload-image to use Cloudinary
-router.post('/upload-image', protect, uploadCloudinary.single('image'), (req, res) => {
+// Use local storage for all uploads
+router.post('/upload-image', protect, uploadLocal.single('image'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: 'No file uploaded' });
   }
-  // Cloudinary returns the full https URL in req.file.path
-  res.json({ imageUrl: req.file.path });
+  // Return local relative path
+  res.json({ imageUrl: `/uploads/templates/${req.file.filename}` });
 });
 
 router.post('/save-layout', protect, async (req, res) => {
   const { name, imageUrl, layoutConfig, showId, showQr } = req.body;
   try {
-    // 1. Convert the template image to Base64 to ensure it persists even if the local file or Cloudinary is inaccessible
+    // 1. Convert the template image to Base64 to ensure it persists even if the local file is inaccessible
     let base64Data = '';
     
-    if (imageUrl.startsWith('http')) {
-       // Fetch from remote URL (Cloudinary)
+    if (imageUrl && imageUrl.startsWith('http')) {
+       // Fetch from remote URL (Legacy/Cloudinary)
        try {
          const response = await axios.get(imageUrl, { responseType: 'arraybuffer' });
          base64Data = Buffer.from(response.data, 'binary').toString('base64');
        } catch (err) {
          console.warn('Failed to fetch remote image for base64 backup:', err.message);
        }
-    } else {
+    } else if (imageUrl) {
        // Fetch from local path
        const cleanUrl = imageUrl.replace(/https?:\/\/[^/]+/, '');
        const localPath = path.join(__dirname, '..', cleanUrl);

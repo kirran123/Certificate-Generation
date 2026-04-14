@@ -52,10 +52,7 @@ export default function UserDashboard() {
     fetchData();
   }, []);
 
-  const handleBulkDownload = () => {
-    const token = sessionStorage.getItem('token');
-    window.open(`${API_BASE}/api/certificate/download-bulk?token=${token}`, '_blank');
-  };
+  const handleBulkDownload = () => { alert('Bulk download is currently disabled.'); };
 
   const handleSendBatchEmails = async (batchCerts) => {
     const ids = batchCerts.filter(c => c.status !== 'Sent').map(c => c.certificateId);
@@ -227,9 +224,9 @@ export default function UserDashboard() {
               <option value="pending">Pending</option>
             </select>
             {generatedCerts.length > 0 && (
-              <button onClick={handleBulkDownload} className="flex items-center gap-2 px-4 py-2 rounded-xl border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-sm font-medium transition-all">
-                <Download className="w-4 h-4" /><span>ZIP</span>
-              </button>
+              <div className="flex items-center gap-2 px-4 py-2 rounded-xl border border-[var(--border-subtle)] text-[var(--text-secondary)] text-sm font-black uppercase tracking-widest opacity-30 select-none">
+                 Ready
+              </div>
             )}
           </div>
         )}
@@ -280,9 +277,7 @@ export default function UserDashboard() {
                               <td className="px-6 py-4"><p className="font-semibold text-sm text-[var(--text-primary)]">{cert.name}</p><p className="text-xs text-[var(--text-secondary)]">{cert.email || '—'}</p></td>
                               <td className="px-6 py-4"><span className="font-mono text-xs text-[var(--text-secondary)] bg-[var(--border-subtle)] px-2 py-1 rounded-lg">{cert.certificateId}</span></td>
                               <td className="px-6 py-4">
-                                <a href={`${API_BASE}/api/certificate/download/${cert.certificateId}`} download className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition-all active:scale-95">
-                                  <Download className="w-3.5 h-3.5" />Download
-                                </a>
+                                <span className="text-[10px] font-black uppercase tracking-widest opacity-20 select-none">Protected</span>
                               </td>
                             </tr>
                           ))}
@@ -410,7 +405,6 @@ export default function UserDashboard() {
                                     </td>
                                     <td className="px-6 py-4">
                                       <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <a href={`${API_BASE}/api/certificate/download/${cert.certificateId}`} download className="p-2 rounded-lg border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-indigo-500 hover:border-indigo-500/40 transition-all" title="Download"><Download className="w-4 h-4" /></a>
                                         <button onClick={e => { e.stopPropagation(); handleSendEmail(cert.certificateId); }} className="p-2 rounded-lg border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-emerald-500 hover:border-emerald-500/40 transition-all" title="Send Email"><Mail className="w-4 h-4" /></button>
                                       </div>
                                     </td>

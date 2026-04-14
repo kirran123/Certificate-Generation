@@ -46,7 +46,7 @@ export default function AdminDashboard() {
 
   useEffect(() => { fetchData(); }, []);
 
-  const handleBulkDownload = () => { const token = sessionStorage.getItem('token'); window.open(`${API_BASE}/api/certificate/download-bulk?token=${token}`, '_blank'); };
+  const handleBulkDownload = () => { alert('Bulk download is currently disabled.'); };
 
   const handleSendBatchEmails = async (batchCerts) => {
     const ids = batchCerts.filter(c => c.status !== 'Sent').map(c => c.certificateId);
@@ -184,9 +184,9 @@ export default function AdminDashboard() {
           <h1 className="text-3xl font-black text-[var(--text-primary)] tracking-tight">Control Center</h1>
           <p className="text-sm text-[var(--text-secondary)] mt-1">Monitor users, certificates, and email delivery.</p>
         </div>
-        <button onClick={handleBulkDownload} className="shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-xl border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-sm font-semibold transition-all active:scale-95">
-          <Download className="w-4 h-4" /><span>Export All (ZIP)</span>
-        </button>
+        <div className="shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-xl border border-[var(--border-subtle)] text-[var(--text-secondary)] text-sm font-black uppercase tracking-widest opacity-30 select-none">
+           Data Export Locked
+        </div>
       </div>
 
       {/* ── Stat Cards ─────────────────────────────────────────────────────── */}
@@ -545,7 +545,7 @@ export default function AdminDashboard() {
                                     <td className="px-6 py-4"><span className="text-xs font-medium text-[var(--text-secondary)] bg-[var(--border-subtle)] border border-[var(--border-subtle)] px-3 py-1 rounded-full">{cert.templateId?.name || 'Standard'}</span></td>
                                     <td className="px-6 py-4 text-right">
                                       <div className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <a href={`${API_BASE}/api/certificate/download/${cert.certificateId}`} download className="p-2 rounded-lg border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-indigo-500 hover:border-indigo-500/40 transition-all"><Download className="w-4 h-4" /></a>
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-[var(--text-secondary)] opacity-30 select-none">Protected</span>
                                       </div>
                                     </td>
                                   </tr>
