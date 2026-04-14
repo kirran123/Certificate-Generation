@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_BASE } from '../apiConfig';
-import { Search, CheckCircle, XCircle, Camera, X, Upload, Download, Loader2, MessageSquare, Send } from 'lucide-react';
+import { Search, CheckCircle, XCircle, Camera, X, Upload, Loader2, MessageSquare, Send, Lock } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Html5QrcodeScanner, Html5Qrcode } from 'html5-qrcode';
 import Footer from '../components/Footer';
@@ -237,6 +237,7 @@ export default function VerifyPortal() {
 
               {result && (
                 <div className="inline-flex items-center space-x-3 bg-white/5 border border-[var(--border-subtle)] text-[var(--text-secondary)] px-10 py-5 rounded-[2rem] text-[10px] font-black uppercase tracking-[0.2em] opacity-30 select-none">
+                  <Lock className="w-3.5 h-3.5" />
                   <span>Certificate Locked</span>
                 </div>
               )}

@@ -32,8 +32,12 @@ app.use(cors({
 }));
 
 app.use(express.json());
-// Serve uploads folder as static
-app.use('/uploads', express.static('uploads'));
+// Serve uploads folder as static with explicit CORS for canvas usage
+app.use('/uploads', express.static('uploads', {
+  setHeaders: (res) => {
+    res.set('Access-Control-Allow-Origin', '*');
+  }
+}));
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));

@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
-import { Award, Download, Search, FileUp, PenTool, Mail, CheckCircle, BarChart2, List, Calendar, ChevronDown, ChevronUp, Loader2, X, ArrowRight, Package, Inbox, Zap, RefreshCw, Clock, Trash2, PauseCircle } from 'lucide-react';
+import { Award, Search, FileUp, PenTool, Mail, CheckCircle, BarChart2, List, Calendar, ChevronDown, ChevronUp, Loader2, X, ArrowRight, Package, Inbox, Zap, RefreshCw, Clock, Trash2, PauseCircle } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { API_BASE } from '../apiConfig';
 
@@ -51,8 +51,6 @@ export default function UserDashboard() {
   useEffect(() => {
     fetchData();
   }, []);
-
-  const handleBulkDownload = () => { alert('Bulk download is currently disabled.'); };
 
   const handleSendBatchEmails = async (batchCerts) => {
     const ids = batchCerts.filter(c => c.status !== 'Sent').map(c => c.certificateId);

@@ -8,7 +8,7 @@ import {
   Plus,
   ArrowRight,
   Image as ImageIcon,
-  Download,
+  Lock,
   Eye,
   EyeOff,
   Mail,
@@ -124,9 +124,22 @@ export default function TemplateDesigner() {
           });
           const t = res.data;
           setTemplateName(t.name);
-          // Handle imageUrl correctly on load
-          const finalUrl = t.imageUrl.startsWith('http') ? t.imageUrl : `${API_BASE}${t.imageUrl}`;
-          setImageUrl(finalUrl);
+          
+          // CRITICAL FIX: Robust normalization + Base64 Fallback
+          let finalUrl = '';
+          if (t.imageUrl) {
+             if (t.imageUrl.startsWith('http')) {
+                finalUrl = t.imageUrl;
+             } else {
+                const clean = t.imageUrl.startsWith('/') ? t.imageUrl : `/${t.imageUrl}`;
+                finalUrl = `${API_BASE}${clean}`;
+             }
+          }
+          
+          // Use base64 if imageUrl is missing or fails (UI will try imageURL first)
+          const fallbackUrl = t.imageBase64 ? `data:image/png;base64,${t.imageBase64}` : '';
+          setImageUrl(finalUrl || fallbackUrl);
+          
           setFields(t.layoutConfig?.fields || []);
           setQrCode(t.qrCode || null);
           setShowId(t.showId !== undefined ? t.showId : true);
@@ -191,7 +204,14 @@ export default function TemplateDesigner() {
         );
         // Cloudinary returns full URL, local returns relative path
         const uploadedUrl = res.data.imageUrl;
-        setImageUrl(uploadedUrl.startsWith('http') ? uploadedUrl : `${API_BASE}${uploadedUrl}`);
+        let finalUrl = '';
+        if (uploadedUrl.startsWith('http')) {
+           finalUrl = uploadedUrl;
+        } else {
+           const clean = uploadedUrl.startsWith('/') ? uploadedUrl : `/${uploadedUrl}`;
+           finalUrl = `${API_BASE}${clean}`;
+        }
+        setImageUrl(finalUrl);
       } catch (err) {
         console.error(err);
       }
@@ -347,7 +367,7 @@ export default function TemplateDesigner() {
         {
           templateId: localStorage.getItem("lastSavedTemplateId"),
           layoutConfig: { fields, qrCode },
-          imageUrl: imageUrl,
+          imageUrl: imageUrl.replace(API_BASE, ""),
           sampleData,
           showId,
           showQr,
@@ -358,17 +378,15 @@ export default function TemplateDesigner() {
         },
       );
 
+      if (download) {
+        alert("Direct PDF download is disabled. Please use the Preview mode to view the layout.");
+        return;
+      }
+      
       // Create blob directly from binary response
       const blob = new Blob([res.data], { type: "application/pdf" });
       const blobUrl = URL.createObjectURL(blob);
 
-      if (download) {
-        const link = document.createElement("a");
-        link.href = blobUrl;
-        link.download = `preview_${templateName || "certificate"}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
       } else {
         // Open the blob directly in a new tab
         const win = window.open(blobUrl, "_blank");
@@ -565,7 +583,8 @@ export default function TemplateDesigner() {
                     <Eye className="w-4 h-4 text-indigo-400" />
                     <span className="text-[10px] font-black uppercase tracking-widest">Preview</span>
                   </button>
-                  <button className="flex items-center justify-center space-x-2 py-4 bg-white/5 border border-white/5 rounded-2xl opacity-30 cursor-not-allowed">
+                  <button className="flex items-center justify-center space-x-3 py-4 bg-white/5 border border-white/5 rounded-2xl opacity-30 cursor-not-allowed group">
+                    <Lock className="w-3 h-3 text-[var(--text-secondary)]" />
                     <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Download Disabled</span>
                   </button>
                   <button onClick={saveLayout} className="col-span-2 py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl transition-all shadow-xl shadow-indigo-600/20 active:scale-95 text-[10px] font-black uppercase tracking-widest flex items-center justify-center space-x-2">
