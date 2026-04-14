@@ -13,13 +13,6 @@ export default function UserDashboard() {
   const [generatedCerts, setGeneratedCerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') === 'managed' ? 'managed' : 'received');
-  const [showMappingModal, setShowMappingModal] = useState(false);
-  const [selectedBatchId, setSelectedBatchId] = useState('');
-  const [excelData, setExcelData] = useState([]);
-  const [excelHeaders, setExcelHeaders] = useState([]);
-  const [mapping, setMapping] = useState({ targetId: '', email: '' });
-  const [mappingLoading, setMappingLoading] = useState(false);
-  const [googleSheetUrl, setGoogleSheetUrl] = useState('');
   const [batchSearch, setBatchSearch] = useState('');
   const [certSearch, setCertSearch] = useState('');
   const [expandedBatch, setExpandedBatch] = useState(null);
@@ -34,89 +27,51 @@ export default function UserDashboard() {
     const token = sessionStorage.getItem('token');
     const headers = { Authorization: `Bearer ${token}` };
     setLoading(true);
-    try {
-      const [receivedRes, generatedRes, autoRes] = await Promise.all([
-        axios.get(`${API_BASE}/api/user/my-certificates`, { headers }),
-        axios.get(`${API_BASE}/api/certificate/my-generations`, { headers }),
-        axios.get(`${API_BASE}/api/certificate/form-automations`, { headers })
-      ]);
-      setReceivedCerts(receivedRes.data);
-      setGeneratedCerts(generatedRes.data);
-      setAutomations(autoRes.data || []);
-    } catch {} finally {
-      setLoading(false);
-    }
+    
+    // Separate fetchers for better resilience
+    const fetchReceived = async () => {
+      try {
+        const res = await axios.get(`${API_BASE}/api/user/my-certificates`, { headers });
+        setReceivedCerts(res.data);
+      } catch (err) {
+        console.error('Failed to fetch received certificates:', err.message);
+      }
+    };
+
+    const fetchGenerated = async () => {
+      try {
+        const res = await axios.get(`${API_BASE}/api/certificate/my-generations`, { headers });
+        console.log(`Fetched ${res.data?.length} generated certificates`);
+        setGeneratedCerts(res.data);
+      } catch (err) {
+        console.error('Failed to fetch generated certificates:', err.message);
+      }
+    };
+
+    const fetchAutomations = async () => {
+      try {
+        const res = await axios.get(`${API_BASE}/api/certificate/form-automations`, { headers });
+        setAutomations(res.data || []);
+      } catch (err) {
+        console.warn('Failed to fetch automations:', err.message);
+      }
+    };
+
+    await Promise.allSettled([
+      fetchReceived(),
+      fetchGenerated(),
+      fetchAutomations()
+    ]);
+    
+    setLoading(false);
   };
+
 
   useEffect(() => {
     fetchData();
   }, []);
 
-  const handleSendBatchEmails = async (batchCerts) => {
-    const ids = batchCerts.filter(c => c.status !== 'Sent').map(c => c.certificateId);
-    if (!ids.length) { alert('All emails already sent.'); return; }
-    const token = sessionStorage.getItem('token');
-    try {
-      await axios.post(`${API_BASE}/api/certificate/send-bulk`, { certificateIds: ids, subject: 'Your Certificate', message: 'Congratulations! Your certificate is attached.' }, { headers: { Authorization: `Bearer ${token}` } });
-      alert(`Sent ${ids.length} emails.`); window.location.reload();
-    } catch { alert('Failed to send emails'); }
-  };
 
-  const handleSendEmail = async (certId) => {
-    const token = sessionStorage.getItem('token');
-    try {
-      await axios.post(`${API_BASE}/api/certificate/send-bulk`, { certificateIds: [certId], subject: 'Your Certificate', message: 'Congratulations! Your certificate is attached.' }, { headers: { Authorization: `Bearer ${token}` } });
-      alert('Email sent.'); window.location.reload();
-    } catch { alert('Failed to send email'); }
-  };
-
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0]; if (!file) return;
-    const formData = new FormData(); formData.append('file', file);
-    const token = sessionStorage.getItem('token');
-    try { setMappingLoading(true); const r = await axios.post(`${API_BASE}/api/certificate/upload-data`, formData, { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' } }); setExcelData(r.data.data); setExcelHeaders(r.data.headers); } catch { alert('Failed to parse file'); } finally { setMappingLoading(false); }
-  };
-
-  const handleSheetImportInModal = async () => {
-    if (!googleSheetUrl) return; setMappingLoading(true);
-    const token = sessionStorage.getItem('token');
-    try { const r = await axios.post(`${API_BASE}/api/certificate/upload-sheet`, { sheetUrl: googleSheetUrl }, { headers: { Authorization: `Bearer ${token}` } }); setExcelData(r.data.data); setExcelHeaders(r.data.headers); } catch (e) { alert(e.response?.data?.message || 'Failed to import sheet.'); } finally { setMappingLoading(false); }
-  };
-
-  const confirmMapping = async () => {
-    if (!mapping.targetId || !mapping.email) { alert('Select both columns'); return; }
-    setMappingLoading(true);
-    const token = sessionStorage.getItem('token');
-    try {
-      const batchCerts = generatedCerts.filter(c => c.batchId === selectedBatchId);
-      const updates = excelData.map(row => { const cert = batchCerts.find(c => c.certificateId === String(row[mapping.targetId]) || c.name === String(row[mapping.targetId])); return cert ? { certificateId: cert.certificateId, email: String(row[mapping.email]) } : null; }).filter(Boolean);
-      if (!updates.length) { alert('No matches found.'); return; }
-      await axios.post(`${API_BASE}/api/certificate/update-batch-emails`, { updates }, { headers: { Authorization: `Bearer ${token}` } });
-      alert(`Updated ${updates.length} certificates.`); window.location.reload();
-    } catch { alert('Failed to update emails'); } finally { setMappingLoading(false); }
-  };
-
-  const handleToggleAuto = async (id, currentActive) => {
-    const token = sessionStorage.getItem('token');
-    try {
-      await axios.patch(`${API_BASE}/api/certificate/form-automation/${id}`,
-        { active: !currentActive },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      fetchData();
-    } catch { }
-  };
-
-  const handleDeleteAuto = async (id) => {
-    if (!window.confirm('Delete this automation? Certificates already generated will remain.')) return;
-    const token = sessionStorage.getItem('token');
-    try {
-      await axios.delete(`${API_BASE}/api/certificate/form-automation/${id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      fetchData();
-    } catch { }
-  };
 
   const groupedBatches = generatedCerts.reduce((acc, cert) => {
     let bid = cert.batchId || (cert.createdAt ? `Generated ${new Date(cert.createdAt).toLocaleDateString()}` : 'Individual');
@@ -173,14 +128,6 @@ export default function UserDashboard() {
           <p className="text-xs font-semibold text-indigo-500 uppercase tracking-widest mb-1">Dashboard</p>
           <h1 className="text-3xl font-black text-[var(--text-primary)] tracking-tight">Welcome back, {user?.name?.split(' ')[0]} 👋</h1>
           <p className="text-sm text-[var(--text-secondary)] mt-1">Manage your certificates and track email delivery.</p>
-        </div>
-        <div className="flex items-center gap-3 shrink-0">
-          <button onClick={() => navigate('/upload')} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-indigo-500/20 active:scale-95">
-            <FileUp className="w-4 h-4" /><span>New Batch</span>
-          </button>
-          <button onClick={() => navigate('/designer')} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-indigo-500/40 transition-all active:scale-95">
-            <PenTool className="w-4 h-4" /><span>Editor</span>
-          </button>
         </div>
       </div>
 
@@ -331,27 +278,7 @@ export default function UserDashboard() {
                             <p className="text-xs text-[var(--text-secondary)]">By {certs[0]?.createdBy?.name || 'Super Admin'} · {fmt(certs[0]?.createdAt)} · {certs.length} certificate{certs.length !== 1 ? 's' : ''}</p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3 flex-wrap">
-                          <div className="flex items-center gap-3 text-xs font-medium">
-                            <span className="flex items-center gap-1.5 text-emerald-500"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />{sent} Sent</span>
-                            {failed > 0 && <span className="flex items-center gap-1.5 text-red-500"><div className="w-1.5 h-1.5 rounded-full bg-red-500" />{failed} Failed</span>}
-                            {pending > 0 && <span className="flex items-center gap-1.5 text-amber-500"><div className="w-1.5 h-1.5 rounded-full bg-amber-500" />{pending} Pending</span>}
-                          </div>
-                          <button onClick={e => { e.stopPropagation(); navigate(`/designer?id=${certs[0].templateId?._id || certs[0].templateId}`); }}
-                            className="px-3 py-1.5 rounded-lg border border-indigo-500/30 text-indigo-500 hover:bg-indigo-500 hover:text-white text-xs font-black uppercase tracking-widest transition-all active:scale-95 flex items-center gap-2 group">
-                            <PenTool className="w-3.5 h-3.5" />
-                            <span>Edit Layout</span>
-                          </button>
-                          <button onClick={e => { e.stopPropagation(); setSelectedBatchId(batchId); setShowMappingModal(true); }}
-                            className="px-3 py-1.5 rounded-lg border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-xs font-medium transition-all">
-                            Missing Emails?
-                          </button>
-                          <button onClick={e => { e.stopPropagation(); handleSendBatchEmails(certs); }}
-                            disabled={pending === 0 && failed === 0}
-                            className="flex items-center gap-2 px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-30 text-white text-xs font-semibold rounded-lg transition-all active:scale-95">
-                            <Mail className="w-3.5 h-3.5" />Send Emails
-                          </button>
-                          {isOpen ? <ChevronUp className="w-4 h-4 text-indigo-500" /> : <ChevronDown className="w-4 h-4 text-[var(--text-secondary)]" />}
+                           {isOpen ? <ChevronUp className="w-4 h-4 text-indigo-500" /> : <ChevronDown className="w-4 h-4 text-[var(--text-secondary)]" />}
                         </div>
                       </div>
 
@@ -439,15 +366,8 @@ export default function UserDashboard() {
                                        <span className="text-[var(--text-secondary)]">{auto.certCount} Sent</span>
                                     </div>
                                  </div>
-                                 <div className="flex items-center gap-1.5 shrink-0">
-                                    <button onClick={() => handleToggleAuto(auto._id, auto.active)} 
-                                       className={`p-1.5 rounded-lg border transition-all ${auto.active ? 'border-amber-500/30 text-amber-600 hover:bg-amber-500/10' : 'border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10'}`}>
-                                       {auto.active ? <PauseCircle className="w-3 h-3" /> : <RefreshCw className="w-3 h-3" />}
-                                    </button>
-                                    <button onClick={() => handleDeleteAuto(auto._id)} className="p-1.5 rounded-lg border border-red-500/20 text-red-500 hover:bg-red-500/10 transition-all">
-                                       <Trash2 className="w-3 h-3" />
-                                    </button>
                                  </div>
+                              </div>
                               </div>
                               <div className="flex items-center justify-between text-[8px] font-black uppercase tracking-widest opacity-40 border-t border-[var(--border-subtle)] pt-3">
                                  <div className="flex items-center gap-1"><Clock className="w-2.5 h-2.5" /> {new Date(auto.lastChecked).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
@@ -474,63 +394,6 @@ export default function UserDashboard() {
         </Link>
       </div>
 
-      {/* ── Email Mapping Modal ────────────────────────────────────────────── */}
-      {showMappingModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="glass w-full max-w-xl rounded-2xl border border-[var(--border-subtle)] shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b border-[var(--border-subtle)]">
-              <div>
-                <h2 className="text-lg font-bold text-[var(--text-primary)]">Upload Email List</h2>
-                <p className="text-xs text-[var(--text-secondary)] mt-0.5">Batch: <span className="text-indigo-500 font-semibold">{selectedBatchId}</span></p>
-              </div>
-              <button onClick={() => { setShowMappingModal(false); setExcelData([]); }} className="p-2 rounded-xl hover:bg-[var(--border-subtle)] text-[var(--text-secondary)] transition-all"><X className="w-5 h-5" /></button>
-            </div>
-            <div className="p-6 space-y-6">
-              {!excelData.length ? (
-                <>
-                  <label htmlFor="mapping-upload" className="flex flex-col items-center justify-center p-10 border-2 border-dashed border-[var(--border-subtle)] rounded-2xl cursor-pointer hover:border-indigo-500/40 hover:bg-indigo-500/5 transition-all">
-                    <div className="p-4 bg-indigo-500/10 rounded-2xl mb-4"><FileUp className="w-8 h-8 text-indigo-500" /></div>
-                    <p className="font-semibold text-[var(--text-primary)] text-sm">Upload Excel or CSV</p>
-                    <p className="text-xs text-[var(--text-secondary)] mt-1">Must contain name and email columns</p>
-                    <input type="file" id="mapping-upload" className="hidden" accept=".xlsx,.csv" onChange={handleFileUpload} />
-                  </label>
-                  <div className="flex items-center gap-3"><div className="flex-1 h-px bg-[var(--border-subtle)]" /><span className="text-xs text-[var(--text-secondary)]">or use Google Sheets</span><div className="flex-1 h-px bg-[var(--border-subtle)]" /></div>
-                  <div className="flex gap-3">
-                    <input type="text" placeholder="Google Sheets public link..." value={googleSheetUrl} onChange={e => setGoogleSheetUrl(e.target.value)}
-                      className="flex-1 px-4 py-2.5 text-sm rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-indigo-500" />
-                    <button onClick={handleSheetImportInModal} disabled={mappingLoading || !googleSheetUrl}
-                      className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-xl disabled:opacity-40 transition-all active:scale-95">
-                      {mappingLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Import'}
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="grid grid-cols-2 gap-4">
-                    {[{ label: 'Name / ID Column', key: 'targetId', placeholder: 'Select name column...' }, { label: 'Email Column', key: 'email', placeholder: 'Select email column...' }].map(f => (
-                      <div key={f.key}>
-                        <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2">{f.label}</label>
-                        <select value={mapping[f.key]} onChange={e => setMapping({ ...mapping, [f.key]: e.target.value })}
-                          className="w-full px-4 py-2.5 text-sm rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-indigo-500 cursor-pointer">
-                          <option value="">{f.placeholder}</option>
-                          {excelHeaders.map(h => <option key={h} value={h}>{h}</option>)}
-                        </select>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex gap-3">
-                    <button onClick={() => setExcelData([])} className="flex-1 py-2.5 text-sm font-semibold rounded-xl border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all">Back</button>
-                    <button onClick={confirmMapping} disabled={mappingLoading}
-                      className="flex-[2] py-2.5 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-xl disabled:opacity-40 transition-all active:scale-95">
-                      {mappingLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><span>Save Updates</span><ArrowRight className="w-4 h-4" /></>}
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

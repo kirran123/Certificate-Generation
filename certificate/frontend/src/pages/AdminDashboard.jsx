@@ -46,52 +46,9 @@ export default function AdminDashboard() {
 
   useEffect(() => { fetchData(); }, []);
 
-  const handleBulkDownload = () => {}; // Decommissioned
 
-  const handleSendBatchEmails = async (batchCerts) => {
-    const ids = batchCerts.filter(c => c.status !== 'Sent').map(c => c.certificateId);
-    if (!ids.length) { alert('All sent.'); return; }
-    const token = sessionStorage.getItem('token');
-    try { await axios.post(`${API_BASE}/api/certificate/send-bulk`, { certificateIds: ids, subject: 'Your Certificate', message: 'Congratulations! Your certificate is attached.' }, { headers: { Authorization: `Bearer ${token}` } }); alert(`Sent ${ids.length} emails.`); window.location.reload(); } catch { alert('Failed'); }
-  };
 
-  const handleDeleteUser = async (uid) => {
-    if (uid === user._id) { alert("Cannot delete your own account."); return; }
-    if (!window.confirm("Permanently delete this user?")) return;
-    const token = sessionStorage.getItem('token');
-    try { await axios.delete(`${API_BASE}/api/admin/users/${uid}`, { headers: { Authorization: `Bearer ${token}` } }); await fetchData(); alert("User deleted."); } catch (e) { alert(e.response?.data?.message || "Failed"); }
-  };
 
-  const handleDeleteFeedback = async (fid) => {
-    if (!window.confirm("Delete this feedback?")) return;
-    const token = sessionStorage.getItem('token');
-    try { 
-      await axios.delete(`${API_BASE}/api/user-feedback/admin/${fid}`, { headers: { Authorization: `Bearer ${token}` } }); 
-      fetchData(); 
-    } catch { alert("Failed to delete."); }
-  };
-
-  const handleToggleAuto = async (id, currentActive) => {
-    const token = sessionStorage.getItem('token');
-    try {
-      await axios.patch(`${API_BASE}/api/certificate/form-automation/${id}`,
-        { active: !currentActive },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      fetchData();
-    } catch { }
-  };
-
-  const handleDeleteAuto = async (id) => {
-    if (!window.confirm('Delete this automation? Certificates already generated will remain.')) return;
-    const token = sessionStorage.getItem('token');
-    try {
-      await axios.delete(`${API_BASE}/api/certificate/form-automation/${id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      fetchData();
-    } catch { }
-  };
 
 
   const groupedBatches = certificates.reduce((acc, cert) => {
@@ -184,7 +141,6 @@ export default function AdminDashboard() {
           <h1 className="text-3xl font-black text-[var(--text-primary)] tracking-tight">Control Center</h1>
           <p className="text-sm text-[var(--text-secondary)] mt-1">Monitor users, certificates, and email delivery.</p>
         </div>
-        </div>
       </div>
 
       {/* ── Stat Cards ─────────────────────────────────────────────────────── */}
@@ -272,13 +228,6 @@ export default function AdminDashboard() {
                   const isAppreciation = ['appreciation', 'thanks', 'heart'].includes(type?.toLowerCase());
                   
                   return (
-                    <div key={fb._id} className={`p-4 rounded-xl border transition-all relative group hover:border-indigo-500/40 hover:shadow-lg hover:shadow-indigo-500/5 ${isBug ? 'bg-red-500/5 border-red-500/10' : isAppreciation ? 'bg-emerald-500/5 border-emerald-500/10' : 'bg-black/20 border-white/5'}`}>
-                      <button 
-                        onClick={() => handleDeleteFeedback(fb._id)}
-                        className="absolute top-2 right-2 p-1.5 bg-red-500/10 text-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
                       <div className="flex items-center gap-3 mb-2.5">
                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs ring-1 ring-inset ${isBug ? 'bg-red-500/10 text-red-500 ring-red-500/20' : isAppreciation ? 'bg-emerald-500/10 text-emerald-500 ring-emerald-500/20' : 'bg-indigo-500/10 text-indigo-500 ring-indigo-500/20'}`}>
                           {isBug ? <AlertTriangle className="w-4 h-4" /> : isAppreciation ? <Heart className="w-4 h-4" /> : <Lightbulb className="w-4 h-4" />}
@@ -359,8 +308,8 @@ export default function AdminDashboard() {
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-[var(--border-subtle)] bg-[var(--border-subtle)]">
-                  {['User', 'Role', 'Joined', 'Actions'].map((h, i) => (
-                    <th key={h} className={`px-6 py-3 text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider ${i === 3 ? 'text-right' : ''}`}>{h}</th>
+                  {['User', 'Role', 'Joined'].map((h, i) => (
+                    <th key={h} className={`px-6 py-3 text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider`}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -384,12 +333,6 @@ export default function AdminDashboard() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-xs text-[var(--text-secondary)]">{fmt(u.createdAt)}</td>
-                    <td className="px-6 py-4 text-right">
-                      <button onClick={() => handleDeleteUser(u._id)} disabled={u.role === 'admin'}
-                        className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-red-500 hover:bg-red-500/10 disabled:opacity-0 transition-all active:scale-90">
-                        <XCircle className="w-4 h-4" />
-                      </button>
-                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -510,22 +453,6 @@ export default function AdminDashboard() {
                               <p className="text-xs text-[var(--text-secondary)]">By {creator} · {certs.length} certificate{certs.length !== 1 ? 's' : ''}</p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-3 flex-wrap">
-                            <div className="flex items-center gap-3 text-xs font-medium">
-                              <span className="flex items-center gap-1.5 text-emerald-500"><CheckCircle className="w-3.5 h-3.5" />{sent} Sent</span>
-                              {failed > 0 && <span className="flex items-center gap-1.5 text-red-500"><XCircle className="w-3.5 h-3.5" />{failed} Failed</span>}
-                              {pending > 0 && <span className="text-[var(--text-secondary)]">{pending} Pending</span>}
-                            </div>
-                            <button onClick={e => { e.stopPropagation(); navigate(`/designer?id=${certs[0].templateId?._id || certs[0].templateId}`); }}
-                               className="px-3 py-1.5 rounded-lg border border-indigo-500/30 text-indigo-500 hover:bg-indigo-500 hover:text-white text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center gap-2 group">
-                               <PenTool className="w-3.5 h-3.5" />
-                               <span>Edit Layout</span>
-                            </button>
-                            <button onClick={e => { e.stopPropagation(); handleSendBatchEmails(certs); }}
-                              disabled={pending === 0 && failed === 0}
-                              className="flex items-center gap-2 px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-30 text-white text-xs font-semibold rounded-lg transition-all active:scale-95">
-                              <Mail className="w-3.5 h-3.5" />{pending > 0 ? 'Send Emails' : failed > 0 ? 'Retry' : 'All Sent'}
-                            </button>
                             {isOpen ? <ChevronUp className="w-4 h-4 text-indigo-500" /> : <ChevronDown className="w-4 h-4 text-[var(--text-secondary)]" />}
                           </div>
                         </div>
@@ -586,15 +513,6 @@ export default function AdminDashboard() {
                                        <span className="text-zinc-500 opacity-30">|</span>
                                        <span className="text-[var(--text-secondary)]">{auto.certCount} Sent</span>
                                     </div>
-                                 </div>
-                                 <div className="flex items-center gap-1.5 shrink-0">
-                                    <button onClick={() => handleToggleAuto(auto._id, auto.active)} 
-                                       className={`p-1.5 rounded-lg border transition-all ${auto.active ? 'border-amber-500/30 text-amber-600 hover:bg-amber-500/10' : 'border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10'}`}>
-                                       {auto.active ? <PauseCircle className="w-3 h-3" /> : <RefreshCw className="w-3 h-3" />}
-                                    </button>
-                                    <button onClick={() => handleDeleteAuto(auto._id)} className="p-1.5 rounded-lg border border-red-500/20 text-red-500 hover:bg-red-500/10 transition-all">
-                                       <Trash2 className="w-3 h-3" />
-                                    </button>
                                  </div>
                               </div>
                               <div className="flex items-center justify-between text-[8px] font-black uppercase tracking-widest opacity-40 border-t border-[var(--border-subtle)] pt-3">

@@ -577,16 +577,13 @@ export default function TemplateDesigner() {
               </div>
 
               <div className="space-y-4">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-secondary)] ml-1 opacity-70">Actions</label>
+
                 <div className="grid grid-cols-2 gap-2">
                   <button onClick={toggleReview} className="flex items-center justify-center space-x-2 py-4 bg-white/5 hover:bg-white/10 border border-white/5 rounded-2xl transition-all group/op active:scale-95">
                     <Eye className="w-4 h-4 text-indigo-400" />
                     <span className="text-[10px] font-black uppercase tracking-widest">Preview</span>
                   </button>
-                  <button className="flex items-center justify-center space-x-3 py-4 bg-white/5 border border-white/5 rounded-2xl opacity-30 cursor-not-allowed group">
-                    <Lock className="w-3 h-3 text-[var(--text-secondary)]" />
-                    <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Download Disabled</span>
-                  </button>
+
                   <button onClick={saveLayout} className="col-span-2 py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl transition-all shadow-xl shadow-indigo-600/20 active:scale-95 text-[10px] font-black uppercase tracking-widest flex items-center justify-center space-x-2">
                     <Check className="w-4 h-4" />
                     <span>{saving === 'done' ? '✓ Saved' : 'Save Template'}</span>
