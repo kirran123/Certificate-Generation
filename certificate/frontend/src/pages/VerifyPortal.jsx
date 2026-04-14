@@ -235,11 +235,10 @@ export default function VerifyPortal() {
                 </div>
               </div>
 
-              {result.pdfUrl && (
+              {result && (
                 <a
-                  href={`${API_BASE}${result.pdfUrl}`}
-                  target="_blank"
-                  rel="noreferrer"
+                  href={`${API_BASE}/api/certificate/download/${result.certificateId}`}
+                  download
                   className="inline-flex items-center space-x-3 bg-white/5 hover:bg-white/10 border border-[var(--border-subtle)] text-[var(--text-primary)] px-10 py-5 rounded-[2rem] text-[10px] font-black uppercase tracking-[0.2em] transition-all active:scale-95"
                 >
                   <Download className="w-4.5 h-4.5" />

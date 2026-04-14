@@ -503,11 +503,11 @@ router.get('/download/:certId', async (req, res) => {
   }
 });
 
-// Download bulk certificates as ZIP
+// Download bulk certificates as ZIP (Regenerate on-demand for Render stability)
 router.get('/download-bulk', protect, async (req, res) => {
   try {
     const filter = req.user.role === 'admin' ? {} : { createdBy: req.user._id };
-    const certs = await Certificate.find(filter);
+    const certs = await Certificate.find(filter).populate('templateId');
     
     if (certs.length === 0) {
       return res.status(404).json({ message: 'No certificates found' });
@@ -518,21 +518,54 @@ router.get('/download-bulk', protect, async (req, res) => {
     archive.pipe(res);
 
     for (const cert of certs) {
-      // Determine folder name (Batch Name)
-      let batchFolderName = cert.batchId || 'Manual Generations';
-      
-      // Sanitize folder name for file system safety
-      batchFolderName = batchFolderName.replace(/[<>:"/\\|?*]/g, '_').trim();
+      try {
+        const template = cert.templateId;
+        if (!template || !template.imageUrl) continue;
 
-      const pdfPath = path.join(__dirname, '..', cert.pdfUrl);
-      if (fs.existsSync(pdfPath)) {
+        // Determine folder name (Batch Name)
+        let batchFolderName = cert.batchId || 'Manual Generations';
+        // Sanitize folder name for file system safety
+        batchFolderName = batchFolderName.replace(/[<>:"/\\|?*]/g, '_').trim();
+
+        const cleanUrl = getRelativePath(template.imageUrl);
+        const templatePath = path.join(__dirname, '..', cleanUrl);
+
+        if (!fs.existsSync(templatePath)) {
+          console.warn(`Skipping ${cert.certificateId} - Template not found: ${templatePath}`);
+          continue;
+        }
+
+        // Build the data object for re-rendering
+        const itemData = {
+          name: cert.name,
+          email: cert.email,
+          course: cert.course,
+          certificateId: cert.certificateId,
+          ...(cert.metadata ? Object.fromEntries(cert.metadata) : {})
+        };
+
+        const pdfBytes = await createCertificatePDF(
+          {
+            imageUrl: template.imageUrl,
+            layoutConfig: template.layoutConfig,
+            qrCode: template.qrCode,
+            showId: template.showId,
+            showQr: template.showQr
+          },
+          itemData,
+          cert.certificateId
+        );
+
         // Add to ZIP within the batch folder
-        archive.file(pdfPath, { name: `${batchFolderName}/${cert.certificateId}.pdf` });
+        archive.append(Buffer.from(pdfBytes), { name: `${batchFolderName}/${cert.certificateId}.pdf` });
+      } catch (certError) {
+        console.error(`Error adding cert ${cert.certificateId} to bulk download:`, certError);
       }
     }
 
     archive.finalize();
   } catch (error) {
+    console.error('Bulk download error:', error);
     res.status(500).json({ message: error.message });
   }
 });
