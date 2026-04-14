@@ -24,6 +24,10 @@ export default function Login() {
     setError('');
     try {
       if (isLogin) {
+        if (isAdminView && formData.email !== 'kirranvijay@gmail.com') {
+          setError('Authentication failed. Default Admin access only.');
+          return;
+        }
         await login(formData.email, formData.password);
         navigate('/');
       } else {
