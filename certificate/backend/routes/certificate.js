@@ -371,10 +371,15 @@ router.post('/send-bulk', protect, async (req, res) => {
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.ethereal.email',
     port: Number(process.env.SMTP_PORT) || 587,
+    secure: false, // TLS requires secure: false for port 587
     auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS
-    }
+    },
+    tls: {
+        rejectUnauthorized: false
+    },
+    family: 4 // Force IPv4 to prevent Render ENETUNREACH IPv6 timeout
   });
 
   try {
@@ -387,6 +392,10 @@ router.post('/send-bulk', protect, async (req, res) => {
       const pdfPath = path.join(__dirname, '..', cert.pdfUrl);
       
       try {
+        if (!fs.existsSync(pdfPath)) {
+            throw new Error(`PDF not found on server (likely cleared by a recent app deployment). Please regenerate this certificate batch.`);
+        }
+
         await transporter.sendMail({
           from: `"${senderName || 'DigiCertify'}" <${senderEmail || process.env.SMTP_USER || 'no-reply@digicertify.com'}>`,
           to: cert.email,
