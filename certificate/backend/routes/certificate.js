@@ -590,7 +590,10 @@ router.get('/form-automations', protect, async (req, res) => {
 // Toggle active / pause
 router.patch('/form-automation/:id', protect, async (req, res) => {
   try {
-    const auto = await FormAutomation.findOne({ _id: req.params.id, userId: req.user._id });
+    const filter = req.user.role === 'admin'
+      ? { _id: req.params.id }
+      : { _id: req.params.id, userId: req.user._id };
+    const auto = await FormAutomation.findOne(filter);
     if (!auto) return res.status(404).json({ message: 'Automation not found.' });
     auto.active = req.body.active !== undefined ? req.body.active : !auto.active;
     await auto.save();
@@ -603,7 +606,10 @@ router.patch('/form-automation/:id', protect, async (req, res) => {
 // Delete automation
 router.delete('/form-automation/:id', protect, async (req, res) => {
   try {
-    const result = await FormAutomation.deleteOne({ _id: req.params.id, userId: req.user._id });
+    const filter = req.user.role === 'admin'
+      ? { _id: req.params.id }
+      : { _id: req.params.id, userId: req.user._id };
+    const result = await FormAutomation.deleteOne(filter);
     if (!result.deletedCount) return res.status(404).json({ message: 'Automation not found.' });
     res.json({ message: 'Automation deleted.' });
   } catch (err) {
