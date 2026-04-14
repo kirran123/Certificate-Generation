@@ -1,0 +1,389 @@
+@import "@fontsource/outfit";
+@import "@fontsource/inter";
+@import "tailwindcss";
+
+@theme {
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
+  --color-primary-950: #172554;
+}
+
+:root {
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-display: 'Outfit', sans-serif;
+}
+
+/* Theme Architect - Explicit Mode Selectors for 100% Stability */
+html[data-theme='dark'], :root:not([data-theme='light']) {
+  --bg-main: #0f172a;
+  --bg-card: rgba(30, 41, 59, 0.7);
+  --bg-sidebar: rgba(15, 23, 42, 0.5);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1; /* Boosted for better Dark Mode contrast (was #94a3b8) */
+  --footer-dim: rgba(203, 213, 225, 0.4);
+  --glass-bg: rgba(30, 41, 59, 0.6);
+  --accent-color: #6366f1;
+  --shadow-color: rgba(0, 0, 0, 0.5);
+}
+
+html[data-theme='light'] {
+  /* Core palette - Maximized visibility */
+  --bg-main: #f9fafb; /* Cleaner neutral-grey */
+  --bg-card: #ffffff;
+  --bg-sidebar: #f3f4f6;
+  --border-subtle: rgba(0, 0, 0, 0.1);
+  --text-primary: #000000; /* Absolute black for readability */
+  --text-secondary: #374151; /* Darker slate for readability */
+  --footer-dim: rgba(55, 65, 81, 0.6);
+  --glass-bg: rgba(255, 255, 255, 0.9);
+  --accent-color: #4f46e5;
+  --shadow-color: rgba(0, 0, 0, 0.05);
+
+  /* Force text to be black everywhere */
+  color: #000000;
+}
+
+/* ── Light mode global overrides ────────────────────────────── */
+
+/* Any elem/* Any element that explicitly sets text to white → Black in light mode */
+html[data-theme='light'] .text-white {
+  color: #000000 !important;
+}
+
+/* 
+   SOFT TINT SYSTEM: 
+   Converts dark/solid brand backgrounds to soft, high-contrast tints in Light Mode.
+*/
+html[data-theme='light'] [class*="bg-indigo-"],
+html[data-theme='light'] [class*="bg-blue-"],
+html[data-theme='light'] [class*="bg-violet-"],
+html[data-theme='light'] [class*="bg-purple-"] {
+  background-color: rgba(79, 70, 229, 0.08) !important;
+  color: #4f46e5 !important;
+  border: 1px solid rgba(79, 70, 229, 0.2) !important;
+}
+
+/* Force dark text for all children inside these light-blue boxes */
+html[data-theme='light'] [class*="bg-indigo-"] *,
+html[data-theme='light'] [class*="bg-blue-"] *,
+html[data-theme='light'] [class*="bg-violet-"] *,
+html[data-theme='light'] [class*="bg-purple-"] * {
+  color: #4f46e5 !important;
+}
+
+/* Emerald/Green specific tints */
+html[data-theme='light'] [class*="bg-emerald-"],
+html[data-theme='light'] [class*="bg-green-"] {
+  background-color: rgba(16, 185, 129, 0.08) !important;
+  color: #059669 !important;
+  border: 1px solid rgba(16, 185, 129, 0.2) !important;
+}
+html[data-theme='light'] [class*="bg-emerald-"] *,
+html[data-theme='light'] [class*="bg-green-"] * {
+  color: #059669 !important;
+}
+
+/* Red/Amber specific tints for errors/warnings */
+html[data-theme='light'] [class*="bg-red-"] {
+  background-color: rgba(239, 68, 68, 0.08) !important;
+  color: #dc2626 !important;
+  border: 1px solid rgba(239, 68, 68, 0.2) !important;
+}
+html[data-theme='light'] [class*="bg-red-"] * {
+  color: #dc2626 !important;
+}
+
+html[data-theme='light'] [class*="bg-amber-"] {
+  background-color: rgba(245, 158, 11, 0.08) !important;
+  color: #d97706 !important;
+  border: 1px solid rgba(245, 158, 11, 0.2) !important;
+}
+html[data-theme='light'] [class*="bg-amber-"] * {
+  color: #d97706 !important;
+}
+
+/* Opacity-dimmed text — lift opacity so icons/labels stay readable */
+html[data-theme='light'] [class*="opacity-"] {
+  opacity: 1 !important;
+}
+
+/* Ensure secondary text in light mode is always dark enough */
+html[data-theme='light'] .text-\[var\(--text-secondary\)\] {
+  color: #374151 !important;
+}
+html[data-theme='light'] .text-\[var\(--text-primary\)\] {
+  color: #000000 !important;
+}='light'] .text-\[var\(--text-primary\)\] {
+  color: #000000 !important;
+}
+
+/* Glass cards in light mode - More defined for visibility */
+html[data-theme='light'] .glass {
+  background: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+html[data-theme='light'] .glass-dark {
+  background: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Input fields */
+html[data-theme='light'] input,
+html[data-theme='light'] textarea,
+html[data-theme='light'] select {
+  color: #000000 !important;
+  background-color: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.25) !important;
+}
+
+html[data-theme='light'] input::placeholder,
+html[data-theme='light'] textarea::placeholder {
+  color: #6b7280 !important;
+  opacity: 1 !important;
+}
+
+/* Table cells */
+html[data-theme='light'] td,
+html[data-theme='light'] th {
+  color: #000000 !important;
+}
+
+/* Zinc/slate greys used as text → dark slate in light mode */
+html[data-theme='light'] .text-zinc-500,
+html[data-theme='light'] .text-slate-400,
+html[data-theme='light'] .text-slate-500,
+html[data-theme='light'] .text-gray-400,
+html[data-theme='light'] .text-gray-500 {
+  color: #374151 !important;
+}
+
+/* Ensure status colors don't vanish or wash out */
+html[data-theme='light'] .text-indigo-400,
+html[data-theme='light'] .text-indigo-500,
+html[data-theme='light'] .text-indigo-600 { color: #4f46e5 !important; }
+
+html[data-theme='light'] .text-emerald-400,
+html[data-theme='light'] .text-emerald-500,
+html[data-theme='light'] .text-emerald-600 { color: #059669 !important; }
+
+html[data-theme='light'] .text-red-400,
+html[data-theme='light'] .text-red-500,
+html[data-theme='light'] .text-red-600 { color: #dc2626 !important; }
+
+html[data-theme='light'] .text-amber-400,
+html[data-theme='light'] .text-amber-500,
+html[data-theme='light'] .text-amber-600 { color: #d97706 !important; }
+
+/* Background light tints for status bubbles */
+html[data-theme='light'] .bg-indigo-500\/10,
+html[data-theme='light'] .bg-indigo-600\/10 { background-color: rgba(79, 70, 229, 0.08) !important; }
+
+html[data-theme='light'] .bg-emerald-500\/10,
+html[data-theme='light'] .bg-emerald-600\/10 { background-color: rgba(5, 150, 105, 0.08) !important; }
+
+html[data-theme='light'] .bg-red-500\/10,
+html[data-theme='light'] .bg-red-600\/10 { background-color: rgba(220, 38, 38, 0.08) !important; }
+
+html[data-theme='light'] .bg-amber-500\/10,
+html[data-theme='light'] .bg-amber-600\/10 { background-color: rgba(217, 119, 6, 0.08) !important; }
+
+/* White borders → defined dark stroke for visibility */
+html[data-theme='light'] [class*="border-white"] {
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Modal overlays - High contrast mask */
+html[data-theme='light'] .bg-black\/40,
+html[data-theme='light'] .bg-black\/20,
+html[data-theme='light'] .bg-black\/30,
+html[data-theme='light'] .bg-black\/60,
+html[data-theme='light'] .bg-black\/80,
+html[data-theme='light'] .bg-black\/95 {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(8px);
+}
+
+/* Sidebar specific */
+html[data-theme='light'] [class*="bg-\[var\(--bg-main\)\]"] {
+  background-color: var(--bg-main) !important;
+}
+
+
+* {
+  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+              border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              color 0.2s ease-in-out;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  width: 100%;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Glassmorphism */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 8px 32px 0 var(--shadow-color);
+}
+
+.glass-dark {
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-subtle);
+}
+
+/* Premium Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.25);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.5);
+}
+
+html[data-theme='light'] ::-webkit-scrollbar-thumb {
+  background: rgba(3, 105, 161, 0.2);
+}
+
+html[data-theme='light'] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(3, 105, 161, 0.4);
+}
+
+/* Hover Effects */
+.card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  border-color: rgba(99, 102, 241, 0.3);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+}
+
+/* Typography Headers */
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+.pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
+}
+
+/* No scrollbar utility */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ── Light mode: modal / overlay panels ─────────────────────── */
+html[data-theme='light'] .backdrop-blur-3xl,
+html[data-theme='light'] .backdrop-blur-xl,
+html[data-theme='light'] .backdrop-blur-md {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Full-screen overlay (modal backs) */
+html[data-theme='light'] .fixed.inset-0.bg-\[var\(--bg-main\)\]\/95 {
+  background-color: rgba(240, 249, 255, 0.96) !important;
+}
+
+/* ── Light mode: sidebar / card panel backgrounds ───────────── */
+html[data-theme='light'] .bg-\[var\(--bg-sidebar\)\] {
+  background-color: rgba(224, 242, 254, 0.95) !important;
+}
+
+html[data-theme='light'] .bg-\[var\(--bg-card\)\] {
+  background-color: rgba(255, 255, 255, 0.85) !important;
+}
+
+html[data-theme='light'] .bg-\[var\(--bg-main\)\] {
+  background-color: #f0f9ff !important;
+}
+
+/* ── Light mode: border adjustments ─────────────────────────── */
+html[data-theme='light'] .border-\[var\(--border-subtle\)\] {
+  border-color: rgba(7, 89, 133, 0.15) !important;
+}
+
+/* ── Light mode: active/selected indigo elements keep contrast ─ */
+html[data-theme='light'] .active-button,
+html[data-theme='light'] .bg-indigo-600.solid-white-text {
+  background-color: #4f46e5 !important;
+  color: #ffffff !important;
+}
+
+
+/* Indigo subtle backgrounds */
+html[data-theme='light'] [class*="bg-indigo-"][class*="\/"] {
+  background-color: rgba(99, 102, 241, 0.1) !important;
+}
+
+/* ── Light mode: shadow adjustments ─────────────────────────── */
+html[data-theme='light'] [class*="shadow-indigo"] {
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.15) !important;
+}
+
+/* ── Light mode: card hover ──────────────────────────────────── */
+html[data-theme='light'] .card-hover:hover {
+  border-color: rgba(79, 70, 229, 0.25) !important;
+  box-shadow: 0 8px 20px rgba(7, 89, 133, 0.12) !important;
+}
