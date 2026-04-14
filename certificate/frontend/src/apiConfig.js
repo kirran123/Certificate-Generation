@@ -1,16 +1,10 @@
-// Centralized API configuration to handle localhost port shifts
-export const getApiBase = () => {
-  // If we are on localhost, always target the backend at port 5000
-  // Robust detection for local dev environments
-  if (
-    window.location.hostname === 'localhost' || 
-    window.location.hostname === '127.0.0.1' || 
-    window.location.port === '5173'
-  ) {
-    return 'http://localhost:5000';
-  }
-  // For production, assume backend is at the same origin but possibly a different subdomain or just use origin
-  return window.location.origin;
-};
-
-export const API_BASE = getApiBase();
+// Centralized API configuration
+// In production, set the VITE_API_BASE_URL env var in your Render/hosting dashboard
+// to point to your backend service (e.g. https://digicertify-backend.onrender.com)
+export const API_BASE =
+  import.meta.env.VITE_API_BASE_URL ||
+  (typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:5000'
+    : '');
