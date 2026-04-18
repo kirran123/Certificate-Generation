@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const certificateSchema = new mongoose.Schema({
-  certificateId: { type: String, required: true, unique: true }, // Format: CERT + 10 digits
+  certificateId: { type: String, required: true, unique: true }, // Format: CERT + 6 digits
   name: { type: String, required: true },
   email: { type: String }, // Optional, for sending email
   course: { type: String }, // Optional depending on template

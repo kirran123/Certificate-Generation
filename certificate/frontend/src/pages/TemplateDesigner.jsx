@@ -28,9 +28,9 @@ import {
   Italic,
   Underline,
   Zap,
-  Zap,
   Trash2,
-  XCircle
+  XCircle,
+  Download
 } from "lucide-react";
 
 // ── Small helper component: manual field name entry ──────────────────────
@@ -333,7 +333,13 @@ export default function TemplateDesigner() {
         templateId: actualTemplateId,
         nameColumn: finalNameCol,
         emailColumn: finalEmailCol,
-        batchId: batchName || "Automation Batch"
+        batchId: (() => {
+          const now = new Date();
+          const date = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+          const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+          const base = (batchName || 'Auto-Cert').trim();
+          return `${base} · ${date} ${time}`;
+        })()
       }, { headers: { Authorization: `Bearer ${token}` } });
       setAutoSuccess(true);
       setSaving("auto_success");
@@ -378,15 +384,17 @@ export default function TemplateDesigner() {
         },
       );
 
-      if (download) {
-        alert("Direct PDF download is disabled. Please use the Preview mode to view the layout.");
-        return;
-      }
-      
       // Create blob directly from binary response
       const blob = new Blob([res.data], { type: "application/pdf" });
       const blobUrl = URL.createObjectURL(blob);
 
+      if (download) {
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = `${batchName || 'Sample'}_Certificate.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
       } else {
         // Open the blob directly in a new tab
         const win = window.open(blobUrl, "_blank");
@@ -483,7 +491,14 @@ export default function TemplateDesigner() {
                 <div className="w-8 h-px bg-indigo-500/50" />
                 <span>Editor</span>
               </div>
-              <h2 className="text-3xl font-black text-[var(--text-primary)] tracking-tighter leading-none mb-2">Design</h2>
+              <input 
+                type="text" 
+                value={templateName}
+                onChange={(e) => setTemplateName(e.target.value)}
+                className="w-full bg-transparent border-none text-3xl font-black text-[var(--text-primary)] tracking-tighter leading-none mb-2 focus:outline-none focus:ring-0 placeholder:text-[var(--text-secondary)] placeholder:opacity-50"
+                placeholder="Template Name"
+                title="Edit Template Name"
+              />
               <p className="text-[var(--text-secondary)] text-xs font-medium">Design your certificate layout with precision.</p>
             </div>
 
@@ -506,54 +521,30 @@ export default function TemplateDesigner() {
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-secondary)] ml-1 opacity-70">Template Info</label>
-                <div className="space-y-6">
-                  {/* ── Connection Status ── */}
-                  {passedSheetUrl && (
-                    <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                        <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest leading-none">Sheet Connected</span>
-                      </div>
-                      <p className="text-[10px] text-[var(--text-secondary)] font-medium truncate opacity-70 italic">
-                        {passedSheetUrl}
-                      </p>
-                      {excelHeaders.length > 0 && (
-                        <div className="pt-1 flex flex-wrap gap-1">
-                          {excelHeaders.slice(0, 3).map(h => (
-                            <span key={h} className="text-[8px] bg-emerald-500/10 text-emerald-500 px-1.5 py-0.5 rounded-md border border-emerald-500/10 uppercase font-bold">
-                              {h}
-                            </span>
-                          ))}
-                          {excelHeaders.length > 3 && <span className="text-[8px] text-emerald-500/50 font-bold">+{excelHeaders.length - 3} more</span>}
-                        </div>
-                      )}
+              {passedSheetUrl && (
+                <div className="space-y-4">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-secondary)] ml-1 opacity-70">Data Connection</label>
+                  <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest leading-none">Sheet Connected</span>
                     </div>
-                  )}
-
-                  <div className="space-y-1.5 ring-1 ring-white/5 p-4 rounded-2xl bg-black/20">
-                    <label className="text-[10px] font-black text-indigo-400 uppercase tracking-widest ml-1">Template Identity</label>
-                    <input
-                      type="text"
-                      className="w-full bg-transparent border-none py-1 px-1 text-sm text-[var(--text-primary)] focus:outline-none transition-all font-medium placeholder:text-[var(--text-secondary)] opacity-80"
-                      value={templateName}
-                      onChange={(e) => setTemplateName(e.target.value)}
-                      placeholder="e.g., Year 10 Excellence"
-                    />
-                  </div>
-                  <div className="space-y-1.5 ring-1 ring-white/5 p-4 rounded-2xl bg-black/20">
-                    <label className="text-[10px] font-black text-indigo-400 uppercase tracking-widest ml-1">Archive Batch Name</label>
-                    <input
-                      type="text"
-                      className="w-full bg-transparent border-none py-1 px-1 text-sm text-[var(--text-primary)] focus:outline-none transition-all font-medium placeholder:text-[var(--text-secondary)] opacity-80"
-                      value={batchName}
-                      onChange={(e) => setBatchName(e.target.value)}
-                      placeholder="e.g., April_2026_Run"
-                    />
+                    <p className="text-[10px] text-[var(--text-secondary)] font-medium truncate opacity-70 italic">
+                      {passedSheetUrl}
+                    </p>
+                    {excelHeaders.length > 0 && (
+                      <div className="pt-1 flex flex-wrap gap-1">
+                        {excelHeaders.slice(0, 3).map(h => (
+                          <span key={h} className="text-[8px] bg-emerald-500/10 text-emerald-500 px-1.5 py-0.5 rounded-md border border-emerald-500/10 uppercase font-bold">
+                            {h}
+                          </span>
+                        ))}
+                        {excelHeaders.length > 3 && <span className="text-[8px] text-emerald-500/50 font-bold">+{excelHeaders.length - 3} more</span>}
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
+              )}
 
               <div className="space-y-4">
                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-secondary)] ml-1 opacity-70">Certificate Design</label>
@@ -582,6 +573,11 @@ export default function TemplateDesigner() {
                   <button onClick={toggleReview} className="flex items-center justify-center space-x-2 py-4 bg-white/5 hover:bg-white/10 border border-white/5 rounded-2xl transition-all group/op active:scale-95">
                     <Eye className="w-4 h-4 text-indigo-400" />
                     <span className="text-[10px] font-black uppercase tracking-widest">Preview</span>
+                  </button>
+
+                  <button onClick={() => handlePreview(true)} disabled={previewLoading} className="flex items-center justify-center space-x-2 py-4 bg-white/5 hover:bg-white/10 border border-white/5 rounded-2xl transition-all group/op active:scale-95 disabled:opacity-50">
+                    <Download className="w-4 h-4 text-emerald-400" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">{previewLoading ? '...' : 'Download'}</span>
                   </button>
 
                   <button onClick={saveLayout} className="col-span-2 py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl transition-all shadow-xl shadow-indigo-600/20 active:scale-95 text-[10px] font-black uppercase tracking-widest flex items-center justify-center space-x-2">

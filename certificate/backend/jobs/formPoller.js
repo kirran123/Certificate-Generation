@@ -25,7 +25,7 @@ let isPollerExecuting = false;
 const generateUniqueId = async () => {
   let certId, isUnique = false;
   while (!isUnique) {
-    const r = Math.floor(1000000000 + Math.random() * 9000000000).toString();
+    const r = Math.floor(100000 + Math.random() * 900000).toString();
     certId = `CERT${r}`;
     const existing = await Certificate.findOne({ certificateId: certId });
     if (!existing) isUnique = true;
@@ -113,6 +113,10 @@ const pollOnce = async () => {
       if (!fs.existsSync(certsDir)) fs.mkdirSync(certsDir, { recursive: true });
 
       let newlyGenerated = 0;
+      
+      const now = new Date();
+      const runTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+      const currentPollBatchId = `${auto.batchId} [Run ${runTime}]`;
 
       for (const row of rows) {
         const name  = String(row[auto.nameColumn]  || '').trim();
@@ -151,7 +155,7 @@ const pollOnce = async () => {
           pdfUrl: `/uploads/certificates/${pdfFileName}`,
           status: 'Pending',
           createdBy: auto.userId,
-          batchId: auto.batchId,
+          batchId: currentPollBatchId,
           isAutomation: true,
           uniqueHash
         });
@@ -173,10 +177,10 @@ const pollOnce = async () => {
         newlyGenerated++;
       }
 
-      // Update automation stats
+      // Update the original automation's stats (no snapshot — prevents duplicate sidebar entries)
       await FormAutomation.findByIdAndUpdate(auto._id, {
         lastChecked: new Date(),
-        $inc: { certCount: newlyGenerated }
+        ...(newlyGenerated > 0 && { $inc: { certCount: newlyGenerated } })
       });
 
       if (newlyGenerated > 0) {

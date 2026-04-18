@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
-import { Award, Search, FileUp, PenTool, Mail, CheckCircle, BarChart2, List, Calendar, ChevronDown, ChevronUp, Loader2, X, ArrowRight, Package, Inbox, Zap, RefreshCw, Clock, Trash2, PauseCircle } from 'lucide-react';
+import { Award, Search, FileUp, PenTool, Mail, CheckCircle, BarChart2, List, Calendar, ChevronDown, ChevronUp, Loader2, X, ArrowRight, Package, Inbox, Zap, RefreshCw, Clock, Trash2, PauseCircle, PlayCircle } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { API_BASE } from '../apiConfig';
 
@@ -60,10 +60,64 @@ export default function UserDashboard() {
     await Promise.allSettled([
       fetchReceived(),
       fetchGenerated(),
-      fetchAutomations()
+      fetchAutomations(),
+      // Silently clean up stale snapshot records from old logic
+      axios.delete(`${API_BASE}/api/certificate/form-automations/cleanup`, { headers }).catch(() => {})
     ]);
     
     setLoading(false);
+  };
+
+  const handleToggleAutomation = async (id, active) => {
+    try {
+      const token = sessionStorage.getItem('token');
+      await axios.patch(`${API_BASE}/api/certificate/form-automation/${id}`, { active: !active }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchData();
+    } catch (err) {
+      console.error('Failed to toggle automation:', err.message);
+    }
+  };
+
+  const handleDeleteAutomation = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this automation/batch?')) return;
+    try {
+      const token = sessionStorage.getItem('token');
+      await axios.delete(`${API_BASE}/api/certificate/form-automation/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchData();
+    } catch (err) {
+      console.error('Failed to delete automation:', err.message);
+    }
+  };
+
+  const handleResendBatch = async (batchId) => {
+    try {
+      setLoading(true);
+      const token = sessionStorage.getItem('token');
+      await axios.post(`${API_BASE}/api/certificate/resend-batch/${encodeURIComponent(batchId)}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchData();
+    } catch (err) {
+      alert('Failed to resend emails: ' + err.message);
+    } finally { setLoading(false); }
+  };
+
+  const handleDeleteBatch = async (batchId) => {
+    if (!window.confirm(`Are you sure you want to delete ALL certificates in batch "${batchId}"? This cannot be undone.`)) return;
+    try {
+      setLoading(true);
+      const token = sessionStorage.getItem('token');
+      await axios.delete(`${API_BASE}/api/certificate/delete-batch/${encodeURIComponent(batchId)}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchData();
+    } catch (err) {
+      alert('Failed to delete batch: ' + err.message);
+    } finally { setLoading(false); }
   };
 
 
@@ -78,23 +132,6 @@ export default function UserDashboard() {
     if (bid.toLowerCase().includes(batchSearch.toLowerCase())) { if (!acc[bid]) acc[bid] = []; acc[bid].push(cert); }
     return acc;
   }, {});
-
-  // Merge in automations that have 0 certs yet
-  automations.forEach(auto => {
-    if (auto.batchId && !groupedBatches[auto.batchId]) {
-      if (auto.batchId.toLowerCase().includes(batchSearch.toLowerCase())) {
-        groupedBatches[auto.batchId] = [{ 
-           _id: `auto-${auto._id}`, 
-           batchId: auto.batchId, 
-           isAutomation: true, 
-           status: 'Pending',
-           createdAt: auto.createdAt,
-           name: 'Waiting for responses...',
-           certificateId: 'AUTO-PENDING'
-        }];
-      }
-    }
-  });
 
   const groupedReceived = receivedCerts.reduce((acc, cert) => {
     const bid = cert.batchId || 'Individual Certificates'; if (!acc[bid]) acc[bid] = []; acc[bid].push(cert); return acc;
@@ -275,13 +312,19 @@ export default function UserDashboard() {
                                  </span>
                                )}
                             </p>
-                            <p className="text-xs text-[var(--text-secondary)]">By {certs[0]?.createdBy?.name || 'Super Admin'} · {fmt(certs[0]?.createdAt)} · {certs.length} certificate{certs.length !== 1 ? 's' : ''}</p>
-                          </div>
+                             <p className="text-xs text-[var(--text-secondary)]">By {certs[0]?.createdBy?.name || 'Super Admin'} · {fmt(certs[0]?.createdAt)} · {certs.length} certificate{certs.length !== 1 ? 's' : ''}</p>
+                           </div>
+                         </div>
+                         <div className="flex items-center gap-3" onClick={e => e.stopPropagation()}>
+                            {certs.some(c => c.isAutomation) && (
+                               <div className="flex items-center gap-2 mr-2">
+                                  <button onClick={() => handleResendBatch(batchId)} title="Resend All Emails" className="p-2 hover:bg-indigo-500/10 text-indigo-400 rounded-lg transition-all"><RefreshCw className="w-3.5 h-3.5" /></button>
+                                  <button onClick={() => handleDeleteBatch(batchId)} title="Delete Batch" className="p-2 hover:bg-red-500/10 text-red-400 rounded-lg transition-all"><Trash2 className="w-3.5 h-3.5" /></button>
+                               </div>
+                            )}
+                            {isOpen ? <ChevronUp className="w-4 h-4 text-indigo-500" /> : <ChevronDown className="w-4 h-4 text-[var(--text-secondary)]" />}
+                         </div>
                         </div>
-                           {isOpen ? <ChevronUp className="w-4 h-4 text-indigo-500" /> : <ChevronDown className="w-4 h-4 text-[var(--text-secondary)]" />}
-                        </div>
-                      </div>
-
                       {/* Expanded Table */}
                       {isOpen && (
                         <div className="border-t border-[var(--border-subtle)]">
@@ -314,7 +357,7 @@ export default function UserDashboard() {
                                 {filteredCerts.map(cert => (
                                   <tr key={cert._id} className="hover:bg-[var(--border-subtle)] transition-colors group">
                                     <td className="px-6 py-4"><p className="font-semibold text-sm text-[var(--text-primary)]">{cert.name}</p><p className="text-xs text-[var(--text-secondary)]">{cert.email || 'No email set'}</p></td>
-                                    <td className="px-6 py-4"><span className="font-mono text-xs text-[var(--text-secondary)] bg-[var(--border-subtle)] px-2 py-1 rounded-lg">#{cert.certificateId?.substring(0, 12)}…</span></td>
+                                    <td className="px-6 py-4"><span className="font-mono text-xs text-[var(--text-secondary)] bg-[var(--border-subtle)] px-2 py-1 rounded-lg">#{cert.certificateId}</span></td>
                                     <td className="px-6 py-4">
                                       {cert.status === 'Sent' ? <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 text-xs font-semibold rounded-full"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />Delivered</span>
                                       : cert.email ? <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-500/10 text-indigo-600 border border-indigo-500/20 text-xs font-semibold rounded-full"><div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />Ready</span>
@@ -366,12 +409,17 @@ export default function UserDashboard() {
                                        <span className="text-[var(--text-secondary)]">{auto.certCount} Sent</span>
                                     </div>
                                  </div>
-                                 </div>
-                              </div>
                               </div>
                               <div className="flex items-center justify-between text-[8px] font-black uppercase tracking-widest opacity-40 border-t border-[var(--border-subtle)] pt-3">
                                  <div className="flex items-center gap-1"><Clock className="w-2.5 h-2.5" /> {new Date(auto.lastChecked).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-                                 <div className="truncate max-w-[120px]">{auto.templateId?.name || 'Standard'}</div>
+                                 <div className="flex items-center gap-2">
+                                    <button onClick={() => handleToggleAutomation(auto._id, auto.active)} className="hover:text-indigo-400 transition-colors">
+                                       {auto.active ? <PauseCircle className="w-3 h-3" /> : <PlayCircle className="w-3 h-3" />}
+                                    </button>
+                                    <button onClick={() => handleDeleteAutomation(auto._id)} className="hover:text-red-400 transition-colors">
+                                       <Trash2 className="w-3 h-3" />
+                                    </button>
+                                 </div>
                               </div>
                            </div>
                         ))}
