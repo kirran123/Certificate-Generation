@@ -53,3 +53,28 @@ export const getEmailLogsHandler = httpAction(async (ctx, req) => {
     return jsonResponse(logs);
   } catch (e: any) { return errorResponse(e.message, e.status || 500); }
 });
+
+export const cleanupDbHandler = httpAction(async (ctx, req) => {
+  try {
+    const user = await requireAuth(ctx, req);
+    if (user.role !== "admin") return errorResponse("Forbidden", 403);
+
+    let cursor = undefined;
+    let isDone = false;
+    let totalUpdated = 0;
+
+    while (!isDone) {
+      const res: any = await ctx.runMutation(internal.migrations.splitBatch, {
+        cursor,
+        limit: 5,
+      });
+      cursor = res.continueCursor;
+      isDone = res.isDone;
+      totalUpdated += res.updated;
+    }
+
+    return jsonResponse({ message: `Successfully cleaned up ${totalUpdated} templates` });
+  } catch (e: any) {
+    return errorResponse(e.message, e.status || 500);
+  }
+});

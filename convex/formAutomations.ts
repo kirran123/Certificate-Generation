@@ -67,6 +67,23 @@ export const remove = internalMutation({
   handler: async (ctx, { id }) => ctx.db.delete(id),
 });
 
+export const removeStale = internalMutation({
+  args: { userId: v.id("users"), isAdmin: v.boolean() },
+  handler: async (ctx, { userId, isAdmin }) => {
+    const all = await ctx.db.query("formAutomations").collect();
+    let count = 0;
+    for (const a of all) {
+      if (!a.active) {
+        if (isAdmin || a.userId === userId) {
+          await ctx.db.delete(a._id);
+          count++;
+        }
+      }
+    }
+    return count;
+  },
+});
+
 export const updateStats = internalMutation({
   args: { id: v.id("formAutomations"), newlyGenerated: v.number() },
   handler: async (ctx, { id, newlyGenerated }) => {

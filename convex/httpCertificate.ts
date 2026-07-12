@@ -550,6 +550,19 @@ const myCertificatesHandler = httpAction(async (ctx, req) => {
   }
 });
 
+const cleanupAutomations = httpAction(async (ctx, req) => {
+  try {
+    const user = await requireAuth(ctx, req);
+    const deletedCount = await ctx.runMutation(internal.formAutomations.removeStale, {
+      userId: user._id,
+      isAdmin: user.role === "admin",
+    });
+    return jsonResponse({ message: `Cleaned up ${deletedCount} stale automation records.` });
+  } catch (e: any) {
+    return errorResponse(e.message, e.status || 500);
+  }
+});
+
 export {
   uploadData,
   uploadSheet,
@@ -568,4 +581,5 @@ export {
   toggleAutomation,
   deleteAutomation,
   myCertificatesHandler,
+  cleanupAutomations,
 };

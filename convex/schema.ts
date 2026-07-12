@@ -72,4 +72,9 @@ export default defineSchema({
     message: v.string(),
     certificateId: v.optional(v.string()),
   }),
+
+  templateImages: defineTable({
+    templateId: v.id("templates"),
+    imageBase64: v.string(),
+  }).index("by_templateId", ["templateId"]),
 });
