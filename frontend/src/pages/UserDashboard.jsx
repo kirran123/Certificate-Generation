@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
-import { Award, Search, FileUp, PenTool, Mail, CheckCircle, BarChart2, List, Calendar, ChevronDown, ChevronUp, Loader2, X, ArrowRight, Package, Inbox, Zap, RefreshCw, Clock, Trash2, PauseCircle, PlayCircle, XCircle } from 'lucide-react';
+import { Award, Search, FileUp, PenTool, Mail, CheckCircle, BarChart2, List, Calendar, ChevronDown, ChevronUp, Loader2, X, ArrowRight, Package, Inbox, Zap, RefreshCw, Clock, Trash2, PauseCircle, PlayCircle, XCircle, Download } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { API_BASE } from '../apiConfig';
 
@@ -384,6 +384,14 @@ export default function UserDashboard() {
                         </div>
                         <div className="flex items-center gap-3">
                           <div className="flex items-center gap-2 mr-2">
+                            <a
+                              href={`${API_BASE}/api/certificate/download-bulk?batchId=${encodeURIComponent(batchId)}`}
+                              download
+                              title="Download Batch (ZIP)"
+                              className="p-2 hover:bg-indigo-500/10 text-indigo-400 rounded-lg transition-all flex items-center justify-center"
+                            >
+                              <Download className="w-3.5 h-3.5" />
+                            </a>
                             <button onClick={() => handleResendBatch(batchId)} title="Resend All Emails" className="p-2 hover:bg-indigo-500/10 text-indigo-400 rounded-lg transition-all"><RefreshCw className="w-3.5 h-3.5" /></button>
                           </div>
                           <button onClick={() => setExpandedBatch(isOpen ? null : batchId)} className="p-2 hover:bg-[var(--border-subtle)] rounded-lg transition-all">
@@ -432,9 +440,19 @@ export default function UserDashboard() {
                                           : <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 text-amber-600 border border-amber-500/20 text-xs font-semibold rounded-full"><div className="w-1.5 h-1.5 rounded-full bg-amber-500" />No Email</span>}
                                     </td>
                                     <td className="px-6 py-4 text-right">
-                                      <button onClick={() => handleDeleteCertificate(cert.certificateId)} className="p-2 text-red-400 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-all opacity-0 group-hover:opacity-100">
-                                        <Trash2 className="w-3.5 h-3.5" />
-                                      </button>
+                                      <div className="flex items-center justify-end gap-2">
+                                        <a
+                                          href={`${API_BASE}/api/certificate/download/${cert.certificateId}`}
+                                          download
+                                          className="p-2 text-indigo-400 hover:bg-indigo-500/10 hover:text-indigo-500 rounded-lg transition-all"
+                                          title="Download PDF"
+                                        >
+                                          <Download className="w-3.5 h-3.5" />
+                                        </a>
+                                        <button onClick={() => handleDeleteCertificate(cert.certificateId)} className="p-2 text-red-400 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-all opacity-0 group-hover:opacity-100">
+                                          <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                      </div>
                                     </td>
                                   </tr>
                                 ))}

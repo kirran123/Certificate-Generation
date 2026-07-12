@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
-import { Users, FileText, CheckCircle, XCircle, Calendar, Mail, Search, Award, BarChart2, ChevronDown, ChevronUp, ShieldCheck, TrendingUp, Zap, MessageSquare, Trash2, PauseCircle, PlayCircle, RefreshCw, Clock, CheckCircle2, AlertTriangle, Heart, Lightbulb, PenTool, List } from 'lucide-react';
+import { Users, FileText, CheckCircle, XCircle, Calendar, Mail, Search, Award, BarChart2, ChevronDown, ChevronUp, ShieldCheck, TrendingUp, Zap, MessageSquare, Trash2, PauseCircle, PlayCircle, RefreshCw, Clock, CheckCircle2, AlertTriangle, Heart, Lightbulb, PenTool, List, Download } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
@@ -551,6 +551,14 @@ export default function AdminDashboard() {
                           </div>
                           <div className="flex items-center gap-3">
                             <div className="flex items-center gap-2 mr-2">
+                              <a
+                                href={`${API_BASE}/api/certificate/download-bulk?batchId=${encodeURIComponent(batchId)}`}
+                                download
+                                title="Download Batch (ZIP)"
+                                className="p-2 hover:bg-indigo-500/10 text-indigo-400 rounded-lg transition-all flex items-center justify-center"
+                              >
+                                <Download className="w-3.5 h-3.5" />
+                              </a>
                               <button onClick={() => handleResendBatch(batchId)} title="Resend All Emails" className="p-2 hover:bg-indigo-500/10 text-indigo-400 rounded-lg transition-all"><RefreshCw className="w-3.5 h-3.5" /></button>
                             </div>
                             <button onClick={() => setExpandedBatch(isOpen ? null : batchId)} className="p-2 hover:bg-[var(--border-subtle)] rounded-lg transition-all">
@@ -622,9 +630,19 @@ export default function AdminDashboard() {
                                         </span>
                                       </td>
                                       <td className="px-6 py-4 text-right align-middle">
-                                        <button onClick={() => handleDeleteCertificate(cert.certificateId)} className="p-2 text-red-400 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-all opacity-0 group-hover:opacity-100">
-                                          <Trash2 className="w-3.5 h-3.5" />
-                                        </button>
+                                        <div className="flex items-center justify-end gap-2">
+                                          <a
+                                            href={`${API_BASE}/api/certificate/download/${cert.certificateId}`}
+                                            download
+                                            className="p-2 text-indigo-400 hover:bg-indigo-500/10 hover:text-indigo-500 rounded-lg transition-all"
+                                            title="Download PDF"
+                                          >
+                                            <Download className="w-3.5 h-3.5" />
+                                          </a>
+                                          <button onClick={() => handleDeleteCertificate(cert.certificateId)} className="p-2 text-red-400 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-all opacity-0 group-hover:opacity-100">
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                          </button>
+                                        </div>
                                       </td>
                                     </tr>
                                   ))}

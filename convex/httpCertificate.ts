@@ -311,9 +311,20 @@ const downloadCert = httpAction(async (ctx, req) => {
 const downloadBulk = httpAction(async (ctx, req) => {
   try {
     const user = await requireAuth(ctx, req);
-    const certs = user.role === "admin"
-      ? await ctx.runQuery(internal.certificates.listAll, {})
-      : await ctx.runQuery(internal.certificates.listForUser, { userId: user._id });
+    const url = new URL(req.url);
+    const batchIdParam = url.searchParams.get("batchId");
+
+    let certs;
+    if (batchIdParam) {
+      certs = await ctx.runQuery(internal.certificates.listByBatchId, { batchId: batchIdParam });
+      if (user.role !== "admin") {
+        certs = certs.filter((c: any) => c.createdBy === user._id);
+      }
+    } else {
+      certs = user.role === "admin"
+        ? await ctx.runQuery(internal.certificates.listAll, {})
+        : await ctx.runQuery(internal.certificates.listForUser, { userId: user._id });
+    }
 
     if (!certs.length) return errorResponse("No certificates found", 404);
 
@@ -349,11 +360,15 @@ const downloadBulk = httpAction(async (ctx, req) => {
         .map((c) => c.charCodeAt(0))
     );
 
+    const safeFilename = batchIdParam 
+      ? `${batchIdParam.replace(/[\s\/:*?"<>|]/g, "_")}.zip` 
+      : "certificates.zip";
+
     return new Response(zipBytes, {
       status: 200,
       headers: {
         "Content-Type": "application/zip",
-        "Content-Disposition": "attachment; filename=\"certificates.zip\"",
+        "Content-Disposition": `attachment; filename="${safeFilename}"`,
         "Access-Control-Allow-Origin": process.env.FRONTEND_URL || "*",
       },
     });
