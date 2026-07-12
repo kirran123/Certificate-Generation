@@ -71,6 +71,9 @@ export const cleanupDbHandler = httpAction(async (ctx, req) => {
       cursor = res.continueCursor;
       isDone = res.isDone;
       totalUpdated += res.updated;
+      if (!isDone) {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
     }
 
     return jsonResponse({ message: `Successfully cleaned up ${totalUpdated} templates` });
