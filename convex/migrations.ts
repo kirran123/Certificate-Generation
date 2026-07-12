@@ -1,7 +1,7 @@
-import { mutation } from "./_generated/server";
+import { internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 
-export const splitBatch = mutation({
+export const splitBatch = internalMutation({
   args: { cursor: v.optional(v.string()), limit: v.number() },
   handler: async (ctx, { cursor, limit }) => {
     const page = await ctx.db.query("templates").paginate({
@@ -10,7 +10,6 @@ export const splitBatch = mutation({
     });
     let updated = 0;
     for (const t of page.page) {
-      // Accessing t.imageBase64 is safe because it is typed as optional string in schema
       const imageBase64 = (t as any).imageBase64;
       if (imageBase64) {
         const existing = await ctx.db
