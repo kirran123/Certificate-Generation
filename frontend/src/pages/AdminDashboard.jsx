@@ -18,7 +18,8 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState([]);
   const [certificates, setCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
+  const rawTab = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState(rawTab === 'managed' ? 'certificates' : (rawTab || 'overview'));
   const [batchSearch, setBatchSearch] = useState('');
   const [certSearch, setCertSearch] = useState('');
   const [logSearch, setLogSearch] = useState('');
