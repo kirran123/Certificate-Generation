@@ -143,7 +143,7 @@ export default function UserDashboard() {
 
 
   const groupedBatches = generatedCerts.reduce((acc, cert) => {
-    let bid = cert.batchId || (cert.createdAt ? `Generated ${new Date(cert.createdAt).toLocaleDateString()}` : 'Individual');
+    let bid = cert.batchId || ((cert.createdAt || cert._creationTime) ? `Generated ${new Date(cert.createdAt || cert._creationTime).toLocaleDateString()}` : 'Individual');
 
     // Global Search: Check batch name OR certificate details
     const searchStr = (batchSearch || certSearch).toLowerCase();
@@ -288,7 +288,7 @@ export default function UserDashboard() {
                       <div className={`p-2.5 rounded-xl ${isOpen ? 'bg-indigo-600 text-white' : 'bg-indigo-500/10 text-indigo-500'}`}><Calendar className="w-4 h-4" /></div>
                       <div>
                         <p className="font-semibold text-[var(--text-primary)] text-sm">{batchId}</p>
-                        <p className="text-xs text-[var(--text-secondary)]">{fmt(certs[0]?.createdAt)} · {certs.length} certificate{certs.length !== 1 ? 's' : ''}</p>
+                        <p className="text-xs text-[var(--text-secondary)]">{fmt(certs[0]?.createdAt || certs[0]?._creationTime)} · {certs.length} certificate{certs.length !== 1 ? 's' : ''}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -310,7 +310,7 @@ export default function UserDashboard() {
                             <tr key={cert._id} className="hover:bg-[var(--border-subtle)] transition-colors">
                               <td className="px-6 py-4"><p className="font-semibold text-sm text-[var(--text-primary)]">{cert.name}</p><p className="text-xs text-[var(--text-secondary)]">{cert.email || '—'}</p></td>
                               <td className="px-6 py-4"><span className="font-mono text-xs text-[var(--text-secondary)] bg-[var(--border-subtle)] px-2 py-1 rounded-lg">{cert.certificateId}</span></td>
-                              <td className="px-6 py-4 text-xs text-[var(--text-secondary)] font-medium">{fmt(cert.createdAt)}</td>
+                              <td className="px-6 py-4 text-xs text-[var(--text-secondary)] font-medium">{fmt(cert.createdAt || cert._creationTime)}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -337,7 +337,7 @@ export default function UserDashboard() {
             <div className="flex-1 space-y-3 w-full">
               {Object.keys(groupedBatches)
                 .filter(bid => { if (statusFilter === 'all') return true; const cs = groupedBatches[bid]; const allSent = cs.every(c => c.status === 'Sent'); return statusFilter === 'sent' ? allSent : !allSent; })
-                .sort((a, b) => { if (sortBy === 'az') return a.localeCompare(b); const dA = new Date(groupedBatches[a][0]?.createdAt || 0); const dB = new Date(groupedBatches[b][0]?.createdAt || 0); return sortBy === 'newest' ? dB - dA : dA - dB; })
+                .sort((a, b) => { if (sortBy === 'az') return a.localeCompare(b); const dA = new Date(groupedBatches[a][0]?.createdAt || groupedBatches[a][0]?._creationTime || 0); const dB = new Date(groupedBatches[b][0]?.createdAt || groupedBatches[b][0]?._creationTime || 0); return sortBy === 'newest' ? dB - dA : dA - dB; })
                 .map(batchId => {
                   const certs = groupedBatches[batchId];
                   const sent = certs.filter(c => c.status === 'Sent').length;
@@ -369,7 +369,7 @@ export default function UserDashboard() {
                                 </span>
                               )}
                             </p>
-                            <p className="text-xs text-[var(--text-secondary)]">By {certs[0]?.createdBy?.name || 'Super Admin'} · {fmt(certs[0]?.createdAt)} · {certs.length} certificate{certs.length !== 1 ? 's' : ''}</p>
+                            <p className="text-xs text-[var(--text-secondary)]">By {certs[0]?.createdBy?.name || 'Super Admin'} · {fmt(certs[0]?.createdAt || certs[0]?._creationTime)} · {certs.length} certificate{certs.length !== 1 ? 's' : ''}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
@@ -414,7 +414,7 @@ export default function UserDashboard() {
                                   <tr key={cert._id} className="hover:bg-[var(--border-subtle)] transition-colors group">
                                     <td className="px-6 py-4"><p className="font-semibold text-sm text-[var(--text-primary)]">{cert.name}</p><p className="text-xs text-[var(--text-secondary)]">{cert.email || 'No email set'}</p></td>
                                     <td className="px-6 py-4"><span className="font-mono text-xs text-[var(--text-secondary)] bg-[var(--border-subtle)] px-2 py-1 rounded-lg">#{cert.certificateId}</span></td>
-                                    <td className="px-6 py-4 text-xs text-[var(--text-secondary)] font-medium">{fmt(cert.createdAt)}</td>
+                                    <td className="px-6 py-4 text-xs text-[var(--text-secondary)] font-medium">{fmt(cert.createdAt || cert._creationTime)}</td>
                                     <td className="px-6 py-4">
                                       {cert.status === 'Sent' ? <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 text-xs font-semibold rounded-full"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />Delivered</span>
                                         : cert.email ? <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-500/10 text-indigo-600 border border-indigo-500/20 text-xs font-semibold rounded-full"><div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />Ready</span>

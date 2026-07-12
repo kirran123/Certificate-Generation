@@ -137,7 +137,7 @@ export default function AdminDashboard() {
 
 
   const groupedBatches = certificates.reduce((acc, cert) => {
-    let bid = cert.batchId || (cert.createdAt ? `Generated ${new Date(cert.createdAt).toLocaleDateString()}` : 'Individual');
+    let bid = cert.batchId || ((cert.createdAt || cert._creationTime) ? `Generated ${new Date(cert.createdAt || cert._creationTime).toLocaleDateString()}` : 'Individual');
     
     // Global Search: Check batch name OR certificate details
     const searchStr = (batchSearch || certSearch).toLowerCase();
@@ -417,7 +417,7 @@ export default function AdminDashboard() {
                         {u.role}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-xs text-[var(--text-secondary)]">{fmt(u.createdAt)}</td>
+                    <td className="px-6 py-4 text-xs text-[var(--text-secondary)]">{fmt(u.createdAt || u._creationTime)}</td>
                     <td className="px-6 py-4 text-right">
                       {u.role !== 'admin' && (
                         <button
@@ -520,7 +520,7 @@ export default function AdminDashboard() {
                   })
                   .sort((a, b) => {
                     if (sortBy === 'az') return a.localeCompare(b);
-                    const dA = new Date(groupedBatches[a][0]?.createdAt || 0); const dB = new Date(groupedBatches[b][0]?.createdAt || 0);
+                    const dA = new Date(groupedBatches[a][0]?.createdAt || groupedBatches[a][0]?._creationTime || 0); const dB = new Date(groupedBatches[b][0]?.createdAt || groupedBatches[b][0]?._creationTime || 0);
                     return sortBy === 'newest' ? dB - dA : dA - dB;
                   })
                   .map(batchId => {
@@ -545,7 +545,7 @@ export default function AdminDashboard() {
                                   </span>
                                 )}
                               </p>
-                              <p className="text-xs text-[var(--text-secondary)]">By {certs[0]?.createdBy?.name || 'Super Admin'} · {new Date(certs[0]?.createdAt).toLocaleDateString()} · {certs.length} certificate{certs.length !== 1 ? 's' : ''}</p>
+                              <p className="text-xs text-[var(--text-secondary)]">By {certs[0]?.createdBy?.name || 'Super Admin'} · {certs[0]?._creationTime || certs[0]?.createdAt ? new Date(certs[0]?.createdAt || certs[0]?._creationTime).toLocaleDateString() : 'Never'} · {certs.length} certificate{certs.length !== 1 ? 's' : ''}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
@@ -611,7 +611,7 @@ export default function AdminDashboard() {
                                         </span>
                                       </td>
                                       <td className="px-6 py-4 text-xs text-[var(--text-secondary)] font-medium whitespace-nowrap align-middle">
-                                        {fmt(cert.createdAt)}
+                                        {fmt(cert.createdAt || cert._creationTime)}
                                       </td>
                                       <td className="px-6 py-4 align-middle">
                                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full border ${cert.status === 'Sent' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20'}`}>
