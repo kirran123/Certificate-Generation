@@ -552,7 +552,7 @@ export default function AdminDashboard() {
                           <div className="flex items-center gap-3">
                             <div className="flex items-center gap-2 mr-2">
                               <a
-                                href={`${API_BASE}/api/certificate/download-bulk?batchId=${encodeURIComponent(batchId)}`}
+                                href={`${API_BASE}/api/certificate/download-bulk?batchId=${encodeURIComponent(batchId)}&token=${sessionStorage.getItem('token')}`}
                                 download
                                 title="Download Batch (ZIP)"
                                 className="p-2 hover:bg-indigo-500/10 text-indigo-400 rounded-lg transition-all flex items-center justify-center"

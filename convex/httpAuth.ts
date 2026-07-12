@@ -6,7 +6,11 @@ import { jsonResponse, errorResponse } from "./_utils/httpHelpers";
 // ── Auth middleware (V8 compatible) ──────────────────────────────────────
 export async function requireAuth(ctx: any, req: Request) {
   const authHeader = req.headers.get("authorization") || "";
-  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  let token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  if (!token) {
+    const url = new URL(req.url);
+    token = url.searchParams.get("token");
+  }
   if (!token) throw { status: 401, message: "No token provided" };
   const decoded = await verifyToken(token);
   if (!decoded) throw { status: 401, message: "Invalid or expired token" };
