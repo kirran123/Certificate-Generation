@@ -673,7 +673,7 @@ export default function AdminDashboard() {
                           </div>
                         </div>
                         <div className="flex items-center justify-between text-[8px] font-black uppercase tracking-widest opacity-40 border-t border-[var(--border-subtle)] pt-3">
-                          <div className="flex items-center gap-1"><Clock className="w-2.5 h-2.5" /> {new Date(auto.lastChecked).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                          <div className="flex items-center gap-1"><Clock className="w-2.5 h-2.5" /> {auto.lastChecked ? new Date(auto.lastChecked).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Never'}</div>
                           <div className="flex items-center gap-2">
                             <button onClick={() => handleToggleAutomation(auto._id, auto.active)} className="hover:text-indigo-400 transition-colors">
                               {auto.active ? <PauseCircle className="w-3 h-3" /> : <PlayCircle className="w-3 h-3" />}
