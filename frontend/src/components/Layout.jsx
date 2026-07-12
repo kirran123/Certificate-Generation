@@ -13,7 +13,6 @@ export default function Layout({ children }) {
 
   const menu = [
     { name: 'Dashboard', path: '/', icon: <LayoutDashboard className="w-4.5 h-4.5" /> },
-    { name: 'My Dashboard', path: '/dashboard', icon: <Award className="w-4.5 h-4.5" />, requireAdmin: true },
     { name: 'Upload Data', path: '/upload', icon: <FileUp className="w-4.5 h-4.5" /> },
     { name: 'Editor', path: '/designer', icon: <PenTool className="w-4.5 h-4.5" /> },
     { name: 'Verify', path: '/verify-portal', icon: <Search className="w-4.5 h-4.5" /> },
