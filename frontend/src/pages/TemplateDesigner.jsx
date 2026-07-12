@@ -161,7 +161,7 @@ export default function TemplateDesigner() {
   useEffect(() => {
     if (autoSuccess) {
       const timer = setTimeout(() => {
-        navigate('/dashboard');
+        navigate('/');
       }, 2000);
       return () => clearTimeout(timer);
     }
