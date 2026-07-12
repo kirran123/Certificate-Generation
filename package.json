@@ -1,0 +1,26 @@
+{
+  "name": "digicertify-convex",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "convex dev",
+    "deploy": "convex deploy"
+  },
+  "dependencies": {
+    "convex": "^1.16.0",
+    "bcryptjs": "^2.4.3",
+    "jose": "^5.9.6",
+    "pdf-lib": "^1.17.1",
+    "xlsx": "^0.18.5",
+    "axios": "^1.15.0",
+    "qrcode": "^1.5.4",
+    "archiver": "^7.0.1"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/qrcode": "^1.5.5",
+    "@types/archiver": "^6.0.3",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}

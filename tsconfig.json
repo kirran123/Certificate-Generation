@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "paths": {
+      "convex/_generated/api": ["./convex/_generated/api.d.ts"],
+      "convex/_generated/server": ["./convex/_generated/server.d.ts"],
+      "convex/_generated/dataModel": ["./convex/_generated/dataModel.d.ts"]
+    }
+  },
+  "include": ["convex"],
+  "exclude": ["node_modules"]
+}
