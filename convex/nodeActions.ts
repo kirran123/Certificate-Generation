@@ -28,16 +28,32 @@ export const parseExcel = internalAction({
 export const parseGoogleSheet = internalAction({
   args: { sheetUrl: v.string() },
   handler: async (_ctx, { sheetUrl }) => {
-    const idMatch = sheetUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
-    if (!idMatch) throw new Error("Invalid Google Sheets URL.");
-    const docId = idMatch[1];
+    let docId = "";
+    let isWebPublished = false;
+
+    const webPubMatch = sheetUrl.match(/\/d\/e\/([a-zA-Z0-9-_]+)/);
+    const standardMatch = sheetUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
+
+    if (webPubMatch) {
+      docId = webPubMatch[1];
+      isWebPublished = true;
+    } else if (standardMatch) {
+      docId = standardMatch[1];
+    } else if (/^[a-zA-Z0-9-_]{20,}$/.test(sheetUrl.trim())) {
+      docId = sheetUrl.trim();
+    } else {
+      throw new Error("Invalid Google Sheets URL.");
+    }
+
     const gidMatch = sheetUrl.match(/[#&?]gid=([0-9]+)/);
     const preferredGid = gidMatch ? gidMatch[1] : null;
     const gidsToTry = [...new Set(preferredGid ? [preferredGid, "0", "1", "2"] : ["0", "1", "2"])];
 
     for (const gid of gidsToTry) {
       try {
-        const exportUrl = `https://docs.google.com/spreadsheets/d/${docId}/export?format=csv&gid=${gid}`;
+        const exportUrl = isWebPublished
+          ? `https://docs.google.com/spreadsheets/d/e/${docId}/pub?output=csv`
+          : `https://docs.google.com/spreadsheets/d/${docId}/export?format=csv&gid=${gid}`;
         const response = await axios.get(exportUrl, { responseType: "arraybuffer", timeout: 15000, headers: { "User-Agent": "Mozilla/5.0" } });
         const text = Buffer.from(response.data).toString("utf8", 0, 200);
         if (text.includes("<html") && (text.includes("accounts.google.com") || text.includes("ServiceLogin"))) {
