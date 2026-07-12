@@ -32,6 +32,12 @@ async function getTemplateBytesBase64(ctx: any, template: any): Promise<string> 
       return btoa(binary);
     }
   }
+  const partition = await ctx.db
+    .query("templateImages")
+    .withIndex("by_templateId", (q) => q.eq("templateId", template._id))
+    .first();
+  if (partition?.imageBase64) return partition.imageBase64;
+
   if (template.imageBase64) return template.imageBase64;
   if (template.imageUrl?.startsWith("http")) {
     const resp = await fetch(template.imageUrl);
