@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
-import { Award, Search, FileUp, PenTool, Mail, CheckCircle, BarChart2, List, Calendar, ChevronDown, ChevronUp, Loader2, X, ArrowRight, Package, Inbox, Zap, RefreshCw, Clock, Trash2, PauseCircle, PlayCircle } from 'lucide-react';
+import { Award, Search, FileUp, PenTool, Mail, CheckCircle, BarChart2, List, Calendar, ChevronDown, ChevronUp, Loader2, X, ArrowRight, Package, Inbox, Zap, RefreshCw, Clock, Trash2, PauseCircle, PlayCircle, XCircle } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { API_BASE } from '../apiConfig';
 
@@ -185,16 +185,25 @@ export default function UserDashboard() {
   ];
 
   const totalSent = generatedCerts.filter(c => c.status === 'Sent').length;
+  const totalPending = generatedCerts.filter(c => c.status === 'Pending').length;
+  const totalFailed = generatedCerts.filter(c => c.status === 'Failed').length;
 
   // ── Stat cards ──────────────────────────────────────────────────────────────
   const stats = [
     { label: 'Certificates Received', value: receivedCerts.length, icon: <Award className="w-5 h-5" />, color: 'indigo' },
     { label: 'Batches Created', value: Object.keys(groupedBatches).length || generatedCerts.length > 0 ? Object.keys(groupedBatches).length : 0, icon: <Package className="w-5 h-5" />, color: 'violet' },
     { label: 'Emails Delivered', value: totalSent, icon: <Mail className="w-5 h-5" />, color: 'emerald' },
-    { label: 'Pending', value: generatedCerts.filter(c => c.status !== 'Sent').length, icon: <Loader2 className="w-5 h-5" />, color: 'amber' },
+    { label: 'Pending', value: totalPending, icon: <Loader2 className="w-5 h-5 animate-spin" />, color: 'amber' },
+    { label: 'Failed Delivery', value: totalFailed, icon: <XCircle className="w-5 h-5" />, color: 'red' },
   ];
 
-  const colorMap = { indigo: 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20', violet: 'bg-violet-500/10 text-violet-500 border-violet-500/20', emerald: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20', amber: 'bg-amber-500/10 text-amber-500 border-amber-500/20' };
+  const colorMap = { 
+    indigo: 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20', 
+    violet: 'bg-violet-500/10 text-violet-500 border-violet-500/20', 
+    emerald: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20', 
+    amber: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
+    red: 'bg-red-500/10 text-red-500 border-red-500/20'
+  };
 
   return (
     <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-8">
@@ -230,7 +239,7 @@ export default function UserDashboard() {
       </div>
 
       {/* ── Stat Cards ─────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {stats.map((s, i) => (
           <div key={i} className="glass rounded-2xl p-5 flex items-center gap-4">
             <div className={`p-3 rounded-xl border ${colorMap[s.color]}`}>{s.icon}</div>
@@ -350,7 +359,8 @@ export default function UserDashboard() {
                     const matchSearch = !s || c.name?.toLowerCase().includes(s) || c.email?.toLowerCase().includes(s) || c.certificateId?.toLowerCase().includes(s);
                     let matchStatus = true;
                     if (localStatusFilter === 'sent') matchStatus = c.status === 'Sent';
-                    else if (localStatusFilter === 'ready') matchStatus = c.status !== 'Sent';
+                    else if (localStatusFilter === 'ready') matchStatus = c.status === 'Pending';
+                    else if (localStatusFilter === 'failed') matchStatus = c.status === 'Failed';
                     return matchSearch && matchStatus;
                   }).sort((a, b) => localSortOrder === 'asc' ? (a.name || '').localeCompare(b.name || '') : (b.name || '').localeCompare(a.name || ''));
 
@@ -391,10 +401,10 @@ export default function UserDashboard() {
                                 className="w-full pl-9 pr-4 py-2 text-sm rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-indigo-500" />
                             </div>
                             <div className="flex items-center gap-1 bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-xl p-1">
-                              {['all', 'ready', 'sent'].map(s => (
+                              {['all', 'ready', 'sent', 'failed'].map(s => (
                                 <button key={s} onClick={e => { e.stopPropagation(); setLocalStatusFilter(s); }}
                                   className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${localStatusFilter === s ? 'bg-indigo-600 text-white' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}>
-                                  {s === 'ready' ? 'Pending' : s.charAt(0).toUpperCase() + s.slice(1)}
+                                  {s === 'ready' ? 'Pending' : s === 'failed' ? 'Failed' : s.charAt(0).toUpperCase() + s.slice(1)}
                                 </button>
                               ))}
                             </div>
@@ -417,6 +427,7 @@ export default function UserDashboard() {
                                     <td className="px-6 py-4 text-xs text-[var(--text-secondary)] font-medium">{fmt(cert.createdAt || cert._creationTime)}</td>
                                     <td className="px-6 py-4">
                                       {cert.status === 'Sent' ? <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 text-xs font-semibold rounded-full"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />Delivered</span>
+                                        : cert.status === 'Failed' ? <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-500/10 text-red-600 border border-red-500/20 text-xs font-semibold rounded-full"><div className="w-1.5 h-1.5 rounded-full bg-red-500" />Failed</span>
                                         : cert.email ? <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-500/10 text-indigo-600 border border-indigo-500/20 text-xs font-semibold rounded-full"><div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />Ready</span>
                                           : <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 text-amber-600 border border-amber-500/20 text-xs font-semibold rounded-full"><div className="w-1.5 h-1.5 rounded-full bg-amber-500" />No Email</span>}
                                     </td>

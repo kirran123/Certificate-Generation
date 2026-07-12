@@ -567,10 +567,10 @@ export default function AdminDashboard() {
                                   className="w-full pl-9 pr-4 py-2 text-sm rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-indigo-500" />
                               </div>
                               <div className="flex items-center gap-1 bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-xl p-1">
-                                {['all', 'ready', 'sent'].map(s => (
+                                {['all', 'ready', 'sent', 'failed'].map(s => (
                                   <button key={s} onClick={e => { e.stopPropagation(); setLocalStatusFilter(s); }}
                                     className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${localStatusFilter === s ? 'bg-indigo-600 text-white' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}>
-                                    {s === 'ready' ? 'Pending' : s.charAt(0).toUpperCase() + s.slice(1)}
+                                    {s === 'ready' ? 'Pending' : s === 'failed' ? 'Failed' : s.charAt(0).toUpperCase() + s.slice(1)}
                                   </button>
                                 ))}
                               </div>
@@ -594,7 +594,8 @@ export default function AdminDashboard() {
                                     const matchSearch = !s || c.name?.toLowerCase().includes(s) || c.email?.toLowerCase().includes(s) || c.certificateId?.toLowerCase().includes(s);
                                     let matchStatus = true;
                                     if (localStatusFilter === 'sent') matchStatus = c.status === 'Sent';
-                                    else if (localStatusFilter === 'ready') matchStatus = c.status !== 'Sent';
+                                    else if (localStatusFilter === 'ready') matchStatus = c.status === 'Pending';
+                                    else if (localStatusFilter === 'failed') matchStatus = c.status === 'Failed';
                                     return matchSearch && matchStatus;
                                   }).sort((a, b) => localSortOrder === 'asc' ? (a.name || '').localeCompare(b.name || '') : (b.name || '').localeCompare(a.name || '')).map(cert => (
                                     <tr key={cert._id} className="hover:bg-[var(--border-subtle)] transition-colors group">
@@ -614,8 +615,8 @@ export default function AdminDashboard() {
                                         {fmt(cert.createdAt || cert._creationTime)}
                                       </td>
                                       <td className="px-6 py-4 align-middle">
-                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full border ${cert.status === 'Sent' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20'}`}>
-                                          <div className={`w-1.5 h-1.5 rounded-full ${cert.status === 'Sent' ? 'bg-emerald-500' : 'bg-indigo-500'}`} />
+                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full border ${cert.status === 'Sent' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : cert.status === 'Failed' ? 'bg-red-500/10 text-red-600 border-red-500/20' : 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20'}`}>
+                                          <div className={`w-1.5 h-1.5 rounded-full ${cert.status === 'Sent' ? 'bg-emerald-500' : cert.status === 'Failed' ? 'bg-red-500' : 'bg-indigo-500'}`} />
                                           {cert.status}
                                         </span>
                                       </td>
