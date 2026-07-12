@@ -639,7 +639,7 @@ export default function AdminDashboard() {
                                           >
                                             <Download className="w-3.5 h-3.5" />
                                           </a>
-                                          <button onClick={() => handleDeleteCertificate(cert.certificateId)} className="p-2 text-red-400 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-all opacity-0 group-hover:opacity-100">
+                                          <button onClick={() => handleDeleteCertificate(cert.certificateId)} className="p-2 text-red-400 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-all">
                                             <Trash2 className="w-3.5 h-3.5" />
                                           </button>
                                         </div>
