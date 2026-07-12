@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "convex dev",
     "deploy": "convex deploy",
-    "build": "npm run build --prefix frontend"
+    "build": "npm install --prefix frontend && npm run build --prefix frontend"
   },
   "dependencies": {
     "convex": "^1.16.0",
