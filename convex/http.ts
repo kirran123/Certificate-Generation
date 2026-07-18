@@ -2,6 +2,7 @@
 // NO "use node" directive — this file must run in V8.
 import { httpRouter } from "convex/server";
 import { httpAction } from "./_generated/server";
+import { internal } from "./_generated/api";
 
 // Auth
 import { signupHandler, loginHandler, meHandler } from "./httpAuth";
@@ -140,6 +141,39 @@ http.route({ path: "/api/user-feedback/test",         method: "GET",    handler:
 http.route({ path: "/api/user-feedback",              method: "POST",   handler: withCors(submitFeedbackHandler) });
 http.route({ path: "/api/user-feedback/admin",        method: "GET",    handler: withCors(getFeedbackHandler) });
 http.route({ pathPrefix: "/api/user-feedback/admin/", method: "DELETE", handler: withCors(deleteFeedbackHandler) });
+
+// ── Temporary public cleanup endpoint ─────────────────────────────────────
+http.route({
+  path: "/api/cleanup-db-public",
+  method: "GET",
+  handler: withCors(httpAction(async (ctx, req) => {
+    try {
+      let cursor = undefined;
+      let isDone = false;
+      let totalUpdated = 0;
+
+      while (!isDone) {
+        const res: any = await ctx.runMutation(internal.migrations.splitBatch, {
+          cursor,
+          limit: 10,
+        });
+        cursor = res.continueCursor;
+        isDone = res.isDone;
+        totalUpdated += res.updated;
+      }
+
+      return new Response(JSON.stringify({ success: true, message: `Successfully cleaned up ${totalUpdated} templates` }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" }
+      });
+    } catch (err: any) {
+      return new Response(JSON.stringify({ success: false, error: err.message }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+  }))
+});
 
 // ── CORS preflight ────────────────────────────────────────────────────────
 http.route({

@@ -29,10 +29,10 @@ async function getTemplateBytesBase64(ctx: any, template: any): Promise<string> 
       return btoa(binary);
     }
   }
-  const fullTemplate = await ctx.runQuery(internal.templates.findById, { id: template._id });
-  if (fullTemplate?.imageBase64) return fullTemplate.imageBase64;
-
   if (template.imageBase64) return template.imageBase64;
+  const dbImage = await ctx.runQuery(internal.templates.getTemplateImage, { templateId: template._id });
+  if (dbImage) return dbImage;
+
   if (template.imageUrl?.startsWith("http")) {
     const resp = await fetch(template.imageUrl);
     if (resp.ok) {
@@ -65,27 +65,50 @@ export const pollAll = internalAction({
 
         if (!rows || !rows.length) continue;
 
-        const templateBase64 = await getTemplateBytesBase64(ctx, template);
-        let newlyGenerated = 0;
-
         const now = new Date();
         const runTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
         const pollBatchId = `${auto.batchId} [Run ${runTime}]`;
 
-        for (const row of rows) {
+        const rowsToProcess: { row: any; uniqueHash: string; name: string; email: string }[] = [];
+        for (const row of (rows as any[])) {
           const name = String(row[auto.nameColumn] || "").trim();
           const email = String(row[auto.emailColumn] || "").trim().toLowerCase();
           if (!name || !email) continue;
 
           const uniqueHash = await calculateUniqueHash(template._id, name, email, auto.batchId);
-          const existing = await ctx.runQuery(internal.certificates.findByHash, { uniqueHash });
-          if (existing) continue;
+          rowsToProcess.push({ row, uniqueHash, name, email });
+        }
 
-          let certId = generateCertId();
-          while (await ctx.runQuery(internal.certificates.findByCertId, { certificateId: certId })) {
-            certId = generateCertId();
+        if (!rowsToProcess.length) continue;
+
+        const allHashes = rowsToProcess.map(r => r.uniqueHash);
+        const existingHashesList = await ctx.runQuery(internal.certificates.checkHashesExist, { hashes: allHashes });
+        const existingHashesSet = new Set(existingHashesList);
+
+        const candidateCerts: { row: any; uniqueHash: string; name: string; email: string; certId: string }[] = [];
+        for (const { row, uniqueHash, name, email } of rowsToProcess) {
+          if (existingHashesSet.has(uniqueHash)) continue;
+          candidateCerts.push({ row, uniqueHash, name, email, certId: generateCertId() });
+        }
+
+        if (!candidateCerts.length) continue;
+
+        const certIdsToCheck = candidateCerts.map(c => c.certId);
+        const existingCertIds = await ctx.runQuery(internal.certificates.checkCertIdsExist, { certIds: certIdsToCheck });
+        const existingCertIdsSet = new Set(existingCertIds);
+
+        for (const certItem of candidateCerts) {
+          while (existingCertIdsSet.has(certItem.certId)) {
+            certItem.certId = generateCertId();
+            const stillExists = await ctx.runQuery(internal.certificates.findByCertId, { certificateId: certItem.certId });
+            if (!stillExists) break;
           }
+        }
 
+        const templateBase64 = await getTemplateBytesBase64(ctx, template);
+        let newlyGenerated = 0;
+
+        for (const { row, uniqueHash, name, email, certId } of candidateCerts) {
           const itemData = { ...row, name, email, certificateId: certId };
 
           let pdfBase64: string;

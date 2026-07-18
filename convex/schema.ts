@@ -40,7 +40,8 @@ export default defineSchema({
     .index("by_batchId", ["batchId"])
     .index("by_createdBy", ["createdBy"])
     .index("by_uniqueHash", ["uniqueHash"])
-    .index("by_isArchived", ["isArchived"]),
+    .index("by_isArchived", ["isArchived"])
+    .index("by_email", ["email"]),
 
   emailLogs: defineTable({
     certificateId: v.string(),

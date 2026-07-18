@@ -28,7 +28,7 @@ export async function requireAuth(ctx: any, req: Request) {
 // ── Handlers ──────────────────────────────────────────────────────────────
 export const signupHandler = httpAction(async (ctx, req) => {
   try {
-    const { name, email, password } = await req.json();
+    const { name, email, password } = (await req.json()) as any;
     if (!name || !email || !password) return errorResponse("All fields required", 400);
     const existing = await ctx.runQuery(internal.users.findByEmail, { email });
     if (existing) return errorResponse("User already exists", 400);
@@ -47,7 +47,7 @@ export const signupHandler = httpAction(async (ctx, req) => {
 
 export const loginHandler = httpAction(async (ctx, req) => {
   try {
-    const { email, password } = await req.json();
+    const { email, password } = (await req.json()) as any;
     const user = await ctx.runQuery(internal.users.findByEmail, { email });
     if (!user) return errorResponse("Invalid email or password", 401);
     const ok = await comparePassword(password, user.passwordHash);

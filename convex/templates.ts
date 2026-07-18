@@ -14,6 +14,25 @@ export const findById = internalQuery({
   },
 });
 
+export const findMetadataById = internalQuery({
+  args: { id: v.id("templates") },
+  handler: async (ctx, { id }) => {
+    return ctx.db.get(id);
+  },
+});
+
+export const getTemplateImage = internalQuery({
+  args: { templateId: v.id("templates") },
+  handler: async (ctx, { templateId }) => {
+    const img = await ctx.db
+      .query("templateImages")
+      .withIndex("by_templateId", (q) => q.eq("templateId", templateId))
+      .first();
+    return img?.imageBase64 || null;
+  },
+});
+
+
 export const create = internalMutation({
   args: {
     name: v.string(),

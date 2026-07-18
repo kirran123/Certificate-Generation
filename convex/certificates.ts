@@ -1,6 +1,6 @@
 import { internalMutation, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
-import { Id } from "./_generated/dataModel";
+import { Doc, Id } from "./_generated/dataModel";
 
 export const findByCertId = internalQuery({
   args: { certificateId: v.string() },
@@ -14,6 +14,40 @@ export const findByHash = internalQuery({
     ctx.db.query("certificates").withIndex("by_uniqueHash", (q) => q.eq("uniqueHash", uniqueHash)).first(),
 });
 
+export const checkHashesExist = internalQuery({
+  args: { hashes: v.array(v.string()) },
+  handler: async (ctx, { hashes }) => {
+    const existing = [];
+    for (const hash of hashes) {
+      const found = await ctx.db
+        .query("certificates")
+        .withIndex("by_uniqueHash", (q) => q.eq("uniqueHash", hash))
+        .first();
+      if (found) {
+        existing.push(hash);
+      }
+    }
+    return existing;
+  },
+});
+
+export const checkCertIdsExist = internalQuery({
+  args: { certIds: v.array(v.string()) },
+  handler: async (ctx, { certIds }) => {
+    const existing = [];
+    for (const certId of certIds) {
+      const found = await ctx.db
+        .query("certificates")
+        .withIndex("by_certificateId", (q) => q.eq("certificateId", certId))
+        .unique();
+      if (found) {
+        existing.push(certId);
+      }
+    }
+    return existing;
+  },
+});
+
 export const listForUser = internalQuery({
   args: { userId: v.id("users") },
   handler: async (ctx, { userId }) => {
@@ -24,9 +58,35 @@ export const listForUser = internalQuery({
       .collect();
     // Sort descending by creation time
     certs.sort((a, b) => b._creationTime - a._creationTime);
+
+    const templateCache = new Map<string, Promise<any>>();
+    const creatorCache = new Map<string, Promise<any>>();
+
     return Promise.all(
       certs.map(async (c) => {
-        const templateDoc = c.templateId ? await ctx.db.get(c.templateId) : null;
+        let templatePromise = null;
+        if (c.templateId) {
+          const tIdStr = c.templateId.toString();
+          if (!templateCache.has(tIdStr)) {
+            templateCache.set(tIdStr, ctx.db.get(c.templateId));
+          }
+          templatePromise = templateCache.get(tIdStr);
+        }
+
+        let creatorPromise = null;
+        if (c.createdBy) {
+          const uIdStr = c.createdBy.toString();
+          if (!creatorCache.has(uIdStr)) {
+            creatorCache.set(uIdStr, ctx.db.get(c.createdBy));
+          }
+          creatorPromise = creatorCache.get(uIdStr);
+        }
+
+        const [templateDoc, creator] = await Promise.all([
+          templatePromise || Promise.resolve(null),
+          creatorPromise || Promise.resolve(null),
+        ]);
+
         const template = templateDoc
           ? {
               _id: templateDoc._id,
@@ -36,7 +96,7 @@ export const listForUser = internalQuery({
               imageStorageId: templateDoc.imageStorageId,
             }
           : null;
-        const creator = c.createdBy ? await ctx.db.get(c.createdBy) : null;
+
         return { ...c, templateId: template, createdBy: creator };
       })
     );
@@ -48,13 +108,39 @@ export const listAll = internalQuery({
   handler: async (ctx) => {
     const certs = await ctx.db
       .query("certificates")
-      .filter((q) => q.neq(q.field("isArchived"), true))
+      .withIndex("by_isArchived", (q) => q.eq("isArchived", false))
       .collect();
     // Sort descending by creation time
     certs.sort((a, b) => b._creationTime - a._creationTime);
+
+    const templateCache = new Map<string, Promise<any>>();
+    const creatorCache = new Map<string, Promise<any>>();
+
     return Promise.all(
       certs.map(async (c) => {
-        const templateDoc = c.templateId ? await ctx.db.get(c.templateId) : null;
+        let templatePromise = null;
+        if (c.templateId) {
+          const tIdStr = c.templateId.toString();
+          if (!templateCache.has(tIdStr)) {
+            templateCache.set(tIdStr, ctx.db.get(c.templateId));
+          }
+          templatePromise = templateCache.get(tIdStr);
+        }
+
+        let creatorPromise = null;
+        if (c.createdBy) {
+          const uIdStr = c.createdBy.toString();
+          if (!creatorCache.has(uIdStr)) {
+            creatorCache.set(uIdStr, ctx.db.get(c.createdBy));
+          }
+          creatorPromise = creatorCache.get(uIdStr);
+        }
+
+        const [templateDoc, creator] = await Promise.all([
+          templatePromise || Promise.resolve(null),
+          creatorPromise || Promise.resolve(null),
+        ]);
+
         const template = templateDoc
           ? {
               _id: templateDoc._id,
@@ -64,7 +150,7 @@ export const listAll = internalQuery({
               imageStorageId: templateDoc.imageStorageId,
             }
           : null;
-        const creator = c.createdBy ? await ctx.db.get(c.createdBy) : null;
+
         return { ...c, templateId: template, createdBy: creator };
       })
     );
@@ -74,24 +160,57 @@ export const listAll = internalQuery({
 export const listMyCertificates = internalQuery({
   args: { userId: v.id("users"), email: v.string() },
   handler: async (ctx, { userId, email }) => {
-    const certs = await ctx.db
+    const certsCreatedBy = await ctx.db
       .query("certificates")
+      .withIndex("by_createdBy", (q) => q.eq("createdBy", userId))
       .filter((q) => q.neq(q.field("isArchived"), true))
       .collect();
 
     const emailLower = email.toLowerCase();
-    const filtered = certs.filter(
-      (c) =>
-        c.createdBy === userId ||
-        (c.email && c.email.toLowerCase() === emailLower)
-    );
+    const certsEmail = await ctx.db
+      .query("certificates")
+      .withIndex("by_email", (q) => q.eq("email", emailLower))
+      .filter((q) => q.neq(q.field("isArchived"), true))
+      .collect();
 
-    // Sort descending by creation time
+    const mergedMap = new Map<string, Doc<"certificates">>();
+    for (const c of certsCreatedBy) {
+      mergedMap.set(c._id, c);
+    }
+    for (const c of certsEmail) {
+      mergedMap.set(c._id, c);
+    }
+    const filtered = Array.from(mergedMap.values());
     filtered.sort((a, b) => b._creationTime - a._creationTime);
+
+    const templateCache = new Map<string, Promise<any>>();
+    const creatorCache = new Map<string, Promise<any>>();
 
     return Promise.all(
       filtered.map(async (c) => {
-        const templateDoc = c.templateId ? await ctx.db.get(c.templateId) : null;
+        let templatePromise = null;
+        if (c.templateId) {
+          const tIdStr = c.templateId.toString();
+          if (!templateCache.has(tIdStr)) {
+            templateCache.set(tIdStr, ctx.db.get(c.templateId));
+          }
+          templatePromise = templateCache.get(tIdStr);
+        }
+
+        let creatorPromise = null;
+        if (c.createdBy) {
+          const uIdStr = c.createdBy.toString();
+          if (!creatorCache.has(uIdStr)) {
+            creatorCache.set(uIdStr, ctx.db.get(c.createdBy));
+          }
+          creatorPromise = creatorCache.get(uIdStr);
+        }
+
+        const [templateDoc, creator] = await Promise.all([
+          templatePromise || Promise.resolve(null),
+          creatorPromise || Promise.resolve(null),
+        ]);
+
         const template = templateDoc
           ? {
               _id: templateDoc._id,
@@ -101,7 +220,7 @@ export const listMyCertificates = internalQuery({
               imageStorageId: templateDoc.imageStorageId,
             }
           : null;
-        const creator = c.createdBy ? await ctx.db.get(c.createdBy) : null;
+
         return { ...c, templateId: template, createdBy: creator };
       })
     );
@@ -119,10 +238,14 @@ export const create = internalMutation({
     createdBy: v.id("users"),
     batchId: v.optional(v.string()),
     isAutomation: v.optional(v.boolean()),
+    isArchived: v.optional(v.boolean()),
     uniqueHash: v.optional(v.string()),
     metadata: v.optional(v.any()),
   },
-  handler: async (ctx, args) => ctx.db.insert("certificates", args),
+  handler: async (ctx, args) => ctx.db.insert("certificates", {
+    ...args,
+    isArchived: args.isArchived ?? false,
+  }),
 });
 
 export const updateStatus = internalMutation({
@@ -167,10 +290,13 @@ export const findConvexId = internalQuery({
 export const countByBatchAndStatus = internalQuery({
   args: { batchIdPrefix: v.string() },
   handler: async (ctx, { batchIdPrefix }) => {
-    const all = await ctx.db.query("certificates").collect();
-    return all.filter(
-      (c) => c.batchId?.startsWith(batchIdPrefix) && c.status === "Sent"
-    ).length;
+    const certs = await ctx.db
+      .query("certificates")
+      .withIndex("by_batchId", (q) =>
+        q.gte("batchId", batchIdPrefix).lte("batchId", batchIdPrefix + "\uffff")
+      )
+      .collect();
+    return certs.filter((c) => c.status === "Sent").length;
   },
 });
 
