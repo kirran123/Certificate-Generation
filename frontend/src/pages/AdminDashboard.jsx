@@ -31,23 +31,65 @@ export default function AdminDashboard() {
   const [automations, setAutomations] = useState([]);
   const [feedbacks, setFeedbacks] = useState([]);
 
-  const fetchData = async () => {
+  const fetchOverviewStats = async (headers) => {
+    try {
+      const res = await axios.get(`${API_BASE}/api/admin/stats`, { headers });
+      setStats({
+        users: res.data.usersCount,
+        certificates: res.data.certificatesCount,
+        sent: res.data.sentCount,
+        failed: res.data.failedCount
+      });
+      setLogs(res.data.recentLogs || []);
+      setFeedbacks(res.data.recentFeedbacks || []);
+    } catch (e) { console.error('Failed to fetch admin stats:', e); }
+  };
+
+  const fetchUsers = async (headers) => {
+    try {
+      const res = await axios.get(`${API_BASE}/api/admin/users`, { headers });
+      setUsers(res.data || []);
+    } catch (e) { console.error('Failed to fetch users:', e); }
+  };
+
+  const fetchCertificates = async (headers) => {
+    try {
+      const [certsRes, autosRes] = await Promise.all([
+        axios.get(`${API_BASE}/api/admin/certificates`, { headers }),
+        axios.get(`${API_BASE}/api/certificate/form-automations`, { headers })
+      ]);
+      setCertificates(certsRes.data || []);
+      setAutomations(autosRes.data || []);
+    } catch (e) { console.error('Failed to fetch certificates:', e); }
+  };
+
+  const fetchEmailLogs = async (headers) => {
+    try {
+      const res = await axios.get(`${API_BASE}/api/admin/emaillogs`, { headers });
+      setLogs(res.data || []);
+    } catch (e) { console.error('Failed to fetch email logs:', e); }
+  };
+
+  const loadTab = async (tab) => {
+    setLoading(true);
     const token = sessionStorage.getItem('token');
     const headers = { Authorization: `Bearer ${token}` };
     try {
-      // Clean up stale snapshots first, then fetch fresh data
-      await axios.delete(`${API_BASE}/api/certificate/form-automations/cleanup`, { headers }).catch(() => { });
-      const [usersRes, certsRes, logsRes, autosRes, fbRes] = await Promise.all([
-        axios.get(`${API_BASE}/api/admin/users`, { headers }),
-        axios.get(`${API_BASE}/api/admin/certificates`, { headers }),
-        axios.get(`${API_BASE}/api/admin/emaillogs`, { headers }),
-        axios.get(`${API_BASE}/api/certificate/form-automations`, { headers }),
-        axios.get(`${API_BASE}/api/user-feedback/admin`, { headers })
-      ]);
-      setStats({ users: usersRes.data.length, certificates: certsRes.data.length, sent: logsRes.data.filter(l => l.status === 'Sent').length, failed: logsRes.data.filter(l => l.status === 'Failed').length });
-      setLogs(logsRes.data); setUsers(usersRes.data); setCertificates(certsRes.data); setAutomations(autosRes.data || []);
-      setFeedbacks(fbRes.data || []);
-    } catch (e) { console.error(e); } finally { setLoading(false); }
+      if (tab === 'certificates') {
+        await axios.delete(`${API_BASE}/api/certificate/form-automations/cleanup`, { headers }).catch(() => { });
+        await fetchCertificates(headers);
+      } else if (tab === 'overview') {
+        await fetchOverviewStats(headers);
+      } else if (tab === 'users') {
+        await fetchUsers(headers);
+      } else if (tab === 'logs') {
+        await fetchEmailLogs(headers);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleToggleAutomation = async (id, active) => {
@@ -56,7 +98,7 @@ export default function AdminDashboard() {
       await axios.patch(`${API_BASE}/api/certificate/form-automation/${id}`, { active: !active }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      fetchData();
+      loadTab('certificates');
     } catch (err) {
       console.error('Failed to toggle automation:', err.message);
     }
@@ -69,7 +111,7 @@ export default function AdminDashboard() {
       await axios.delete(`${API_BASE}/api/certificate/form-automation/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      fetchData();
+      loadTab('certificates');
     } catch (err) {
       console.error('Failed to delete automation:', err.message);
     }
@@ -82,7 +124,7 @@ export default function AdminDashboard() {
       await axios.post(`${API_BASE}/api/certificate/resend-batch/${encodeURIComponent(batchId)}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      fetchData();
+      loadTab('certificates');
     } catch (err) {
       alert('Failed to resend emails: ' + err.message);
     } finally { setLoading(false); }
@@ -96,7 +138,7 @@ export default function AdminDashboard() {
       await axios.post(`${API_BASE}/api/certificate/delete-batch-secure`, { batchId }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      fetchData();
+      loadTab('certificates');
     } catch (err) {
       alert('Failed to delete batch: ' + err.message);
     } finally { setLoading(false); }
@@ -110,7 +152,7 @@ export default function AdminDashboard() {
       await axios.delete(`${API_BASE}/api/certificate/delete-certificate/${encodeURIComponent(certId)}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      fetchData();
+      loadTab('certificates');
     } catch (err) {
       alert('Failed to delete certificate: ' + (err.response?.data?.message || err.message));
     } finally { setLoading(false); }
@@ -124,13 +166,13 @@ export default function AdminDashboard() {
       await axios.delete(`${API_BASE}/api/admin/users/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      fetchData();
+      loadTab('users');
     } catch (err) {
       alert('Failed to delete user: ' + (err.response?.data?.message || err.message));
     } finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { loadTab(activeTab); }, [activeTab]);
 
 
 

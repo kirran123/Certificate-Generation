@@ -23,50 +23,40 @@ export default function UserDashboard() {
   const [sortBy, setSortBy] = useState('newest');
   const [statusFilter, setStatusFilter] = useState('all');
   const [automations, setAutomations] = useState([]);
+  const [statsData, setStatsData] = useState({ receivedCount: 0, batchesCount: 0, sentCount: 0, failedCount: 0, pendingCount: 0 });
 
-  const fetchData = async () => {
+  const fetchStats = async (headers) => {
+    try {
+      const res = await axios.get(`${API_BASE}/api/user/stats`, { headers });
+      setStatsData(res.data);
+    } catch (err) {
+      console.error('Failed to fetch user stats:', err.message);
+    }
+  };
+
+  const loadTab = async (tab) => {
+    setLoading(true);
     const token = sessionStorage.getItem('token');
     const headers = { Authorization: `Bearer ${token}` };
-    setLoading(true);
-
-    // Separate fetchers for better resilience
-    const fetchReceived = async () => {
-      try {
+    try {
+      await fetchStats(headers);
+      if (tab === 'received') {
         const res = await axios.get(`${API_BASE}/api/user/my-certificates`, { headers });
-        setReceivedCerts(res.data);
-      } catch (err) {
-        console.error('Failed to fetch received certificates:', err.message);
+        setReceivedCerts(res.data || []);
+      } else if (tab === 'managed') {
+        await axios.delete(`${API_BASE}/api/certificate/form-automations/cleanup`, { headers }).catch(() => { });
+        const [genRes, autoRes] = await Promise.all([
+          axios.get(`${API_BASE}/api/certificate/my-generations`, { headers }),
+          axios.get(`${API_BASE}/api/certificate/form-automations`, { headers })
+        ]);
+        setGeneratedCerts(genRes.data || []);
+        setAutomations(autoRes.data || []);
       }
-    };
-
-    const fetchGenerated = async () => {
-      try {
-        const res = await axios.get(`${API_BASE}/api/certificate/my-generations`, { headers });
-        console.log(`Fetched ${res.data?.length} generated certificates`);
-        setGeneratedCerts(res.data);
-      } catch (err) {
-        console.error('Failed to fetch generated certificates:', err.message);
-      }
-    };
-
-    const fetchAutomations = async () => {
-      try {
-        const res = await axios.get(`${API_BASE}/api/certificate/form-automations`, { headers });
-        setAutomations(res.data || []);
-      } catch (err) {
-        console.warn('Failed to fetch automations:', err.message);
-      }
-    };
-
-    await Promise.allSettled([
-      fetchReceived(),
-      fetchGenerated(),
-      fetchAutomations(),
-      // Silently clean up stale snapshot records from old logic
-      axios.delete(`${API_BASE}/api/certificate/form-automations/cleanup`, { headers }).catch(() => { })
-    ]);
-
-    setLoading(false);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleToggleAutomation = async (id, active) => {
@@ -75,7 +65,7 @@ export default function UserDashboard() {
       await axios.patch(`${API_BASE}/api/certificate/form-automation/${id}`, { active: !active }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      fetchData();
+      loadTab('managed');
     } catch (err) {
       console.error('Failed to toggle automation:', err.message);
     }
@@ -88,7 +78,7 @@ export default function UserDashboard() {
       await axios.delete(`${API_BASE}/api/certificate/form-automation/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      fetchData();
+      loadTab('managed');
     } catch (err) {
       console.error('Failed to delete automation:', err.message);
     }
@@ -101,7 +91,7 @@ export default function UserDashboard() {
       await axios.post(`${API_BASE}/api/certificate/resend-batch/${encodeURIComponent(batchId)}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      fetchData();
+      loadTab('managed');
     } catch (err) {
       alert('Failed to resend emails: ' + err.message);
     } finally { setLoading(false); }
@@ -115,7 +105,7 @@ export default function UserDashboard() {
       await axios.post(`${API_BASE}/api/certificate/delete-batch-secure`, { batchId }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      fetchData();
+      loadTab('managed');
     } catch (err) {
       alert('Failed to delete batch: ' + err.message);
     } finally { setLoading(false); }
@@ -129,16 +119,15 @@ export default function UserDashboard() {
       await axios.delete(`${API_BASE}/api/certificate/delete-certificate/${encodeURIComponent(certId)}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      fetchData();
+      loadTab('managed');
     } catch (err) {
       alert('Failed to delete certificate: ' + (err.response?.data?.message || err.message));
     } finally { setLoading(false); }
   };
 
-
   useEffect(() => {
-    fetchData();
-  }, []);
+    loadTab(activeTab);
+  }, [activeTab]);
 
 
 
@@ -184,17 +173,13 @@ export default function UserDashboard() {
     { id: 'managed', label: 'Sent Batches', icon: <Package className="w-4 h-4" /> },
   ];
 
-  const totalSent = generatedCerts.filter(c => c.status === 'Sent').length;
-  const totalPending = generatedCerts.filter(c => c.status === 'Pending').length;
-  const totalFailed = generatedCerts.filter(c => c.status === 'Failed').length;
-
   // ── Stat cards ──────────────────────────────────────────────────────────────
   const stats = [
-    { label: 'Certificates Received', value: receivedCerts.length, icon: <Award className="w-5 h-5" />, color: 'indigo' },
-    { label: 'Batches Created', value: Object.keys(groupedBatches).length || generatedCerts.length > 0 ? Object.keys(groupedBatches).length : 0, icon: <Package className="w-5 h-5" />, color: 'violet' },
-    { label: 'Emails Delivered', value: totalSent, icon: <Mail className="w-5 h-5" />, color: 'emerald' },
-    { label: 'Pending', value: totalPending, icon: <Loader2 className="w-5 h-5 animate-spin" />, color: 'amber' },
-    { label: 'Failed Delivery', value: totalFailed, icon: <XCircle className="w-5 h-5" />, color: 'red' },
+    { label: 'Certificates Received', value: statsData.receivedCount, icon: <Award className="w-5 h-5" />, color: 'indigo' },
+    { label: 'Batches Created', value: statsData.batchesCount, icon: <Package className="w-5 h-5" />, color: 'violet' },
+    { label: 'Emails Delivered', value: statsData.sentCount, icon: <Mail className="w-5 h-5" />, color: 'emerald' },
+    { label: 'Pending', value: statsData.pendingCount, icon: <Loader2 className="w-5 h-5 animate-spin" />, color: 'amber' },
+    { label: 'Failed Delivery', value: statsData.failedCount, icon: <XCircle className="w-5 h-5" />, color: 'red' },
   ];
 
   const colorMap = { 

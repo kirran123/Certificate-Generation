@@ -647,6 +647,19 @@ const cleanupAutomations = httpAction(async (ctx, req) => {
   }
 });
 
+const userStatsHandler = httpAction(async (ctx, req) => {
+  try {
+    const user = await requireAuth(ctx, req);
+    const stats = await ctx.runQuery(internal.certificates.countUserStats, {
+      userId: user._id,
+      email: user.email,
+    });
+    return jsonResponse(stats);
+  } catch (e: any) {
+    return errorResponse(e.message, e.status || 500);
+  }
+});
+
 export {
   uploadData,
   uploadSheet,
@@ -666,4 +679,5 @@ export {
   deleteAutomation,
   myCertificatesHandler,
   cleanupAutomations,
+  userStatsHandler,
 };

@@ -81,3 +81,22 @@ export const cleanupDbHandler = httpAction(async (ctx, req) => {
     return errorResponse(e.message, e.status || 500);
   }
 });
+
+export const getAdminStatsHandler = httpAction(async (ctx, req) => {
+  try {
+    const user = await requireAuth(ctx, req);
+    if (user.role !== "admin") return errorResponse("Forbidden", 403);
+    
+    const certStats = await ctx.runQuery(internal.certificates.getStats, {});
+    const logs = await ctx.runQuery(internal.emailLogs.listAll, {});
+    const recentLogs = logs.slice(0, 20);
+    const feedbacks = await ctx.runQuery(internal.feedback.listAll, {});
+    const recentFeedbacks = feedbacks.slice(0, 8);
+
+    return jsonResponse({
+      ...certStats,
+      recentLogs,
+      recentFeedbacks,
+    });
+  } catch (e: any) { return errorResponse(e.message, e.status || 500); }
+});

@@ -15,6 +15,7 @@ import {
   deleteAdminCertificateHandler,
   getEmailLogsHandler,
   cleanupDbHandler,
+  getAdminStatsHandler,
 } from "./httpAdmin";
 
 // Template
@@ -40,6 +41,7 @@ import {
   deleteAutomation,
   myCertificatesHandler,
   cleanupAutomations,
+  userStatsHandler,
 } from "./httpCertificate";
 
 // Verify
@@ -105,6 +107,7 @@ http.route({ path: "/api/admin/certificates",        method: "GET",    handler: 
 http.route({ pathPrefix: "/api/admin/certificates/", method: "DELETE", handler: withCors(deleteAdminCertificateHandler) });
 http.route({ path: "/api/admin/emaillogs",           method: "GET",    handler: withCors(getEmailLogsHandler) });
 http.route({ path: "/api/admin/cleanup-db",          method: "POST",   handler: withCors(cleanupDbHandler) });
+http.route({ path: "/api/admin/stats",               method: "GET",    handler: withCors(getAdminStatsHandler) });
 
 // ── Template ──────────────────────────────────────────────────────────────
 http.route({ path: "/api/template/upload-image", method: "POST", handler: withCors(uploadImageHandler) });
@@ -132,6 +135,7 @@ http.route({ path: "/api/certificate/form-automations/cleanup",  method: "DELETE
 
 // ── User Certificates ─────────────────────────────────────────────────────
 http.route({ path: "/api/user/my-certificates", method: "GET", handler: withCors(myCertificatesHandler) });
+http.route({ path: "/api/user/stats",           method: "GET", handler: withCors(userStatsHandler) });
 
 // ── Verify (public) ───────────────────────────────────────────────────────
 http.route({ pathPrefix: "/api/verify/", method: "GET", handler: withCors(verifyCertHandler) });

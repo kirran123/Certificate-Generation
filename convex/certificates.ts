@@ -320,3 +320,72 @@ export const listByBatchId = internalQuery({
   handler: async (ctx, { batchId }) =>
     ctx.db.query("certificates").withIndex("by_batchId", (q) => q.eq("batchId", batchId)).collect(),
 });
+
+export const getStats = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const certs = await ctx.db
+      .query("certificates")
+      .withIndex("by_isArchived", (q) => q.eq("isArchived", false))
+      .collect();
+
+    let sent = 0;
+    let failed = 0;
+    let pending = 0;
+    for (const c of certs) {
+      if (c.status === "Sent") sent++;
+      else if (c.status === "Failed") failed++;
+      else if (c.status === "Pending") pending++;
+    }
+
+    const users = await ctx.db.query("users").collect();
+
+    return {
+      usersCount: users.length,
+      certificatesCount: certs.length,
+      sentCount: sent,
+      failedCount: failed,
+      pendingCount: pending,
+    };
+  },
+});
+
+export const countUserStats = internalQuery({
+  args: { userId: v.id("users"), email: v.string() },
+  handler: async (ctx, { userId, email }) => {
+    const emailLower = email.toLowerCase();
+    const receivedCerts = await ctx.db
+      .query("certificates")
+      .withIndex("by_email", (q) => q.eq("email", emailLower))
+      .filter((q) => q.neq(q.field("isArchived"), true))
+      .collect();
+
+    const generatedCerts = await ctx.db
+      .query("certificates")
+      .withIndex("by_createdBy", (q) => q.eq("createdBy", userId))
+      .filter((q) => q.neq(q.field("isArchived"), true))
+      .collect();
+
+    let sent = 0;
+    let failed = 0;
+    let pending = 0;
+    const uniqueBatches = new Set<string>();
+
+    for (const c of generatedCerts) {
+      if (c.status === "Sent") sent++;
+      else if (c.status === "Failed") failed++;
+      else if (c.status === "Pending") pending++;
+
+      const bid = c.batchId || (c.createdAt || c._creationTime ? `Generated ${new Date(c.createdAt || c._creationTime).toLocaleDateString()}` : "Individual");
+      uniqueBatches.add(bid);
+    }
+
+    return {
+      receivedCount: receivedCerts.length,
+      batchesCount: uniqueBatches.size,
+      sentCount: sent,
+      failedCount: failed,
+      pendingCount: pending,
+    };
+  },
+});
