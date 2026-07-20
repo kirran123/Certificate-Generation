@@ -707,7 +707,7 @@ export default function AdminDashboard() {
                     <h3 className="text-sm font-black text-[var(--text-primary)] uppercase tracking-tight">Active Automations</h3>
                     <p className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-widest opacity-50">Monitoring Google Sheets</p>
                   </div>
-                  <button onClick={fetchData} className="p-2 hover:bg-indigo-500/10 text-indigo-400 rounded-xl transition-all">
+                  <button onClick={() => loadTab(activeTab)} className="p-2 hover:bg-indigo-500/10 text-indigo-400 rounded-xl transition-all">
                     <RefreshCw className="w-3.5 h-3.5" />
                   </button>
                 </div>
