@@ -2,12 +2,37 @@ const express = require('express');
 const User = require('../models/User');
 const Certificate = require('../models/Certificate');
 const EmailLog = require('../models/EmailLog');
+const Feedback = require('../models/Feedback');
 const { protect, admin } = require('../middleware/auth');
 
 const router = express.Router();
 
 // All routes here are protected and admin-only
 router.use(protect, admin);
+
+// Get overview stats
+router.get('/stats', async (req, res) => {
+  try {
+    const usersCount = await User.countDocuments({});
+    const certificatesCount = await Certificate.countDocuments({ isArchived: { $ne: true } });
+    const sentCount = await Certificate.countDocuments({ status: 'Sent', isArchived: { $ne: true } });
+    const failedCount = await Certificate.countDocuments({ status: 'Failed', isArchived: { $ne: true } });
+    
+    const recentLogs = await EmailLog.find({}).sort({ sentAt: -1 }).limit(20);
+    const recentFeedbacks = await Feedback.find({}).sort({ createdAt: -1 }).limit(10);
+
+    res.json({
+      usersCount,
+      certificatesCount,
+      sentCount,
+      failedCount,
+      recentLogs,
+      recentFeedbacks
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
 // Get all users
 router.get('/users', async (req, res) => {
