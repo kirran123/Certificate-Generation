@@ -34,6 +34,7 @@ export default function AdminDashboard() {
   const fetchOverviewStats = async (headers) => {
     try {
       const res = await axios.get(`${API_BASE}/api/admin/stats`, { headers });
+      console.log('Overview Stats Response:', res.data);
       setStats({
         users: res.data.usersCount,
         certificates: res.data.certificatesCount,

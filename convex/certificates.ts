@@ -376,7 +376,7 @@ export const countUserStats = internalQuery({
       else if (c.status === "Failed") failed++;
       else if (c.status === "Pending") pending++;
 
-      const bid = c.batchId || (c.createdAt || c._creationTime ? `Generated ${new Date(c.createdAt || c._creationTime).toLocaleDateString()}` : "Individual");
+      const bid = c.batchId || (c._creationTime ? `Generated ${new Date(c._creationTime).toLocaleDateString()}` : "Individual");
       uniqueBatches.add(bid);
     }
 

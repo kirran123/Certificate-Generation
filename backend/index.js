@@ -6,6 +6,8 @@ dns.setDefaultResultOrder('ipv4first');
 
 const connectDB = require('./config/db');
 const User = require('./models/User');
+const Certificate = require('./models/Certificate');
+const EmailLog = require('./models/EmailLog');
 const { startFormPoller } = require('./jobs/formPoller');
 
 // Load env vars
@@ -87,6 +89,22 @@ const PORT = process.env.PORT || 5000;
 // Connect DB → seed admin → start background jobs → listen
 connectDB().then(async () => {
   await createDefaultAdmin();
+  
+  // Diagnostic counts
+  try {
+    const usersCount = await User.countDocuments({});
+    const certsCount = await Certificate.countDocuments({});
+    const logsCount = await EmailLog.countDocuments({});
+    console.log(`\n==================================================`);
+    console.log(`[Database Diagnosis]`);
+    console.log(`  - Total Users in MongoDB: ${usersCount}`);
+    console.log(`  - Total Certificates in MongoDB: ${certsCount}`);
+    console.log(`  - Total Email Logs in MongoDB: ${logsCount}`);
+    console.log(`==================================================\n`);
+  } catch (err) {
+    console.error('Error fetching diagnostic counts:', err);
+  }
+
   startFormPoller();
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
