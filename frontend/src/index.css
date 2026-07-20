@@ -22,7 +22,7 @@
 }
 
 /* Theme Architect - Explicit Mode Selectors for 100% Stability */
-html[data-theme='dark'], :root:not([data-theme='light']) {
+html[data-theme='dark'] {
   --bg-main: #0f172a;
   --bg-card: rgba(30, 41, 59, 0.7);
   --bg-sidebar: rgba(15, 23, 42, 0.5);
@@ -35,7 +35,7 @@ html[data-theme='dark'], :root:not([data-theme='light']) {
   --shadow-color: rgba(0, 0, 0, 0.5);
 }
 
-html[data-theme='light'] {
+html[data-theme='light'], :root:not([data-theme='dark']) {
   /* Core palette - Maximized visibility */
   --bg-main: #f9fafb; /* Cleaner neutral-grey */
   --bg-card: #ffffff;
