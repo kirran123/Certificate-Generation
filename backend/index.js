@@ -9,6 +9,7 @@ const User = require('./models/User');
 const Certificate = require('./models/Certificate');
 const EmailLog = require('./models/EmailLog');
 const { startFormPoller } = require('./jobs/formPoller');
+const { getBrevoKeysCount } = require('./utils/brevoPool');
 
 // Load env vars
 dotenv.config();
@@ -40,6 +41,11 @@ app.use('/uploads', express.static('uploads', {
     res.set('Access-Control-Allow-Origin', '*');
   }
 }));
+
+// Health route for Render keep-alive (UptimeRobot / Cron pinger)
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', server: 'Render Node.js Heavy IO Backend', time: new Date().toISOString() });
+});
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
@@ -95,11 +101,15 @@ connectDB().then(async () => {
     const usersCount = await User.countDocuments({});
     const certsCount = await Certificate.countDocuments({});
     const logsCount = await EmailLog.countDocuments({});
+    const brevoKeys = getBrevoKeysCount();
     console.log(`\n==================================================`);
     console.log(`[Database Diagnosis]`);
     console.log(`  - Total Users in MongoDB: ${usersCount}`);
     console.log(`  - Total Certificates in MongoDB: ${certsCount}`);
     console.log(`  - Total Email Logs in MongoDB: ${logsCount}`);
+    console.log(`[Brevo Pool]`);
+    console.log(`  - Active Brevo API Keys: ${brevoKeys} key(s) loaded`);
+    console.log(`  - Daily email capacity: ~${brevoKeys * 300} emails/day`);
     console.log(`==================================================\n`);
   } catch (err) {
     console.error('Error fetching diagnostic counts:', err);

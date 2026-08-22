@@ -15,6 +15,7 @@ const Counter = require('../models/Counter');
 const FormAutomation = require('../models/FormAutomation');
 const { protect, admin } = require('../middleware/auth');
 const { createCertificatePDF, calculateUniqueHash, getRelativePath } = require('../utils/pdfGenerator');
+const { sendEmailWithFailover } = require('../utils/brevoPool');
 
 const router = express.Router();
 
@@ -366,62 +367,77 @@ router.post('/generate', protect, async (req, res) => {
   }
 });
 
-// Send bulk emails
+// Send bulk emails with 5-key Brevo Pool silent failover & on-demand PDF fallback
 router.post('/send-bulk', protect, async (req, res) => {
   const { certificateIds, subject, message, senderName, senderEmail } = req.body;
 
-  // Create transporter
-  const brevoApiKey = process.env.BREVO_API_KEY;
-
   try {
-    const certs = await Certificate.find({ certificateId: { $in: certificateIds } });
+    const certs = await Certificate.find({ certificateId: { $in: certificateIds } }).populate('templateId');
 
     let sentCount = 0;
     for (const cert of certs) {
       if (!cert.email) continue;
 
-      const pdfPath = path.join(__dirname, '..', cert.pdfUrl);
-
       try {
-        if (!fs.existsSync(pdfPath)) {
-          throw new Error(`PDF not found on server (likely cleared by a recent app deployment). Please regenerate this certificate batch.`);
+        let pdfBuffer = null;
+        const pdfPath = cert.pdfUrl ? path.join(__dirname, '..', cert.pdfUrl) : null;
+
+        if (pdfPath && fs.existsSync(pdfPath)) {
+          pdfBuffer = fs.readFileSync(pdfPath);
+        } else if (cert.templateId && cert.templateId.imageUrl) {
+          // On-demand PDF generation fallback (solves Render filesystem reset)
+          const itemData = {
+            name: cert.name,
+            email: cert.email,
+            course: cert.course,
+            certificateId: cert.certificateId,
+            ...(cert.metadata ? Object.fromEntries(cert.metadata) : {})
+          };
+          const pdfBytes = await createCertificatePDF(
+            {
+              imageUrl: cert.templateId.imageUrl,
+              layoutConfig: cert.templateId.layoutConfig,
+              qrCode: cert.templateId.qrCode,
+              showId: cert.templateId.showId,
+              showQr: cert.templateId.showQr
+            },
+            itemData,
+            cert.certificateId
+          );
+          pdfBuffer = Buffer.from(pdfBytes);
         }
 
-        const pdfBuffer = fs.readFileSync(pdfPath);
-        const base64Pdf = pdfBuffer.toString('base64');
+        if (!pdfBuffer) {
+          throw new Error(`Could not locate or render PDF for certificate ${cert.certificateId}`);
+        }
 
+        const base64Pdf = pdfBuffer.toString('base64');
         const senderEmailFinal = senderEmail || 'digicertify00@gmail.com';
         const senderNameFinal = senderName || 'DigiCertify';
 
-        const brevoPayload = {
-          sender: { name: senderNameFinal, email: senderEmailFinal },
-          to: [{ email: cert.email }],
-          subject: subject || 'Your Certificate of Achievement',
-          htmlContent: `
-            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-              <h2 style="color: #4f46e5;">Your Certificate is Ready!</h2>
-              <p>Hi ${cert.name},</p>
-              <p>${message || 'Congratulations on your achievement! Please find your official certificate attached to this email.'}</p>
-              <div style="margin: 20px 0; padding: 15px; background: #f9fafb; border-radius: 8px;">
-                <p style="margin: 0; font-size: 12px; color: #6b7280;">Certificate ID:</p>
-                <p style="margin: 0; font-weight: bold; font-family: monospace;">${cert.certificateId}</p>
-              </div>
-              <p style="font-size: 14px; color: #374151;">Best Regards,<br/><strong>${senderNameFinal} Team</strong></p>
+        const htmlContent = `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+            <h2 style="color: #4f46e5;">Your Certificate is Ready!</h2>
+            <p>Hi ${cert.name},</p>
+            <p>${message || 'Congratulations on your achievement! Please find your official certificate attached to this email.'}</p>
+            <div style="margin: 20px 0; padding: 15px; background: #f9fafb; border-radius: 8px;">
+              <p style="margin: 0; font-size: 12px; color: #6b7280;">Certificate ID:</p>
+              <p style="margin: 0; font-weight: bold; font-family: monospace;">${cert.certificateId}</p>
             </div>
-          `,
-          attachment: [
-            {
-              content: base64Pdf,
-              name: `${cert.certificateId}.pdf`
-            }
-          ]
-        };
+            <p style="font-size: 14px; color: #374151;">Best Regards,<br/><strong>${senderNameFinal} Team</strong></p>
+          </div>
+        `;
 
-        const response = await axios.post('https://api.brevo.com/v3/smtp/email', brevoPayload, {
-          headers: {
-            'api-key': brevoApiKey,
-            'Content-Type': 'application/json'
-          }
+        // Send via 5-key Brevo Pool with silent zero-error failover
+        await sendEmailWithFailover({
+          to: cert.email,
+          name: cert.name,
+          subject: subject || 'Your Certificate of Achievement',
+          htmlContent,
+          pdfBase64: base64Pdf,
+          certId: cert.certificateId,
+          senderName: senderNameFinal,
+          senderEmail: senderEmailFinal
         });
 
         cert.status = 'Sent';
@@ -434,6 +450,7 @@ router.post('/send-bulk', protect, async (req, res) => {
         });
         sentCount++;
       } catch (err) {
+        console.error(`[Send-Bulk Error] ${cert.email}:`, err.message);
         cert.status = 'Failed';
         await cert.save();
         await EmailLog.create({
@@ -678,30 +695,50 @@ router.post('/delete-batch-secure', protect, async (req, res) => {
   }
 });
 
-// Resend emails for an entire batch (Retry failed ones or all)
+// Resend emails for an entire batch (Retry failed ones or all) with 5-key Brevo pool & PDF fallback
 router.post('/resend-batch/:batchId', protect, async (req, res) => {
   const { batchId } = req.params;
-  const brevoApiKey = process.env.BREVO_API_KEY;
 
   try {
     const filter = req.user.role === 'admin' ? { batchId } : { batchId, createdBy: req.user._id };
-    const certs = await Certificate.find(filter);
+    const certs = await Certificate.find(filter).populate('templateId');
 
     let sentCount = 0;
     for (const cert of certs) {
       if (!cert.email) continue;
 
-      const pdfPath = path.join(__dirname, '..', cert.pdfUrl);
-      if (!fs.existsSync(pdfPath)) continue;
+      try {
+        let pdfBuffer = null;
+        const pdfPath = cert.pdfUrl ? path.join(__dirname, '..', cert.pdfUrl) : null;
 
-      const pdfBuffer = fs.readFileSync(pdfPath);
-      const base64Pdf = pdfBuffer.toString('base64');
+        if (pdfPath && fs.existsSync(pdfPath)) {
+          pdfBuffer = fs.readFileSync(pdfPath);
+        } else if (cert.templateId && cert.templateId.imageUrl) {
+          const itemData = {
+            name: cert.name,
+            email: cert.email,
+            course: cert.course,
+            certificateId: cert.certificateId,
+            ...(cert.metadata ? Object.fromEntries(cert.metadata) : {})
+          };
+          const pdfBytes = await createCertificatePDF(
+            {
+              imageUrl: cert.templateId.imageUrl,
+              layoutConfig: cert.templateId.layoutConfig,
+              qrCode: cert.templateId.qrCode,
+              showId: cert.templateId.showId,
+              showQr: cert.templateId.showQr
+            },
+            itemData,
+            cert.certificateId
+          );
+          pdfBuffer = Buffer.from(pdfBytes);
+        }
 
-      const brevoPayload = {
-        sender: { name: 'DigiCertify', email: process.env.SMTP_USER || 'digicertify00@gmail.com' },
-        to: [{ email: cert.email }],
-        subject: 'Your Certificate of Achievement',
-        htmlContent: `
+        if (!pdfBuffer) continue;
+
+        const base64Pdf = pdfBuffer.toString('base64');
+        const htmlContent = `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
             <h2 style="color: #4f46e5;">Your Certificate is Ready!</h2>
             <p>Hi ${cert.name},</p>
@@ -711,14 +748,19 @@ router.post('/resend-batch/:batchId', protect, async (req, res) => {
               <p style="margin: 0; font-weight: bold; font-family: monospace;">${cert.certificateId}</p>
             </div>
           </div>
-        `,
-        attachment: [{ content: base64Pdf, name: `${cert.certificateId}.pdf` }]
-      };
+        `;
 
-      try {
-        await axios.post('https://api.brevo.com/v3/smtp/email', brevoPayload, {
-          headers: { 'api-key': brevoApiKey, 'Content-Type': 'application/json' }
+        await sendEmailWithFailover({
+          to: cert.email,
+          name: cert.name,
+          subject: 'Your Certificate of Achievement',
+          htmlContent,
+          pdfBase64: base64Pdf,
+          certId: cert.certificateId,
+          senderName: 'DigiCertify',
+          senderEmail: 'digicertify00@gmail.com'
         });
+
         cert.status = 'Sent';
         await cert.save();
         sentCount++;

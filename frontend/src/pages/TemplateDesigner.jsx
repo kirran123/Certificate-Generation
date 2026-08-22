@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
-import { API_BASE } from "../apiConfig";
+import { API_BASE, IO_API_BASE } from "../apiConfig";
 import { Rnd } from "react-rnd";
 import {
   Save,
@@ -371,11 +371,11 @@ export default function TemplateDesigner() {
 
       // Upgrade to 'blob' response type for maximum stability
       const res = await axios.post(
-        `${API_BASE}/api/certificate/preview`,
+        `${IO_API_BASE}/api/certificate/preview`,
         {
           templateId: localStorage.getItem("lastSavedTemplateId"),
           layoutConfig: { fields, qrCode },
-          imageUrl: imageUrl.replace(API_BASE, ""),
+          imageUrl: imageUrl.replace(API_BASE, "").replace(IO_API_BASE, ""),
           sampleData,
           showId,
           showQr,
@@ -440,7 +440,7 @@ export default function TemplateDesigner() {
 
     try {
       const genRes = await axios.post(
-        `${API_BASE}/api/certificate/generate`,
+        `${IO_API_BASE}/api/certificate/generate`,
         {
           templateId: localStorage.getItem("lastSavedTemplateId"),
           mappings: selection,
@@ -459,8 +459,9 @@ export default function TemplateDesigner() {
 
       if (sendEmail && generatedIds.length > 0) {
         setSaving("sending");
+        // send-bulk uses 5-key Brevo pool with silent zero-error failover
         await axios.post(
-          `${API_BASE}/api/certificate/send-bulk`,
+          `${IO_API_BASE}/api/certificate/send-bulk`,
           {
             certificateIds: generatedIds,
             subject: emailConfig.subject,

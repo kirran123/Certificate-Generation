@@ -5,7 +5,7 @@ import {
   FileSpreadsheet, ArrowRight, Link as LinkIcon, Loader2,
   Zap, CheckCircle2, PauseCircle, Trash2, RefreshCw, Clock
 } from 'lucide-react';
-import { API_BASE } from '../apiConfig';
+import { API_BASE, IO_API_BASE } from '../apiConfig';
 
 export default function UploadData() {
   const navigate = useNavigate();
@@ -33,7 +33,7 @@ export default function UploadData() {
     setLoading(true); setError(''); setSheetWarning('');
     try {
       const token = sessionStorage.getItem('token');
-      const res = await axios.post(`${API_BASE}/api/certificate/upload-sheet`,
+      const res = await axios.post(`${IO_API_BASE}/api/certificate/upload-sheet`,
         { sheetUrl },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -66,7 +66,7 @@ export default function UploadData() {
     formData.append('file', file);
     try {
       const token = sessionStorage.getItem('token');
-      const res = await axios.post(`${API_BASE}/api/certificate/upload-data`, formData, {
+      const res = await axios.post(`${IO_API_BASE}/api/certificate/upload-data`, formData, {
         headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` }
       });
       navigate('/designer', { state: { excelData: res.data.data, excelHeaders: res.data.headers } });

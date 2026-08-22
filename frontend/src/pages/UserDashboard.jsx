@@ -3,7 +3,7 @@ import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 import { Award, Search, FileUp, PenTool, Mail, CheckCircle, BarChart2, List, Calendar, ChevronDown, ChevronUp, Loader2, X, ArrowRight, Package, Inbox, Zap, RefreshCw, Clock, Trash2, PauseCircle, PlayCircle, XCircle, Download } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { API_BASE } from '../apiConfig';
+import { API_BASE, IO_API_BASE } from '../apiConfig';
 
 export default function UserDashboard() {
   const { user } = useContext(AuthContext);
@@ -370,7 +370,7 @@ export default function UserDashboard() {
                         <div className="flex items-center gap-3">
                           <div className="flex items-center gap-2 mr-2">
                             <a
-                              href={`${API_BASE}/api/certificate/download-bulk?batchId=${encodeURIComponent(batchId)}&token=${sessionStorage.getItem('token')}`}
+                              href={`${IO_API_BASE}/api/certificate/download-bulk?batchId=${encodeURIComponent(batchId)}&token=${sessionStorage.getItem('token')}`}
                               download
                               title="Download Batch (ZIP)"
                               className="p-2 hover:bg-indigo-500/10 text-indigo-400 rounded-lg transition-all flex items-center justify-center"
@@ -427,7 +427,7 @@ export default function UserDashboard() {
                                     <td className="px-6 py-4 text-right">
                                       <div className="flex items-center justify-end gap-2">
                                         <a
-                                          href={`${API_BASE}/api/certificate/download/${cert.certificateId}`}
+                                          href={`${IO_API_BASE}/api/certificate/download/${cert.certificateId}`}
                                           download
                                           className="p-2 text-indigo-400 hover:bg-indigo-500/10 hover:text-indigo-500 rounded-lg transition-all"
                                           title="Download PDF"
