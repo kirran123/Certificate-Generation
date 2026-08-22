@@ -193,25 +193,25 @@ export default function UserDashboard() {
   };
 
   return (
-    <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-8">
+    <div className="p-4 sm:p-6 md:p-10 max-w-7xl mx-auto space-y-6 md:space-y-8 mobile-padding">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <p className="text-xs font-semibold text-indigo-500 uppercase tracking-widest mb-1">Dashboard</p>
-          <h1 className="text-3xl font-black text-[var(--text-primary)] tracking-tight">Welcome back, {user?.name?.split(' ')[0]} 👋</h1>
-          <p className="text-sm text-[var(--text-secondary)] mt-1">Manage your certificates and track email delivery.</p>
+          <h1 className="text-2xl sm:text-3xl font-black text-[var(--text-primary)] tracking-tight mobile-title">Welcome back, {user?.name?.split(' ')[0]} 👋</h1>
+          <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1">Manage your certificates and track email delivery.</p>
         </div>
 
-        <div className="flex items-center gap-3 pb-3">
-          <div className="relative">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 pb-2 sm:pb-3 mobile-search-bar">
+          <div className="relative flex-1 min-w-[180px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
             <input
               type="text"
               placeholder={activeTab === 'received' ? "Search my certificates..." : "Search batches..."}
               value={activeTab === 'received' ? receivedSearch : batchSearch}
               onChange={e => activeTab === 'received' ? setReceivedSearch(e.target.value) : setBatchSearch(e.target.value)}
-              className="pl-9 pr-4 py-2 text-sm rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-indigo-500 w-52"
+              className="pl-9 pr-4 py-2 text-sm rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-indigo-500 w-full"
             />
           </div>
           {activeTab === 'managed' && (
@@ -226,13 +226,13 @@ export default function UserDashboard() {
       </div>
 
       {/* ── Stat Cards ─────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4 mobile-stats-grid">
         {stats.map((s, i) => (
-          <div key={i} className="glass rounded-2xl p-5 flex items-center gap-4">
-            <div className={`p-3 rounded-xl border ${colorMap[s.color]}`}>{s.icon}</div>
-            <div>
-              <p className="text-xs text-[var(--text-secondary)] font-medium">{s.label}</p>
-              <p className="text-2xl font-black text-[var(--text-primary)] tracking-tight">{loading ? '—' : s.value}</p>
+          <div key={i} className="glass rounded-2xl p-3.5 sm:p-5 flex items-center gap-3 sm:gap-4 mobile-stats-card">
+            <div className={`p-2.5 sm:p-3 rounded-xl border shrink-0 ${colorMap[s.color]}`}>{s.icon}</div>
+            <div className="min-w-0">
+              <p className="text-[11px] sm:text-xs text-[var(--text-secondary)] font-medium truncate">{s.label}</p>
+              <p className="text-xl sm:text-2xl font-black text-[var(--text-primary)] tracking-tight">{loading ? '—' : s.value}</p>
             </div>
           </div>
         ))}
@@ -240,10 +240,10 @@ export default function UserDashboard() {
 
       {/* ── Tabs ───────────────────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--border-subtle)] pb-0">
-        <div className="flex gap-1">
+        <div className="flex gap-1 overflow-x-auto no-scrollbar pb-1 mobile-tab-scroll">
           {TABS.map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-all ${activeTab === tab.id ? 'border-indigo-500 text-indigo-500' : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}>
+              className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold border-b-2 transition-all whitespace-nowrap shrink-0 mobile-tab-item ${activeTab === tab.id ? 'border-indigo-500 text-indigo-500' : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}>
               {tab.icon}{tab.label}
             </button>
           ))}

@@ -108,22 +108,22 @@ export default function VerifyPortal() {
 
   return (
     <>
-    <div className="min-h-screen relative flex flex-col items-center justify-center p-6 overflow-hidden">
+    <div className="min-h-screen relative flex flex-col items-center justify-center p-4 sm:p-6 overflow-hidden mobile-padding">
       {/* Dynamic Background Elements */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-500/10 rounded-full blur-[120px] animate-pulse" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-500/10 rounded-full blur-[120px] animate-pulse" />
 
       <div className="max-w-3xl w-full relative z-10 animate-fade-in-up">
-        <div className="text-center mb-16">
+        <div className="text-center mb-8 sm:mb-16">
           <div className="inline-flex items-center space-x-2 text-indigo-400 text-[10px] font-black uppercase tracking-[0.3em] mb-4 bg-indigo-500/5 px-4 py-1.5 rounded-full border border-indigo-500/10">
             <CheckCircle className="w-3.5 h-3.5" />
             <span>Secure Verification</span>
           </div>
-          <h1 className="text-5xl font-black text-[var(--text-primary)] tracking-tighter leading-none mb-4">Verify Certificate</h1>
-          <p className="text-[var(--text-secondary)] text-lg font-medium max-w-lg mx-auto">Check if a certificate is real and valid by entering its ID or scanning the QR code.</p>
+          <h1 className="text-3xl sm:text-5xl font-black text-[var(--text-primary)] tracking-tighter leading-none mb-4 mobile-title">Verify Certificate</h1>
+          <p className="text-[var(--text-secondary)] text-sm sm:text-lg font-medium max-w-lg mx-auto">Check if a certificate is real and valid by entering its ID or scanning the QR code.</p>
         </div>
 
-        <div className="glass rounded-[3.5rem] p-12 shadow-2xl border border-[var(--border-subtle)] relative overflow-hidden group">
+        <div className="glass rounded-3xl sm:rounded-[3.5rem] p-5 sm:p-12 shadow-2xl border border-[var(--border-subtle)] relative overflow-hidden group">
           <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-all duration-1000">
              <Search className="w-48 h-48 text-indigo-400" />
           </div>

@@ -88,13 +88,13 @@ export default function UploadData() {
 
   // ══════════════════════════════════════════════════════════════════════════
   return (
-    <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-8">
+    <div className="p-4 sm:p-6 md:p-10 max-w-7xl mx-auto space-y-6 md:space-y-8 mobile-padding">
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div>
         <p className="text-xs font-semibold text-indigo-500 uppercase tracking-widest mb-1">Upload Data</p>
-        <h1 className="text-3xl font-black text-[var(--text-primary)] tracking-tight mb-1">Select Source Data</h1>
-        <p className="text-sm text-[var(--text-secondary)]">
+        <h1 className="text-2xl sm:text-3xl font-black text-[var(--text-primary)] tracking-tight mb-1 mobile-title">Select Source Data</h1>
+        <p className="text-xs sm:text-sm text-[var(--text-secondary)]">
           Import your recipient list via Excel, CSV, or Google Sheets to begin.
         </p>
       </div>
@@ -192,8 +192,8 @@ export default function UploadData() {
           </div>
 
           <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
+            <div className="overflow-x-auto mobile-table-wrapper">
+              <table className="w-full text-left min-w-[500px]">
                 <thead>
                   <tr className="border-b border-[var(--border-subtle)] bg-[var(--border-subtle)]">
                     {headers.map((h, i) => (

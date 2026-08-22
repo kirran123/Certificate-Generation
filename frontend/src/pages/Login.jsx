@@ -89,7 +89,7 @@ export default function Login() {
           </div>
 
           {/* Glass Card */}
-          <div className="glass p-8 rounded-[2rem] shadow-2xl border border-white/10 relative overflow-hidden group">
+          <div className="glass p-5 sm:p-8 rounded-[2rem] shadow-2xl border border-white/10 relative overflow-hidden group">
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
             
             {/* Red Heartbeat Message - Repositioned */}

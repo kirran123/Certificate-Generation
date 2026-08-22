@@ -122,8 +122,6 @@ html[data-theme='light'] .text-\[var\(--text-secondary\)\] {
 }
 html[data-theme='light'] .text-\[var\(--text-primary\)\] {
   color: #000000 !important;
-}='light'] .text-\[var\(--text-primary\)\] {
-  color: #000000 !important;
 }
 
 /* Glass cards in light mode - More defined for visibility */
@@ -398,4 +396,86 @@ html[data-theme='light'] [class*="shadow-indigo"] {
 html[data-theme='light'] .card-hover:hover {
   border-color: rgba(79, 70, 229, 0.25) !important;
   box-shadow: 0 8px 20px rgba(7, 89, 133, 0.12) !important;
+}
+
+/* ── Mobile View Enhancements (Desktop > 768px left 100% UNTOUCHED) ── */
+@media (max-width: 768px) {
+  html, body {
+    overflow-x: hidden;
+  }
+
+  .mobile-padding {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+  }
+
+  /* Stat cards 2x2 grid on mobile */
+  .mobile-stats-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.75rem !important;
+  }
+
+  .mobile-stats-card {
+    padding: 0.75rem !important;
+    gap: 0.5rem !important;
+  }
+
+  .mobile-stats-card p.text-2xl {
+    font-size: 1.25rem !important;
+    line-height: 1.5rem !important;
+  }
+
+  /* Horizontal scrolling tab list on mobile */
+  .mobile-tab-scroll {
+    display: flex !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .mobile-tab-scroll::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .mobile-tab-item {
+    flex-shrink: 0 !important;
+    padding-left: 0.875rem !important;
+    padding-right: 0.875rem !important;
+  }
+
+  /* Table horizontal touch scroll on mobile */
+  .mobile-table-wrapper {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    width: 100% !important;
+    display: block !important;
+  }
+
+  .mobile-table-wrapper table {
+    min-width: 580px !important;
+  }
+
+  /* Mobile text sizes */
+  .mobile-title {
+    font-size: 1.5rem !important;
+    line-height: 2rem !important;
+  }
+
+  /* Flex wrap for search and action buttons */
+  .mobile-search-bar {
+    width: 100% !important;
+    flex-wrap: wrap !important;
+  }
+
+  .mobile-search-bar input,
+  .mobile-search-bar select {
+    width: 100% !important;
+  }
 }
