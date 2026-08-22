@@ -390,27 +390,27 @@ export default function AdminDashboard() {
           </div>
 
           {/* Performance Row (Email Stats Table/Chart) */}
-          <div className="glass rounded-2xl border border-[var(--border-subtle)] p-8 flex flex-col items-center justify-center relative overflow-hidden">
+          <div className="glass rounded-2xl border border-[var(--border-subtle)] p-5 sm:p-8 flex flex-col items-center justify-center relative overflow-hidden">
             <div className="absolute top-0 right-0 p-8 opacity-5">
               <TrendingUp className="w-40 h-40" />
             </div>
-            <div className="flex flex-col sm:flex-row items-center gap-12 w-full relative z-10">
-              <div className="flex-1 text-center sm:text-left">
-                <h2 className="text-xl font-black text-[var(--text-primary)] uppercase tracking-tight mb-2">Email Sending Report</h2>
-                <p className="text-sm text-[var(--text-secondary)] opacity-60 mb-6 font-medium">Track how many certificates were successfully emailed.</p>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/10">
+            <div className="flex flex-col sm:flex-row items-center gap-6 sm:gap-12 w-full relative z-10">
+              <div className="flex-1 text-center sm:text-left w-full">
+                <h2 className="text-lg sm:text-xl font-black text-[var(--text-primary)] uppercase tracking-tight mb-2">Email Sending Report</h2>
+                <p className="text-xs sm:text-sm text-[var(--text-secondary)] opacity-60 mb-4 sm:mb-6 font-medium">Track how many certificates were successfully emailed.</p>
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                  <div className="p-3 sm:p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/10">
                     <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1">Success Rate</p>
-                    <p className="text-2xl font-black text-emerald-500">{efficiency}%</p>
+                    <p className="text-xl sm:text-2xl font-black text-emerald-500">{efficiency}%</p>
                   </div>
-                  <div className="p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/10">
+                  <div className="p-3 sm:p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/10">
                     <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1">Total Sent</p>
-                    <p className="text-2xl font-black text-indigo-500">{stats.sent}</p>
+                    <p className="text-xl sm:text-2xl font-black text-indigo-500">{stats.sent}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="relative w-64 h-64 shrink-0">
+              <div className="relative w-44 h-44 sm:w-64 sm:h-64 shrink-0">
                 {stats.sent === 0 && stats.failed === 0 ? (
                   <div className="flex flex-col items-center py-12">
                     <TrendingUp className="w-12 h-12 text-[var(--text-secondary)] opacity-20 mb-4" />
@@ -420,20 +420,20 @@ export default function AdminDashboard() {
                   <>
                     <Doughnut data={doughnutData} options={{ plugins: { legend: { display: false } }, cutout: '78%' }} />
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                      <p className="text-4xl font-black text-[var(--text-primary)] tracking-tighter">{efficiency}%</p>
+                      <p className="text-3xl sm:text-4xl font-black text-[var(--text-primary)] tracking-tighter">{efficiency}%</p>
                       <p className="text-[10px] text-[var(--text-secondary)] font-black uppercase tracking-[0.2em] opacity-50">Score</p>
                     </div>
                   </>
                 )}
               </div>
 
-              <div className="flex flex-col gap-3 shrink-0">
-                <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-black/20 border border-white/5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/40" />
+              <div className="flex flex-row sm:flex-col gap-3 shrink-0 w-full sm:w-auto">
+                <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-black/20 border border-white/5 flex-1 sm:flex-none">
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/40 shrink-0" />
                   <span className="text-xs font-black text-emerald-500 tracking-widest">{stats.sent} SUCCESS</span>
                 </div>
-                <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-black/20 border border-white/5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-lg shadow-red-500/40" />
+                <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-black/20 border border-white/5 flex-1 sm:flex-none">
+                  <div className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-lg shadow-red-500/40 shrink-0" />
                   <span className="text-xs font-black text-red-500 tracking-widest">{stats.failed} FAILED</span>
                 </div>
               </div>
@@ -442,15 +442,15 @@ export default function AdminDashboard() {
         </div>
       ) : activeTab === 'users' ? (
         <div className="glass rounded-2xl border border-[var(--border-subtle)] overflow-hidden">
-          <div className="px-6 py-4 border-b border-[var(--border-subtle)] flex items-center justify-between">
+          <div className="px-4 sm:px-6 py-4 border-b border-[var(--border-subtle)] flex items-center justify-between">
             <div>
               <h2 className="text-base font-bold text-[var(--text-primary)]">Registered Users</h2>
               <p className="text-xs text-[var(--text-secondary)]">{users.length} total accounts</p>
             </div>
             <Users className="w-4 h-4 text-[var(--text-secondary)]" />
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
+          <div className="overflow-x-auto mobile-table-wrapper">
+            <table className="w-full text-left min-w-[480px]">
               <thead>
                 <tr className="border-b border-[var(--border-subtle)] bg-[var(--border-subtle)]">
                   {['User', 'Role', 'Joined', ''].map((h, i) => (
@@ -497,18 +497,18 @@ export default function AdminDashboard() {
         </div>
       ) : activeTab === 'logs' ? (
         <div className="glass rounded-2xl border border-[var(--border-subtle)] overflow-hidden">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-6 py-4 border-b border-[var(--border-subtle)]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-6 py-4 border-b border-[var(--border-subtle)]">
             <div>
               <h2 className="text-base font-bold text-[var(--text-primary)]">Email Logs</h2>
               <p className="text-xs text-[var(--text-secondary)]">{logs.length} total delivery records</p>
             </div>
-            <div className="relative">
+            <div className="relative w-full sm:w-auto">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
               <input type="text" placeholder="Search by email or ID..." value={logSearch} onChange={e => setLogSearch(e.target.value)}
-                className="pl-9 pr-4 py-2 text-sm rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-indigo-500 w-64" />
+                className="pl-9 pr-4 py-2 text-sm rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-indigo-500 w-full sm:w-64" />
             </div>
           </div>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto mobile-table-wrapper">
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-[var(--border-subtle)] bg-[var(--border-subtle)]">
@@ -540,25 +540,27 @@ export default function AdminDashboard() {
       ) : (
         /* Batches Tab */
         <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row items-center gap-3">
+          <div className="flex flex-col gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
               <input type="text" placeholder="Search batches..." value={batchSearch} onChange={e => setBatchSearch(e.target.value)}
                 className="w-full pl-9 pr-4 py-2 text-sm rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-indigo-500" />
             </div>
-            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-              className="px-4 py-2 text-sm rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] text-[var(--text-secondary)] focus:outline-none cursor-pointer">
-              <option value="all">All Status</option>
-              <option value="sent">Fully Sent</option>
-              <option value="pending">Has Pending</option>
-            </select>
-            <div className="flex items-center gap-1 bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-xl p-1">
-              {['newest', 'oldest', 'az'].map(s => (
-                <button key={s} onClick={() => setSortBy(s)}
-                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${sortBy === s ? 'bg-indigo-600 text-white' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}>
-                  {s === 'az' ? 'A–Z' : s.charAt(0).toUpperCase() + s.slice(1)}
-                </button>
-              ))}
+            <div className="flex flex-wrap items-center gap-2">
+              <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
+                className="flex-1 sm:flex-none px-4 py-2 text-sm rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] text-[var(--text-secondary)] focus:outline-none cursor-pointer">
+                <option value="all">All Status</option>
+                <option value="sent">Fully Sent</option>
+                <option value="pending">Has Pending</option>
+              </select>
+              <div className="flex items-center gap-1 bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-xl p-1">
+                {['newest', 'oldest', 'az'].map(s => (
+                  <button key={s} onClick={() => setSortBy(s)}
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${sortBy === s ? 'bg-indigo-600 text-white' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}>
+                    {s === 'az' ? 'A–Z' : s.charAt(0).toUpperCase() + s.slice(1)}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 

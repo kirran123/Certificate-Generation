@@ -43,9 +43,9 @@ export default function Feedback() {
     <div className="p-4 sm:p-6 md:p-10 max-w-4xl mx-auto min-h-[calc(100vh-160px)] flex flex-col justify-center mobile-padding">
       <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-600/10 rounded-full blur-[120px] pointer-events-none" />
       
-      <div className="text-center mb-8 sm:mb-12 animate-fade-in-up">
-        <div className="inline-flex items-center justify-center p-3 bg-indigo-600/10 rounded-2xl mb-4 border border-indigo-500/20">
-          <MessageSquare className="w-8 h-8 text-indigo-500" />
+      <div className="text-center mb-6 sm:mb-12 animate-fade-in-up">
+        <div className="inline-flex items-center justify-center p-2.5 sm:p-3 bg-indigo-600/10 rounded-2xl mb-4 border border-indigo-500/20">
+          <MessageSquare className="w-7 h-7 sm:w-8 sm:h-8 text-indigo-500" />
         </div>
         <h1 className="text-2xl sm:text-4xl font-black text-[var(--text-primary)] tracking-tight mb-2 mobile-title">Platform Feedback</h1>
         <p className="text-xs sm:text-sm text-[var(--text-secondary)] font-medium max-w-md mx-auto">
@@ -53,7 +53,7 @@ export default function Feedback() {
         </p>
       </div>
 
-      <div className="glass rounded-[2rem] sm:rounded-[3rem] p-5 sm:p-8 md:p-12 border border-[var(--border-subtle)] shadow-2xl relative overflow-hidden animate-fade-in-up transition-all">
+      <div className="glass rounded-2xl sm:rounded-[3rem] p-4 sm:p-8 md:p-12 border border-[var(--border-subtle)] shadow-2xl relative overflow-hidden animate-fade-in-up transition-all">
         {submitted ? (
           <div className="text-center py-10 space-y-6 animate-fade-in">
             <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto border border-emerald-500/20">
@@ -80,7 +80,7 @@ export default function Feedback() {
                     key={t.id}
                     type="button"
                     onClick={() => setType(t.id)}
-                    className={`flex items-center justify-center space-x-2 p-4 rounded-2xl border transition-all duration-300 ${
+                    className={`flex items-center justify-center space-x-2 p-3.5 sm:p-4 rounded-2xl border transition-all duration-300 min-h-[52px] ${
                       type === t.id 
                         ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400 shadow-lg shadow-indigo-500/10 scale-[1.02]' 
                         : 'border-[var(--border-subtle)] bg-black/20 text-[var(--text-secondary)] opacity-60 hover:opacity-100 hover:border-indigo-500/30'
@@ -101,14 +101,14 @@ export default function Feedback() {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Share your thoughts, report a bug, or just say hi..."
-                className="w-full bg-black/40 border border-[var(--border-subtle)] rounded-[2rem] p-6 text-[var(--text-primary)] text-sm focus:outline-none focus:border-indigo-500 transition-all resize-none placeholder:text-[var(--text-secondary)] placeholder:opacity-40"
+                className="w-full bg-black/40 border border-[var(--border-subtle)] rounded-2xl sm:rounded-[2rem] p-4 sm:p-6 text-[var(--text-primary)] text-sm focus:outline-none focus:border-indigo-500 transition-all resize-none placeholder:text-[var(--text-secondary)] placeholder:opacity-40"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading || !message.trim()}
-              className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-30 text-white py-5 rounded-3xl text-xs font-black uppercase tracking-[0.3em] transition-all shadow-2xl shadow-indigo-600/30 active:scale-95 flex items-center justify-center space-x-3 group"
+              className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-30 text-white py-4 sm:py-5 rounded-2xl sm:rounded-3xl text-xs font-black uppercase tracking-[0.3em] transition-all shadow-2xl shadow-indigo-600/30 active:scale-95 flex items-center justify-center space-x-3 group min-h-[56px]"
             >
               {loading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />

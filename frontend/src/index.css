@@ -402,25 +402,43 @@ html[data-theme='light'] .card-hover:hover {
 @media (max-width: 768px) {
   html, body {
     overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  /* Prevent auto zoom on iOS Safari inputs */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="search"],
+  textarea,
+  select {
+    font-size: 16px !important;
   }
 
   .mobile-padding {
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
     padding-top: 1rem !important;
     padding-bottom: 1rem !important;
   }
 
-  /* Stat cards 2x2 grid on mobile */
+  /* Touch friendly min height for interactive controls */
+  .mobile-touch-target {
+    min-height: 44px !important;
+  }
+
+  /* Stat cards 2-column grid on mobile */
   .mobile-stats-grid {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 0.75rem !important;
+    gap: 0.625rem !important;
   }
 
   .mobile-stats-card {
     padding: 0.75rem !important;
     gap: 0.5rem !important;
+    border-radius: 1rem !important;
   }
 
   .mobile-stats-card p.text-2xl {
@@ -438,6 +456,7 @@ html[data-theme='light'] .card-hover:hover {
     -ms-overflow-style: none !important;
     width: 100% !important;
     max-width: 100% !important;
+    padding-bottom: 0.25rem !important;
   }
 
   .mobile-tab-scroll::-webkit-scrollbar {
@@ -448,6 +467,7 @@ html[data-theme='light'] .card-hover:hover {
     flex-shrink: 0 !important;
     padding-left: 0.875rem !important;
     padding-right: 0.875rem !important;
+    font-size: 0.8125rem !important;
   }
 
   /* Table horizontal touch scroll on mobile */
@@ -456,6 +476,8 @@ html[data-theme='light'] .card-hover:hover {
     -webkit-overflow-scrolling: touch !important;
     width: 100% !important;
     display: block !important;
+    border-radius: 0.75rem !important;
+    box-shadow: inset -8px 0 8px -8px rgba(0, 0, 0, 0.2);
   }
 
   .mobile-table-wrapper table {
@@ -464,18 +486,54 @@ html[data-theme='light'] .card-hover:hover {
 
   /* Mobile text sizes */
   .mobile-title {
-    font-size: 1.5rem !important;
-    line-height: 2rem !important;
+    font-size: 1.375rem !important;
+    line-height: 1.75rem !important;
+  }
+
+  .mobile-subtitle {
+    font-size: 0.8125rem !important;
+    line-height: 1.125rem !important;
   }
 
   /* Flex wrap for search and action buttons */
   .mobile-search-bar {
     width: 100% !important;
-    flex-wrap: wrap !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
   }
 
   .mobile-search-bar input,
-  .mobile-search-bar select {
+  .mobile-search-bar select,
+  .mobile-search-bar button {
     width: 100% !important;
   }
+
+  /* Canvas Mobile Scaling Container */
+  .mobile-canvas-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding: 0.5rem !important;
+  }
+
+  /* Mobile tool panel drawer */
+  .mobile-tool-panel {
+    max-height: 50vh !important;
+    overflow-y: auto !important;
+  }
 }
+
+@media (max-width: 480px) {
+  .mobile-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.5rem !important;
+  }
+  
+  .mobile-padding {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+}
+

@@ -114,16 +114,16 @@ export default function VerifyPortal() {
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-500/10 rounded-full blur-[120px] animate-pulse" />
 
       <div className="max-w-3xl w-full relative z-10 animate-fade-in-up">
-        <div className="text-center mb-8 sm:mb-16">
+        <div className="text-center mb-6 sm:mb-16">
           <div className="inline-flex items-center space-x-2 text-indigo-400 text-[10px] font-black uppercase tracking-[0.3em] mb-4 bg-indigo-500/5 px-4 py-1.5 rounded-full border border-indigo-500/10">
             <CheckCircle className="w-3.5 h-3.5" />
             <span>Secure Verification</span>
           </div>
-          <h1 className="text-3xl sm:text-5xl font-black text-[var(--text-primary)] tracking-tighter leading-none mb-4 mobile-title">Verify Certificate</h1>
+          <h1 className="text-2xl sm:text-5xl font-black text-[var(--text-primary)] tracking-tighter leading-none mb-3 sm:mb-4 mobile-title">Verify Certificate</h1>
           <p className="text-[var(--text-secondary)] text-sm sm:text-lg font-medium max-w-lg mx-auto">Check if a certificate is real and valid by entering its ID or scanning the QR code.</p>
         </div>
 
-        <div className="glass rounded-3xl sm:rounded-[3.5rem] p-5 sm:p-12 shadow-2xl border border-[var(--border-subtle)] relative overflow-hidden group">
+        <div className="glass rounded-2xl sm:rounded-[3.5rem] p-4 sm:p-12 shadow-2xl border border-[var(--border-subtle)] relative overflow-hidden group">
           <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-all duration-1000">
              <Search className="w-48 h-48 text-indigo-400" />
           </div>
@@ -150,11 +150,11 @@ export default function VerifyPortal() {
               )}
 
               <div className="relative group/input">
-                <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-[var(--text-secondary)] opacity-50 group-focus-within/input:text-indigo-400 transition-colors" />
+                <Search className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 w-5 sm:w-6 h-5 sm:h-6 text-[var(--text-secondary)] opacity-50 group-focus-within/input:text-indigo-400 transition-colors" />
                 <input
                   type="text"
                   placeholder="Enter Certificate ID..."
-                  className="w-full bg-black/40 border border-white/5 rounded-[2rem] py-6 pl-16 pr-8 text-lg text-[var(--text-primary)] focus:outline-none focus:border-indigo-500 focus:bg-black/60 transition-all font-medium placeholder:text-[var(--text-secondary)]"
+                  className="w-full bg-black/40 border border-white/5 rounded-[2rem] py-4 sm:py-6 pl-12 sm:pl-16 pr-5 sm:pr-8 text-base sm:text-lg text-[var(--text-primary)] focus:outline-none focus:border-indigo-500 focus:bg-black/60 transition-all font-medium placeholder:text-[var(--text-secondary)]"
                   value={certId}
                   onChange={(e) => setCertId(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && verifyCertificate()}
@@ -163,31 +163,31 @@ export default function VerifyPortal() {
               
               <div className="flex items-center">
                 <div className="flex-1 h-px bg-white/5"></div>
-                <span className="mx-8 text-[10px] font-black text-[var(--text-secondary)] opacity-30 uppercase tracking-[0.5em]">OR</span>
+                <span className="mx-5 sm:mx-8 text-[10px] font-black text-[var(--text-secondary)] opacity-30 uppercase tracking-[0.5em]">OR</span>
                 <div className="flex-1 h-px bg-white/5"></div>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-2 gap-3 sm:gap-6">
                 <button
                   onClick={() => { setResult(null); setError(''); setIsScanning(true); }}
-                  className="group flex flex-col items-center justify-center space-y-4 p-10 bg-white/2 hover:bg-white/5 border border-white/5 rounded-[2.5rem] transition-all duration-500 hover:border-indigo-500/30 active:scale-95"
+                  className="group flex flex-col items-center justify-center space-y-3 sm:space-y-4 p-5 sm:p-10 bg-white/2 hover:bg-white/5 border border-white/5 rounded-2xl sm:rounded-[2.5rem] transition-all duration-500 hover:border-indigo-500/30 active:scale-95"
                 >
-                  <div className="w-16 h-16 bg-indigo-600/10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
-                     <Camera className="w-8 h-8 text-indigo-400" />
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-indigo-600/10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+                     <Camera className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-400" />
                   </div>
                    <div className="text-center">
-                    <p className="text-sm font-black text-[var(--text-primary)] uppercase tracking-widest leading-none mb-1">Scan QR Code</p>
-                    <p className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-tight opacity-70">Scan with Camera</p>
+                    <p className="text-xs sm:text-sm font-black text-[var(--text-primary)] uppercase tracking-widest leading-none mb-1">Scan QR</p>
+                    <p className="text-[9px] sm:text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-tight opacity-70">Use Camera</p>
                   </div>
                 </button>
 
-                <label className="group flex flex-col items-center justify-center space-y-4 p-10 bg-white/2 hover:bg-white/5 border border-white/5 rounded-[2.5rem] transition-all duration-500 hover:border-indigo-500/30 active:scale-95 cursor-pointer">
-                  <div className="w-16 h-16 bg-purple-600/10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
-                     <Upload className="w-8 h-8 text-purple-400" />
+                <label className="group flex flex-col items-center justify-center space-y-3 sm:space-y-4 p-5 sm:p-10 bg-white/2 hover:bg-white/5 border border-white/5 rounded-2xl sm:rounded-[2.5rem] transition-all duration-500 hover:border-indigo-500/30 active:scale-95 cursor-pointer">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-purple-600/10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+                     <Upload className="w-6 h-6 sm:w-8 sm:h-8 text-purple-400" />
                   </div>
                   <div className="text-center">
-                    <p className="text-sm font-black text-[var(--text-primary)] uppercase tracking-widest leading-none mb-1">Upload QR Image</p>
-                    <p className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-tight opacity-70">Upload an image of the QR</p>
+                    <p className="text-xs sm:text-sm font-black text-[var(--text-primary)] uppercase tracking-widest leading-none mb-1">Upload QR</p>
+                    <p className="text-[9px] sm:text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-tight opacity-70">Image File</p>
                   </div>
                   <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
                 </label>
@@ -196,7 +196,7 @@ export default function VerifyPortal() {
               <button
                 onClick={() => verifyCertificate()}
                 disabled={loading || !certId}
-                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-6 rounded-[2rem] text-xs font-black uppercase tracking-[0.3em] transition-all shadow-2xl shadow-indigo-600/30 disabled:opacity-0 active:scale-95 flex items-center justify-center space-x-3"
+                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-4 sm:py-6 rounded-[2rem] text-xs font-black uppercase tracking-[0.3em] transition-all shadow-2xl shadow-indigo-600/30 disabled:opacity-0 active:scale-95 flex items-center justify-center space-x-3 min-h-[56px]"
               >
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
                 <span>{loading ? 'Verifying...' : 'Verify'}</span>
@@ -229,28 +229,28 @@ export default function VerifyPortal() {
           )}
 
           {result && (
-            <div className="mt-10 bg-emerald-500/5 border border-emerald-500/20 p-12 rounded-[2.5rem] text-center animate-fade-in-up">
-              <div className="w-24 h-24 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-8 animate-bounce-subtle">
-                 <CheckCircle className="w-12 h-12 text-emerald-500 shadow-xl shadow-emerald-500/20" />
+            <div className="mt-6 sm:mt-10 bg-emerald-500/5 border border-emerald-500/20 p-6 sm:p-12 rounded-2xl sm:rounded-[2.5rem] text-center animate-fade-in-up">
+              <div className="w-16 h-16 sm:w-24 sm:h-24 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-5 sm:mb-8 animate-bounce-subtle">
+                 <CheckCircle className="w-8 h-8 sm:w-12 sm:h-12 text-emerald-500 shadow-xl shadow-emerald-500/20" />
               </div>
-              <h1 className="text-3xl font-black text-[var(--text-primary)] mb-8 tracking-tighter uppercase tracking-widest">Certificate Verified</h1>
+              <h1 className="text-xl sm:text-3xl font-black text-[var(--text-primary)] mb-5 sm:mb-8 tracking-tighter uppercase">Certificate Verified</h1>
               
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left mb-10">
-                <div className="bg-black/40 rounded-3xl p-6 border border-[var(--border-subtle)] group hover:border-indigo-500/30 transition-colors">
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6 text-left mb-6 sm:mb-10">
+                <div className="bg-black/40 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-[var(--border-subtle)] group hover:border-indigo-500/30 transition-colors">
                   <span className="text-[10px] text-[var(--text-secondary)] font-black uppercase tracking-widest block mb-2 opacity-50">Awarded To</span>
-                  <span className="text-[var(--text-primary)] font-black tracking-tight text-lg">{result.name}</span>
+                  <span className="text-[var(--text-primary)] font-black tracking-tight text-base sm:text-lg">{result.name}</span>
                 </div>
-                <div className="bg-black/40 rounded-3xl p-6 border border-[var(--border-subtle)] group hover:border-indigo-500/30 transition-colors">
+                <div className="bg-black/40 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-[var(--border-subtle)] group hover:border-indigo-500/30 transition-colors">
                   <span className="text-[10px] text-[var(--text-secondary)] font-black uppercase tracking-widest block mb-2 opacity-50">Course/Event</span>
-                  <span className="text-[var(--text-primary)] font-black tracking-tight text-lg">{result.course || 'Achievement'}</span>
+                  <span className="text-[var(--text-primary)] font-black tracking-tight text-base sm:text-lg">{result.course || 'Achievement'}</span>
                 </div>
-                <div className="bg-black/40 rounded-3xl p-6 border border-[var(--border-subtle)] group hover:border-indigo-500/30 transition-colors">
+                <div className="bg-black/40 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-[var(--border-subtle)] group hover:border-indigo-500/30 transition-colors">
                   <span className="text-[10px] text-[var(--text-secondary)] font-black uppercase tracking-widest block mb-2 opacity-50">Date Issued</span>
-                  <span className="text-[var(--text-primary)] font-black tracking-tight text-lg">{new Date(result.date).toLocaleDateString()}</span>
+                  <span className="text-[var(--text-primary)] font-black tracking-tight text-base sm:text-lg">{new Date(result.date).toLocaleDateString()}</span>
                 </div>
-                <div className="bg-black/40 rounded-3xl p-6 border border-[var(--border-subtle)] group hover:border-indigo-500/30 transition-colors">
+                <div className="bg-black/40 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-[var(--border-subtle)] group hover:border-indigo-500/30 transition-colors">
                   <span className="text-[10px] text-[var(--text-secondary)] font-black uppercase tracking-widest block mb-1 opacity-50">Certificate ID</span>
-                  <span className="text-indigo-400 font-mono text-xs font-black uppercase">{result.certificateId}</span>
+                  <span className="text-indigo-400 font-mono text-xs font-black uppercase break-all">{result.certificateId}</span>
                 </div>
               </div>
 

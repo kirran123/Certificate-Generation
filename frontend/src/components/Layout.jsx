@@ -158,37 +158,41 @@ export default function Layout({ children }) {
       )}
 
       {/* Mobile Drawer */}
-      <aside className={`lg:hidden fixed inset-y-0 left-0 z-50 w-64 bg-[var(--bg-sidebar)] border-r border-[var(--border-subtle)] flex flex-col transition-transform duration-300 ease-in-out transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="absolute right-3 top-5">
-          <button onClick={() => setIsMobileMenuOpen(false)} className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--border-subtle)] rounded-lg border border-[var(--border-subtle)] transition-all">
-            <X className="w-4 h-4" />
+      <aside className={`lg:hidden fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-[var(--bg-sidebar)] border-r border-[var(--border-subtle)] flex flex-col transition-transform duration-300 ease-in-out transform shadow-2xl ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="absolute right-3 top-4 z-10">
+          <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--border-subtle)] rounded-xl border border-[var(--border-subtle)] transition-all active:scale-90">
+            <X className="w-5 h-5" />
           </button>
         </div>
-        <SidebarContent />
+        <div className="h-full overflow-y-auto flex flex-col">
+          <SidebarContent />
+        </div>
       </aside>
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         {/* Mobile Top Bar */}
-        <header className="lg:hidden flex items-center justify-between px-4 py-3 border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)] backdrop-blur-md z-40">
-          <div className="flex items-center space-x-2.5">
-            <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center">
-              <Award className="w-4 h-4 text-white" />
+        <header className="lg:hidden flex items-center justify-between px-4 py-3 min-h-[56px] border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)] backdrop-blur-md z-40 sticky top-0">
+          <Link to="/" className="flex items-center space-x-2.5">
+            <div className="w-8 h-8 bg-indigo-600 rounded-xl flex items-center justify-center shadow-md shadow-indigo-500/20">
+              <Award className="w-4.5 h-4.5 text-white" />
             </div>
-            <span className="font-black text-base tracking-tight text-[var(--text-primary)]">DigiCertify</span>
-          </div>
+            <span className="font-black text-lg tracking-tight text-[var(--text-primary)]">DigiCertify</span>
+          </Link>
           <div className="flex items-center space-x-2">
             <button
               onClick={toggleTheme}
-              className="p-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--border-subtle)] rounded-lg active:scale-90 transition-all border border-[var(--border-subtle)]"
+              aria-label="Toggle Theme"
+              className="p-2.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--border-subtle)] rounded-xl active:scale-90 transition-all border border-[var(--border-subtle)] min-h-[44px] min-w-[44px] flex items-center justify-center"
             >
-              {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              {isDark ? <Sun className="w-4.5 h-4.5 text-amber-500" /> : <Moon className="w-4.5 h-4.5 text-indigo-500" />}
             </button>
             <button
               onClick={() => setIsMobileMenuOpen(true)}
-              className="p-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--border-subtle)] rounded-lg active:scale-90 transition-all border border-[var(--border-subtle)]"
+              aria-label="Open Menu"
+              className="p-2.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--border-subtle)] rounded-xl active:scale-90 transition-all border border-[var(--border-subtle)] min-h-[44px] min-w-[44px] flex items-center justify-center"
             >
-              <Menu className="w-4 h-4" />
+              <Menu className="w-5 h-5" />
             </button>
           </div>
         </header>

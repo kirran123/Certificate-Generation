@@ -487,8 +487,8 @@ export default function TemplateDesigner() {
     <div className="flex flex-col lg:flex-row h-auto lg:h-[calc(100vh-140px)] overflow-x-hidden lg:overflow-hidden animate-fade-in-up relative">
       {/* Sidebar Controls */}
       {!isPreview && (
-        <div className="w-full lg:w-[380px] shrink-0 bg-[var(--bg-sidebar)] border-b lg:border-b-0 lg:border-r border-[var(--border-subtle)] flex flex-col max-h-[500px] lg:max-h-none h-full overflow-y-auto no-scrollbar transition-all duration-500">
-          <div className="p-8 space-y-10">
+        <div className="w-full lg:w-[380px] shrink-0 bg-[var(--bg-sidebar)] border-b lg:border-b-0 lg:border-r border-[var(--border-subtle)] flex flex-col max-h-[360px] lg:max-h-none h-full overflow-y-auto no-scrollbar transition-all duration-500">
+          <div className="p-4 sm:p-8 space-y-6 sm:space-y-10">
             <div>
               <div className="flex items-center space-x-2 text-indigo-400 text-[10px] font-black uppercase tracking-[0.3em] mb-4">
                 <div className="w-8 h-px bg-indigo-500/50" />
@@ -886,12 +886,13 @@ export default function TemplateDesigner() {
       {/* Canvas Area */}
       <div
         ref={canvasContainerRef}
-        className="flex-1 bg-[var(--bg-main)] opacity-95 p-4 sm:p-12 overflow-auto relative custom-scrollbar flex items-center justify-center transition-colors duration-500"
+        className="flex-1 bg-[var(--bg-main)] opacity-95 p-2 sm:p-12 overflow-auto relative custom-scrollbar flex items-start sm:items-center justify-center transition-colors duration-500"
+        style={{ WebkitOverflowScrolling: 'touch' }}
       >
         {!imageUrl && (
-          <div className="w-full max-w-2xl flex flex-col items-center justify-center text-center p-10 space-y-10 animate-fade-in-up">
+          <div className="w-full max-w-2xl flex flex-col items-center justify-center text-center p-5 sm:p-10 space-y-6 sm:space-y-10 animate-fade-in-up">
             {excelData.length > 0 && (
-              <div className="w-full p-6 bg-emerald-500/5 border border-emerald-500/20 rounded-3xl flex items-center space-x-4 text-left">
+              <div className="w-full p-4 sm:p-6 bg-emerald-500/5 border border-emerald-500/20 rounded-3xl flex items-center space-x-4 text-left">
                 <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center shrink-0">
                   <Check className="w-5 h-5 text-emerald-400" />
                 </div>
@@ -902,12 +903,12 @@ export default function TemplateDesigner() {
               </div>
             )}
 
-            <div className="w-full p-8 border-2 border-dashed border-white/5 bg-white/[0.01] rounded-[3rem] group">
-              <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/5 group-hover:scale-110 transition-transform duration-700">
-                <ImageIcon className="w-10 h-10 text-[var(--text-secondary)] opacity-30" />
+            <div className="w-full p-6 sm:p-8 border-2 border-dashed border-white/5 bg-white/[0.01] rounded-[2rem] sm:rounded-[3rem] group">
+              <div className="w-16 h-16 sm:w-24 sm:h-24 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 border border-white/5 group-hover:scale-110 transition-transform duration-700">
+                <ImageIcon className="w-8 h-8 sm:w-10 sm:h-10 text-[var(--text-secondary)] opacity-30" />
               </div>
-              <h3 className="text-2xl font-black text-[var(--text-primary)] tracking-tighter mb-3">Upload Certificate Design</h3>
-              <p className="text-[var(--text-secondary)] text-sm font-medium max-w-sm mx-auto mb-8">Use the <span className="text-indigo-400 font-black">"Upload Design"</span> button on the left panel to set your certificate background image (PNG or JPG).</p>
+              <h3 className="text-xl sm:text-2xl font-black text-[var(--text-primary)] tracking-tighter mb-3">Upload Certificate Design</h3>
+              <p className="text-[var(--text-secondary)] text-xs sm:text-sm font-medium max-w-sm mx-auto mb-6 sm:mb-8">Use the <span className="text-indigo-400 font-black">"Upload Design"</span> button on the panel above to set your certificate background image (PNG or JPG).</p>
               <div className="flex items-center justify-center space-x-3 text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] opacity-40">
                 <span className="w-8 h-px bg-current" />
                 <span>Step 1 of 3</span>
@@ -919,11 +920,11 @@ export default function TemplateDesigner() {
 
         {imageUrl && (
           <div
-            className="relative group/canvas transition-transform duration-300 ease-out origin-center"
+            className="relative group/canvas transition-transform duration-300 ease-out origin-top sm:origin-center"
             style={{ transform: `scale(${zoom})`, minWidth: imageSize.width, minHeight: imageSize.height }}
           >
             {/* Preview Status Overlay */}
-            <div className="absolute -top-12 left-0 right-0 flex justify-between items-center px-4">
+            <div className="absolute -top-10 sm:-top-12 left-0 right-0 flex justify-between items-center px-2 sm:px-4">
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 rounded-full bg-indigo-500 pulse" />
@@ -934,10 +935,10 @@ export default function TemplateDesigner() {
                 {isPreview && (
                   <button
                     onClick={toggleReview}
-                    className="fixed bottom-12 right-12 z-[100] bg-black/95 hover:bg-black text-white px-12 py-6 rounded-[2rem] font-black text-sm uppercase tracking-[0.3em] shadow-[0_20px_50px_rgba(0,0,0,0.8)] flex items-center space-x-4 animate-bounce-in border flex-row border-white/10 transition-all hover:scale-105 active:scale-95 group"
+                    className="fixed bottom-4 sm:bottom-12 right-4 sm:right-12 z-[100] bg-black/95 hover:bg-black text-white px-6 sm:px-12 py-3 sm:py-6 rounded-[2rem] font-black text-xs sm:text-sm uppercase tracking-[0.3em] shadow-[0_20px_50px_rgba(0,0,0,0.8)] flex items-center space-x-3 sm:space-x-4 animate-bounce-in border flex-row border-white/10 transition-all hover:scale-105 active:scale-95 group"
                   >
-                    <EyeOff className="w-6 h-6 group-hover:rotate-12 transition-transform text-indigo-400" />
-                    <span>Exit Preview Mode</span>
+                    <EyeOff className="w-5 h-5 group-hover:rotate-12 transition-transform text-indigo-400" />
+                    <span>Exit Preview</span>
                   </button>
                 )}
               </div>

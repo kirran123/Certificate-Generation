@@ -49,10 +49,11 @@ export default function Login() {
   return (
     <div className="min-h-screen flex flex-col bg-[var(--bg-main)] relative overflow-hidden font-sans">
       {/* Theme Toggle Floating */}
-      <div className="absolute top-6 right-6 z-50">
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-50">
         <button
           onClick={toggleTheme}
-          className="p-3 bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-2xl shadow-xl hover:border-indigo-500/50 transition-all active:scale-95 group"
+          aria-label="Toggle Theme"
+          className="p-2.5 sm:p-3 bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-xl sm:rounded-2xl shadow-xl hover:border-indigo-500/50 transition-all active:scale-95 group min-w-[44px] min-h-[44px] flex items-center justify-center"
         >
           {isDark ? (
             <Sun className="w-5 h-5 text-amber-500 group-hover:rotate-45 transition-transform duration-500" />
@@ -66,13 +67,13 @@ export default function Login() {
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600/20 rounded-full blur-[120px] animate-pulse pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/10 rounded-full blur-[120px] pointer-events-none" />
       
-      <div className="flex-1 flex items-center justify-center p-4 relative z-10">
+      <div className="flex-1 flex items-center justify-center p-3 sm:p-4 relative z-10 my-auto">
         <div className="w-full max-w-md animate-fade-in-up">
           {/* Quick Verify Link - Repositioned to Top */}
-          <div className="flex justify-center mb-6">
+          <div className="flex justify-center mb-4 sm:mb-6">
             <button
               onClick={() => navigate('/verify-portal')}
-              className="flex items-center space-x-2 px-6 py-2.5 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 hover:bg-indigo-500 hover:text-white transition-all rounded-full text-xs font-black uppercase tracking-widest group shadow-xl shadow-indigo-500/5"
+              className="flex items-center space-x-2 px-5 py-2.5 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 hover:bg-indigo-500 hover:text-white transition-all rounded-full text-[11px] sm:text-xs font-black uppercase tracking-widest group shadow-xl shadow-indigo-500/5 min-h-[40px]"
             >
               <Search className="w-4 h-4 group-hover:scale-110 transition-transform" />
               <span>Verify a Certificate</span>
@@ -80,16 +81,16 @@ export default function Login() {
           </div>
 
           {/* Logo Section */}
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center justify-center p-3 bg-indigo-600 rounded-2xl shadow-xl shadow-indigo-500/20 mb-4">
-              <Award className="w-10 h-10 text-white" />
+          <div className="text-center mb-6 sm:mb-10">
+            <div className="inline-flex items-center justify-center p-2.5 sm:p-3 bg-indigo-600 rounded-2xl shadow-xl shadow-indigo-500/20 mb-3 sm:mb-4">
+              <Award className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
             </div>
-            <h1 className="text-4xl font-black text-[var(--text-primary)] tracking-tighter">DigiCertify</h1>
-            <p className="text-[var(--text-secondary)] text-sm font-medium mt-1 uppercase tracking-widest">Professional Certificates. Effortless Delivery.</p>
+            <h1 className="text-3xl sm:text-4xl font-black text-[var(--text-primary)] tracking-tighter mobile-title">DigiCertify</h1>
+            <p className="text-[var(--text-secondary)] text-xs sm:text-sm font-medium mt-1 uppercase tracking-widest">Professional Certificates. Effortless Delivery.</p>
           </div>
 
           {/* Glass Card */}
-          <div className="glass p-5 sm:p-8 rounded-[2rem] shadow-2xl border border-white/10 relative overflow-hidden group">
+          <div className="glass p-4 sm:p-8 rounded-2xl sm:rounded-[2rem] shadow-2xl border border-white/10 relative overflow-hidden group">
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
             
             {/* Red Heartbeat Message - Repositioned */}

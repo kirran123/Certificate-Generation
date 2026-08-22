@@ -367,34 +367,34 @@ export default function UserDashboard() {
                   return (
                     <div key={batchId} className={`glass rounded-2xl border overflow-hidden transition-all ${isOpen ? 'border-indigo-500/40' : 'border-[var(--border-subtle)]'}`}>
                       {/* Batch Header */}
-                      <div className="flex items-center justify-between px-6 py-5 hover:bg-[var(--border-subtle)] transition-colors">
-                        <div onClick={() => setExpandedBatch(isOpen ? null : batchId)} className="flex-1 flex items-center gap-4 cursor-pointer">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-4 sm:px-6 py-4 sm:py-5 hover:bg-[var(--border-subtle)] transition-colors">
+                        <div onClick={() => setExpandedBatch(isOpen ? null : batchId)} className="flex-1 flex items-center gap-3 sm:gap-4 cursor-pointer w-full">
                           <div className={`p-2.5 rounded-xl shrink-0 ${isOpen ? 'bg-indigo-600 text-white' : 'bg-indigo-500/10 text-indigo-500'}`}><Calendar className="w-4 h-4" /></div>
-                          <div>
-                            <p className="font-semibold text-[var(--text-primary)] text-sm flex items-center gap-2">
-                              {batchId}
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-[var(--text-primary)] text-sm flex flex-wrap items-center gap-2">
+                              <span className="truncate">{batchId}</span>
                               {certs.some(c => c.isAutomation) && (
                                 <span className="text-[9px] bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-2 py-0.5 rounded-full uppercase font-black tracking-widest shrink-0 flex items-center gap-1">
-                                  <Zap className="w-2.5 h-2.5" /> Auto-Cert Generation
+                                  <Zap className="w-2.5 h-2.5" /> Auto-Cert
                                 </span>
                               )}
                             </p>
-                            <p className="text-xs text-[var(--text-secondary)]">By {certs[0]?.createdBy?.name || 'Super Admin'} · {fmt(certs[0]?.createdAt || certs[0]?._creationTime)} · {certs.length} certificate{certs.length !== 1 ? 's' : ''}</p>
+                            <p className="text-xs text-[var(--text-secondary)] truncate">By {certs[0]?.createdBy?.name || 'Super Admin'} · {fmt(certs[0]?.createdAt || certs[0]?._creationTime)} · {certs.length} cert{certs.length !== 1 ? 's' : ''}</p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center gap-2 mr-2">
+                        <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-[var(--border-subtle)]">
+                          <div className="flex items-center gap-2">
                             <a
                               href={`${IO_API_BASE}/api/certificate/download-bulk?batchId=${encodeURIComponent(batchId)}&token=${sessionStorage.getItem('token')}`}
                               download
                               title="Download Batch (ZIP)"
-                              className="p-2 hover:bg-indigo-500/10 text-indigo-400 rounded-lg transition-all flex items-center justify-center"
+                              className="p-2 hover:bg-indigo-500/10 text-indigo-400 rounded-lg transition-all flex items-center justify-center min-h-[36px] min-w-[36px]"
                             >
-                              <Download className="w-3.5 h-3.5" />
+                              <Download className="w-4 h-4" />
                             </a>
-                            <button onClick={() => handleResendBatch(batchId)} title="Resend All Emails" className="p-2 hover:bg-indigo-500/10 text-indigo-400 rounded-lg transition-all"><RefreshCw className="w-3.5 h-3.5" /></button>
+                            <button onClick={() => handleResendBatch(batchId)} title="Resend All Emails" className="p-2 hover:bg-indigo-500/10 text-indigo-400 rounded-lg transition-all min-h-[36px] min-w-[36px] flex items-center justify-center"><RefreshCw className="w-4 h-4" /></button>
                           </div>
-                          <button onClick={() => setExpandedBatch(isOpen ? null : batchId)} className="p-2 hover:bg-[var(--border-subtle)] rounded-lg transition-all">
+                          <button onClick={() => setExpandedBatch(isOpen ? null : batchId)} className="p-2 hover:bg-[var(--border-subtle)] rounded-lg transition-all min-h-[36px] min-w-[36px] flex items-center justify-center">
                             {isOpen ? <ChevronUp className="w-4 h-4 text-indigo-500" /> : <ChevronDown className="w-4 h-4 text-[var(--text-secondary)]" />}
                           </button>
                         </div>
@@ -402,30 +402,32 @@ export default function UserDashboard() {
                       {/* Expanded Table */}
                       {isOpen && (
                         <div className="border-t border-[var(--border-subtle)]">
-                          <div className="flex flex-col sm:flex-row items-center gap-3 px-6 py-4 border-b border-[var(--border-subtle)] bg-[var(--border-subtle)]" onClick={e => e.stopPropagation()}>
-                            <div className="relative flex-1">
+                          <div className="flex flex-col sm:flex-row items-center gap-3 px-4 sm:px-6 py-4 border-b border-[var(--border-subtle)] bg-[var(--border-subtle)]" onClick={e => e.stopPropagation()}>
+                            <div className="relative flex-1 w-full">
                               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
                               <input type="text" placeholder="Search certificates..." value={certSearch} onChange={e => setCertSearch(e.target.value)}
                                 className="w-full pl-9 pr-4 py-2 text-sm rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-indigo-500" />
                             </div>
-                            <div className="flex items-center gap-1 bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-xl p-1">
+                            <div className="flex items-center gap-1 bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-xl p-1 w-full sm:w-auto overflow-x-auto">
                               {['all', 'ready', 'sent', 'failed'].map(s => (
                                 <button key={s} onClick={e => { e.stopPropagation(); setLocalStatusFilter(s); }}
-                                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${localStatusFilter === s ? 'bg-indigo-600 text-white' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}>
+                                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all shrink-0 ${localStatusFilter === s ? 'bg-indigo-600 text-white' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}>
                                   {s === 'ready' ? 'Pending' : s === 'failed' ? 'Failed' : s.charAt(0).toUpperCase() + s.slice(1)}
                                 </button>
                               ))}
                             </div>
-                            <button onClick={e => { e.stopPropagation(); setLocalSortOrder(o => o === 'asc' ? 'desc' : 'asc'); }}
-                              className="px-3 py-2 text-xs font-medium text-[var(--text-secondary)] border border-[var(--border-subtle)] rounded-xl hover:text-[var(--text-primary)] transition-all">
-                              <List className="w-4 h-4" />
-                            </button>
-                            <span className="text-xs text-[var(--text-secondary)] whitespace-nowrap">{filteredCerts.length}/{certs.length}</span>
+                            <div className="flex items-center justify-between w-full sm:w-auto gap-2">
+                              <button onClick={e => { e.stopPropagation(); setLocalSortOrder(o => o === 'asc' ? 'desc' : 'asc'); }}
+                                className="px-3 py-2 text-xs font-medium text-[var(--text-secondary)] border border-[var(--border-subtle)] rounded-xl hover:text-[var(--text-primary)] transition-all">
+                                <List className="w-4 h-4" />
+                              </button>
+                              <span className="text-xs text-[var(--text-secondary)] whitespace-nowrap">{filteredCerts.length}/{certs.length}</span>
+                            </div>
                           </div>
-                          <div className="overflow-x-auto">
-                            <table className="w-full text-left">
+                          <div className="overflow-x-auto mobile-table-wrapper">
+                            <table className="w-full text-left min-w-[540px]">
                               <thead><tr className="border-b border-[var(--border-subtle)]">
-                                {['Name / Email', 'Certificate ID', 'Created', 'Status', ''].map((h, i) => <th key={h} className={`px-6 py-3 text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider ${i === 4 ? 'text-right' : ''}`}>{h}</th>)}
+                                {['Name / Email', 'Certificate ID', 'Created', 'Status', ''].map((h, i) => <th key={h} className={`px-4 sm:px-6 py-3 text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider ${i === 4 ? 'text-right' : ''}`}>{h}</th>)}
                               </tr></thead>
                               <tbody className="divide-y divide-[var(--border-subtle)]">
                                 {filteredCerts.map(cert => (

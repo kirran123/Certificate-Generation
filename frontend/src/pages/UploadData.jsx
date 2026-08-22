@@ -103,40 +103,40 @@ export default function UploadData() {
 
       {/* ── Upload Cards (only when no data loaded) */}
       {showCards && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-4 sm:gap-6">
 
-          {/* Excel / CSV ─────────────────────────────────────────────────── */}
-          <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-8 flex flex-col items-center text-center gap-6">
+          {/* Excel / CSV */}
+          <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-6 sm:p-8 flex flex-col items-center text-center gap-5 sm:gap-6">
             <div>
-              <div className="w-16 h-16 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <FileSpreadsheet className="w-8 h-8 text-indigo-500" />
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <FileSpreadsheet className="w-7 h-7 sm:w-8 sm:h-8 text-indigo-500" />
               </div>
-              <h3 className="text-lg font-bold text-[var(--text-primary)] mb-1">Excel / CSV File</h3>
+              <h3 className="text-base sm:text-lg font-bold text-[var(--text-primary)] mb-1">Excel / CSV File</h3>
               <p className="text-sm text-[var(--text-secondary)]">Upload a .xlsx or .csv recipient list</p>
             </div>
 
             <input type="file" id="file-upload" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleFileChange} />
             <label htmlFor="file-upload"
-              className="w-full cursor-pointer px-6 py-3 rounded-xl border-2 border-dashed border-[var(--border-subtle)] hover:border-indigo-500/40 hover:bg-indigo-500/5 text-sm text-[var(--text-secondary)] hover:text-indigo-500 transition-all">
-              {file ? `📄 ${file.name}` : 'Click to select file'}
+              className="w-full cursor-pointer px-6 py-3 rounded-xl border-2 border-dashed border-[var(--border-subtle)] hover:border-indigo-500/40 hover:bg-indigo-500/5 text-sm text-[var(--text-secondary)] hover:text-indigo-500 transition-all min-h-[52px] flex items-center justify-center">
+              {file ? `📄 ${file.name}` : 'Tap to select file'}
             </label>
 
             {file && (
               <button onClick={handleUpload} disabled={loading}
-                className="w-full flex items-center justify-center gap-2 py-3 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-xl transition-all disabled:opacity-50 active:scale-95">
+                className="w-full flex items-center justify-center gap-2 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-xl transition-all disabled:opacity-50 active:scale-95 min-h-[52px]">
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
                 {loading ? 'Processing...' : 'Upload & Open Editor'}
               </button>
             )}
           </div>
 
-          {/* Google Sheets ───────────────────────────────────────────────── */}
-          <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-8 flex flex-col gap-5">
+          {/* Google Sheets */}
+          <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-6 sm:p-8 flex flex-col gap-4 sm:gap-5">
             <div>
-              <div className="w-16 h-16 bg-violet-500/10 border border-violet-500/20 rounded-2xl flex items-center justify-center mb-4">
-                <LinkIcon className="w-8 h-8 text-violet-500" />
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-violet-500/10 border border-violet-500/20 rounded-2xl flex items-center justify-center mb-4">
+                <LinkIcon className="w-7 h-7 sm:w-8 sm:h-8 text-violet-500" />
               </div>
-              <h3 className="text-lg font-bold text-[var(--text-primary)] mb-1">Google Sheets</h3>
+              <h3 className="text-base sm:text-lg font-bold text-[var(--text-primary)] mb-1">Google Sheets</h3>
               <p className="text-sm text-[var(--text-secondary)]">
                 Import from a public Google Sheet to begin.
               </p>
@@ -152,7 +152,7 @@ export default function UploadData() {
 
             {/* Action button */}
             <button onClick={() => fetchSheet(true)} disabled={loading || !sheetUrl}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition-all disabled:opacity-40 active:scale-95">
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition-all disabled:opacity-40 active:scale-95 min-h-[52px]">
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
               Open Editor
             </button>
@@ -193,7 +193,7 @@ export default function UploadData() {
 
           <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] overflow-hidden">
             <div className="overflow-x-auto mobile-table-wrapper">
-              <table className="w-full text-left min-w-[500px]">
+              <table className="w-full text-left min-w-[480px]">
                 <thead>
                   <tr className="border-b border-[var(--border-subtle)] bg-[var(--border-subtle)]">
                     {headers.map((h, i) => (
