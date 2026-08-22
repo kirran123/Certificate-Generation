@@ -1,9 +1,8 @@
 import { cronJobs } from "convex/server";
-import { internal } from "./_generated/api";
 
 const crons = cronJobs();
 
-// Poll active Google Sheet automations every 10 minutes
-crons.interval("form-poller", { minutes: 10 }, internal.formPoller.pollAll);
+// Form polling is handled by Render Node.js backend (backend/jobs/formPoller.js)
+// Disabled Convex cron job to prevent function call limits.
 
 export default crons;

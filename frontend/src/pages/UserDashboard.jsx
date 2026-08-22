@@ -124,11 +124,24 @@ export default function UserDashboard() {
 
   useEffect(() => {
     loadTab(activeTab, true);
-    // Real-time background auto-refresh every 5 seconds (zero reload needed!)
+    // Smart polling: poll every 30s only when tab is visible (pauses in background to prevent Convex limit hits)
     const interval = setInterval(() => {
-      loadTab(activeTab, false);
-    }, 5000);
-    return () => clearInterval(interval);
+      if (document.visibilityState === 'visible') {
+        loadTab(activeTab, false);
+      }
+    }, 30000);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        loadTab(activeTab, false);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [activeTab]);
 
 
