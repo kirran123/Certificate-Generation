@@ -763,9 +763,23 @@ router.post('/resend-batch/:batchId', protect, async (req, res) => {
 
         cert.status = 'Sent';
         await cert.save();
+
+        await EmailLog.create({
+          certificateId: cert.certificateId,
+          recipient: cert.email,
+          status: 'Sent'
+        });
         sentCount++;
       } catch (e) {
         console.error(`Resend failed for ${cert.email}:`, e.message);
+        cert.status = 'Failed';
+        await cert.save();
+        await EmailLog.create({
+          certificateId: cert.certificateId,
+          recipient: cert.email,
+          status: 'Failed',
+          error: e.message
+        });
       }
     }
     res.json({ message: `Successfully resent ${sentCount} emails for batch "${batchId}".` });

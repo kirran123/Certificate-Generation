@@ -88,7 +88,7 @@ export default function UserDashboard() {
     try {
       setLoading(true);
       const token = sessionStorage.getItem('token');
-      await axios.post(`${API_BASE}/api/certificate/resend-batch/${encodeURIComponent(batchId)}`, {}, {
+      await axios.post(`${IO_API_BASE}/api/certificate/resend-batch/${encodeURIComponent(batchId)}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       loadTab('managed');

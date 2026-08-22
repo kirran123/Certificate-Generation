@@ -5,7 +5,7 @@ import { Users, FileText, CheckCircle, XCircle, Calendar, Mail, Search, Award, B
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
-import { API_BASE } from '../apiConfig';
+import { API_BASE, IO_API_BASE } from '../apiConfig';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
 
@@ -122,7 +122,7 @@ export default function AdminDashboard() {
     try {
       setLoading(true);
       const token = sessionStorage.getItem('token');
-      await axios.post(`${API_BASE}/api/certificate/resend-batch/${encodeURIComponent(batchId)}`, {}, {
+      await axios.post(`${IO_API_BASE}/api/certificate/resend-batch/${encodeURIComponent(batchId)}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       loadTab('certificates');
