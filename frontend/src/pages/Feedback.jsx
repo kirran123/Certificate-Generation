@@ -40,20 +40,20 @@ export default function Feedback() {
   ];
 
   return (
-    <div className="p-6 md:p-10 max-w-4xl mx-auto min-h-[calc(100vh-160px)] flex flex-col justify-center">
+    <div className="p-4 sm:p-6 md:p-10 max-w-4xl mx-auto min-h-[calc(100vh-160px)] flex flex-col justify-center mobile-padding">
       <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-600/10 rounded-full blur-[120px] pointer-events-none" />
       
-      <div className="text-center mb-12 animate-fade-in-up">
+      <div className="text-center mb-8 sm:mb-12 animate-fade-in-up">
         <div className="inline-flex items-center justify-center p-3 bg-indigo-600/10 rounded-2xl mb-4 border border-indigo-500/20">
           <MessageSquare className="w-8 h-8 text-indigo-500" />
         </div>
-        <h1 className="text-4xl font-black text-[var(--text-primary)] tracking-tight mb-2">Platform Feedback</h1>
-        <p className="text-[var(--text-secondary)] font-medium max-w-md mx-auto">
+        <h1 className="text-2xl sm:text-4xl font-black text-[var(--text-primary)] tracking-tight mb-2 mobile-title">Platform Feedback</h1>
+        <p className="text-xs sm:text-sm text-[var(--text-secondary)] font-medium max-w-md mx-auto">
           Help us shape the future of DigiCertify. Your thoughts and suggestions fuel our innovation.
         </p>
       </div>
 
-      <div className="glass rounded-[3rem] p-8 md:p-12 border border-[var(--border-subtle)] shadow-2xl relative overflow-hidden animate-fade-in-up transition-all">
+      <div className="glass rounded-[2rem] sm:rounded-[3rem] p-5 sm:p-8 md:p-12 border border-[var(--border-subtle)] shadow-2xl relative overflow-hidden animate-fade-in-up transition-all">
         {submitted ? (
           <div className="text-center py-10 space-y-6 animate-fade-in">
             <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto border border-emerald-500/20">

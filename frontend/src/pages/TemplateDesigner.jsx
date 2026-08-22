@@ -484,10 +484,10 @@ export default function TemplateDesigner() {
   const toggleReview = () => setIsPreview(!isPreview);
 
   return (
-    <div className="flex h-[calc(100vh-140px)] overflow-hidden animate-fade-in-up relative">
+    <div className="flex flex-col lg:flex-row h-auto lg:h-[calc(100vh-140px)] overflow-x-hidden lg:overflow-hidden animate-fade-in-up relative">
       {/* Sidebar Controls */}
       {!isPreview && (
-        <div className="w-[380px] bg-[var(--bg-sidebar)] border-r border-[var(--border-subtle)] flex flex-col h-full overflow-y-auto no-scrollbar transition-all duration-500">
+        <div className="w-full lg:w-[380px] shrink-0 bg-[var(--bg-sidebar)] border-b lg:border-b-0 lg:border-r border-[var(--border-subtle)] flex flex-col max-h-[500px] lg:max-h-none h-full overflow-y-auto no-scrollbar transition-all duration-500">
           <div className="p-8 space-y-10">
             <div>
               <div className="flex items-center space-x-2 text-indigo-400 text-[10px] font-black uppercase tracking-[0.3em] mb-4">
@@ -886,7 +886,7 @@ export default function TemplateDesigner() {
       {/* Canvas Area */}
       <div
         ref={canvasContainerRef}
-        className="flex-1 bg-[var(--bg-main)] opacity-95 p-12 overflow-auto relative custom-scrollbar flex items-center justify-center transition-colors duration-500"
+        className="flex-1 bg-[var(--bg-main)] opacity-95 p-4 sm:p-12 overflow-auto relative custom-scrollbar flex items-center justify-center transition-colors duration-500"
       >
         {!imageUrl && (
           <div className="w-full max-w-2xl flex flex-col items-center justify-center text-center p-10 space-y-10 animate-fade-in-up">
