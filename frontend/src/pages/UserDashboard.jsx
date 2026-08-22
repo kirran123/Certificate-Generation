@@ -34,8 +34,8 @@ export default function UserDashboard() {
     }
   };
 
-  const loadTab = async (tab) => {
-    setLoading(true);
+  const loadTab = async (tab, showLoading = false) => {
+    if (showLoading) setLoading(true);
     const token = sessionStorage.getItem('token');
     const headers = { Authorization: `Bearer ${token}` };
     try {
@@ -55,7 +55,7 @@ export default function UserDashboard() {
     } catch (err) {
       console.error(err);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
@@ -65,7 +65,7 @@ export default function UserDashboard() {
       await axios.patch(`${API_BASE}/api/certificate/form-automation/${id}`, { active: !active }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      loadTab('managed');
+      loadTab('managed', false);
     } catch (err) {
       console.error('Failed to toggle automation:', err.message);
     }
@@ -78,7 +78,7 @@ export default function UserDashboard() {
       await axios.delete(`${API_BASE}/api/certificate/form-automation/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      loadTab('managed');
+      loadTab('managed', false);
     } catch (err) {
       console.error('Failed to delete automation:', err.message);
     }
@@ -86,47 +86,49 @@ export default function UserDashboard() {
 
   const handleResendBatch = async (batchId) => {
     try {
-      setLoading(true);
       const token = sessionStorage.getItem('token');
       await axios.post(`${IO_API_BASE}/api/certificate/resend-batch/${encodeURIComponent(batchId)}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      loadTab('managed');
+      loadTab('managed', false);
     } catch (err) {
       alert('Failed to resend emails: ' + err.message);
-    } finally { setLoading(false); }
+    }
   };
 
   const handleDeleteBatch = async (batchId) => {
     if (!window.confirm(`Are you sure you want to delete ALL certificates in batch "${batchId}"? This cannot be undone.`)) return;
     try {
-      setLoading(true);
       const token = sessionStorage.getItem('token');
       await axios.post(`${API_BASE}/api/certificate/delete-batch-secure`, { batchId }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      loadTab('managed');
+      loadTab('managed', false);
     } catch (err) {
       alert('Failed to delete batch: ' + err.message);
-    } finally { setLoading(false); }
+    }
   };
 
   const handleDeleteCertificate = async (certId) => {
     if (!window.confirm(`Are you sure you want to delete certificate "${certId}"? This cannot be undone.`)) return;
     try {
-      setLoading(true);
       const token = sessionStorage.getItem('token');
       await axios.delete(`${API_BASE}/api/certificate/delete-certificate/${encodeURIComponent(certId)}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      loadTab('managed');
+      loadTab('managed', false);
     } catch (err) {
       alert('Failed to delete certificate: ' + (err.response?.data?.message || err.message));
-    } finally { setLoading(false); }
+    }
   };
 
   useEffect(() => {
-    loadTab(activeTab);
+    loadTab(activeTab, true);
+    // Real-time background auto-refresh every 5 seconds (zero reload needed!)
+    const interval = setInterval(() => {
+      loadTab(activeTab, false);
+    }, 5000);
+    return () => clearInterval(interval);
   }, [activeTab]);
 
 
