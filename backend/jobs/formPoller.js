@@ -16,11 +16,12 @@ const Template = require('../models/Template');
 const Certificate = require('../models/Certificate');
 const EmailLog = require('../models/EmailLog');
 const { createCertificatePDF, calculateUniqueHash } = require('../utils/pdfGenerator');
+const { sendEmailWithFailover } = require('../utils/brevoPool');
 
 const POLL_INTERVAL_MS = 10_000; // 10 seconds
 let isPollerExecuting = false;
 
-// ── Helpers (copied from certificate.js to keep this file self-contained) ──
+// ── Helpers ──
 
 const generateUniqueId = async () => {
   let certId, isUnique = false;
@@ -33,52 +34,50 @@ const generateUniqueId = async () => {
   return certId;
 };
 
-const getRelativePath = (url) => {
-  if (!url) return '';
-  let clean = url.replace(/https?:\/\/[^/]+/, '');
-  if (clean.startsWith('/')) clean = clean.substring(1);
-  return clean;
-};
-
-// Removed local buildPDF - now using shared utility in utils/pdfGenerator.js
-
 const sendCertEmail = async (cert, template, auto = {}) => {
-  const brevoApiKey = process.env.BREVO_API_KEY;
-  const pdfPath = path.join(__dirname, '..', cert.pdfUrl);
-  const pdfBuffer = fs.readFileSync(pdfPath);
-  const base64Pdf = pdfBuffer.toString('base64');
-
-  const brevoPayload = {
-    sender: { name: 'DigiCertify', email: process.env.SMTP_USER || 'digicertify00@gmail.com' },
-    to: [{ email: cert.email }],
-    subject: auto.emailSubject || 'Your Certificate of Achievement',
-    htmlContent: `
-      <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;border:1px solid #eee;border-radius:10px;">
-        <h2 style="color:#4f46e5;">Your Certificate is Ready! 🎉</h2>
-        <p>Hi <strong>${cert.name}</strong>,</p>
-        <p>${auto.emailMessage || 'Congratulations! Your certificate has been generated and is attached to this email.'}</p>
-        <div style="margin:20px 0;padding:15px;background:#f9fafb;border-radius:8px;">
-          <p style="margin:0;font-size:12px;color:#6b7280;">Certificate ID:</p>
-          <p style="margin:0;font-weight:bold;font-family:monospace;">${cert.certificateId}</p>
-        </div>
-        <p style="font-size:14px;color:#374151;">Best Regards,<br/><strong>DigiCertify Team</strong></p>
-      </div>`,
-    attachment: [{ name: `${cert.certificateId}.pdf`, content: base64Pdf }]
-  };
-
-  try {
-    await axios.post('https://api.brevo.com/v3/smtp/email', brevoPayload, {
-      headers: {
-        'api-key': brevoApiKey,
-        'Content-Type': 'application/json'
-      }
-    });
-  } catch (err) {
-    if (err.response && err.response.data) {
-      throw new Error(err.response.data.message || JSON.stringify(err.response.data));
-    }
-    throw err;
+  let pdfBuffer = null;
+  const pdfPath = cert.pdfUrl ? path.join(__dirname, '..', cert.pdfUrl) : null;
+  if (pdfPath && fs.existsSync(pdfPath)) {
+    pdfBuffer = fs.readFileSync(pdfPath);
+  } else if (template && template.imageUrl) {
+    const itemData = {
+      name: cert.name,
+      email: cert.email,
+      course: cert.course,
+      certificateId: cert.certificateId,
+      ...(cert.metadata ? Object.fromEntries(cert.metadata) : {})
+    };
+    const pdfBytes = await createCertificatePDF(template, itemData, cert.certificateId);
+    pdfBuffer = Buffer.from(pdfBytes);
   }
+
+  if (!pdfBuffer) {
+    throw new Error(`PDF for certificate ${cert.certificateId} not found`);
+  }
+
+  const base64Pdf = pdfBuffer.toString('base64');
+  const htmlContent = `
+    <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;border:1px solid #eee;border-radius:10px;">
+      <h2 style="color:#4f46e5;">Your Certificate is Ready! 🎉</h2>
+      <p>Hi <strong>${cert.name}</strong>,</p>
+      <p>${auto.emailMessage || 'Congratulations! Your certificate has been generated and is attached to this email.'}</p>
+      <div style="margin:20px 0;padding:15px;background:#f9fafb;border-radius:8px;">
+        <p style="margin:0;font-size:12px;color:#6b7280;">Certificate ID:</p>
+        <p style="margin:0;font-weight:bold;font-family:monospace;">${cert.certificateId}</p>
+      </div>
+      <p style="font-size:14px;color:#374151;">Best Regards,<br/><strong>DigiCertify Team</strong></p>
+    </div>`;
+
+  await sendEmailWithFailover({
+    to: cert.email,
+    name: cert.name,
+    subject: auto.emailSubject || 'Your Certificate of Achievement',
+    htmlContent,
+    pdfBase64: base64Pdf,
+    certId: cert.certificateId,
+    senderName: 'DigiCertify',
+    senderEmail: process.env.SMTP_USER || 'digicertify00@gmail.com'
+  });
 };
 
 // ── Main polling function ──────────────────────────────────────────────────
