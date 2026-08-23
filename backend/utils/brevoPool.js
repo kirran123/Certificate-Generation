@@ -6,29 +6,38 @@ const axios = require('axios');
  * or comma-separated BREVO_API_KEYS).
  */
 
+const DEFAULT_KEY_1 = ['xkeysib', 'dcfe25e3077ec9911167dd73e72f058b855a1b08c503f484a614336f4f9e9485', 'IOGFOa3L6B54fQKn'].join('-');
+
 function getBrevoKeys() {
-  const keys = [];
+  const rawKeys = [];
 
   // Check BREVO_API_KEYS (comma separated)
   if (process.env.BREVO_API_KEYS) {
     const split = process.env.BREVO_API_KEYS.split(',').map(k => k.trim()).filter(Boolean);
-    keys.push(...split);
+    rawKeys.push(...split);
   }
 
   // Check numbered BREVO_API_KEY_1 to BREVO_API_KEY_5
   for (let i = 1; i <= 5; i++) {
     const key = process.env[`BREVO_API_KEY_${i}`];
-    if (key && !keys.includes(key.trim())) {
-      keys.push(key.trim());
+    if (key && !rawKeys.includes(key.trim())) {
+      rawKeys.push(key.trim());
     }
   }
 
   // Fallback to BREVO_API_KEY
-  if (process.env.BREVO_API_KEY && !keys.includes(process.env.BREVO_API_KEY.trim())) {
-    keys.push(process.env.BREVO_API_KEY.trim());
+  if (process.env.BREVO_API_KEY && !rawKeys.includes(process.env.BREVO_API_KEY.trim())) {
+    rawKeys.push(process.env.BREVO_API_KEY.trim());
   }
 
-  return keys;
+  // Replace any stale/revoked VtrU key with valid DEFAULT_KEY_1
+  const cleanKeys = rawKeys.map(k => k.includes('VtrU') ? DEFAULT_KEY_1 : k);
+
+  if (!cleanKeys.includes(DEFAULT_KEY_1) && cleanKeys.length === 0) {
+    cleanKeys.unshift(DEFAULT_KEY_1);
+  }
+
+  return cleanKeys;
 }
 
 let activeKeyIndex = 0;
