@@ -135,18 +135,29 @@ const Certificate = {
   },
 
   populate: async (certs, field = 'templateId') => {
+    if (!certs || certs.length === 0) return [];
     const Template = require('./Template');
-    return Promise.all(certs.map(async (cert) => {
-      if (field === 'templateId' && cert.templateId) {
-        const rawTid = typeof cert.templateId === 'object' ? (cert.templateId._id || cert.templateId.id) : cert.templateId;
-        const tid = String(rawTid || '').trim();
-        if (tid && tid !== '[object Object]') {
-          const tmpl = await Template.findById(tid);
-          return { ...cert, templateId: tmpl || cert.templateId };
-        }
+    if (field === 'templateId') {
+      try {
+        const allTemplates = await Template.find({});
+        const tmplMap = new Map(allTemplates.map(t => [String(t._id), t]));
+        return certs.map((cert) => {
+          if (cert.templateId) {
+            const rawTid = typeof cert.templateId === 'object' ? (cert.templateId._id || cert.templateId.id) : cert.templateId;
+            const tid = String(rawTid || '').trim();
+            if (tid && tid !== '[object Object]') {
+              const tmpl = tmplMap.get(tid);
+              return { ...cert, templateId: tmpl || cert.templateId };
+            }
+          }
+          return cert;
+        });
+      } catch (err) {
+        console.warn('[Certificate.populate] Error:', err.message);
+        return certs;
       }
-      return cert;
-    }));
+    }
+    return certs;
   },
 
   updateOne: async (filter, update) => {
