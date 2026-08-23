@@ -513,6 +513,7 @@ router.get('/download/:certId', async (req, res) => {
     const pdfBytes = await createCertificatePDF(
       {
         imageUrl: template.imageUrl,
+        imageBase64: template.imageBase64,
         layoutConfig: template.layoutConfig,
         qrCode: template.qrCode,
         showId: template.showId,
@@ -583,6 +584,7 @@ router.get('/download-bulk', protect, async (req, res) => {
         const pdfBytes = await createCertificatePDF(
           {
             imageUrl: template.imageUrl,
+            imageBase64: template.imageBase64,
             layoutConfig: template.layoutConfig,
             qrCode: template.qrCode,
             showId: template.showId,
@@ -729,6 +731,7 @@ router.post('/resend-batch/:batchId', protect, async (req, res) => {
           const pdfBytes = await createCertificatePDF(
             {
               imageUrl: cert.templateId.imageUrl,
+              imageBase64: cert.templateId.imageBase64,
               layoutConfig: cert.templateId.layoutConfig,
               qrCode: cert.templateId.qrCode,
               showId: cert.templateId.showId,
@@ -829,6 +832,7 @@ router.post('/resend-single/:certId', protect, async (req, res) => {
       const pdfBytes = await createCertificatePDF(
         {
           imageUrl: cert.templateId.imageUrl,
+          imageBase64: cert.templateId.imageBase64,
           layoutConfig: cert.templateId.layoutConfig,
           qrCode: cert.templateId.qrCode,
           showId: cert.templateId.showId,

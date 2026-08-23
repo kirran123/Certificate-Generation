@@ -157,7 +157,7 @@ export default function AdminDashboard() {
       alert(res.data?.message || `Successfully resent email to ${email}`);
       loadTab('certificates', false);
     } catch (err) {
-      alert('Failed to resend email: ' + (err.response?.data?.message || err.message));
+      alert(err.response?.data?.message || err.message);
     } finally {
       setResendingCertId(null);
     }

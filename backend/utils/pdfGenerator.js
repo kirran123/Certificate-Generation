@@ -45,8 +45,27 @@ async function createCertificatePDF(template, data, certId) {
     } else if (template.imageBase64) {
       console.log(`[PDF Generator] Local file missing. Using Base64 backup for ${certId}.`);
       templateBytes = Buffer.from(template.imageBase64, 'base64');
+    } else if (template.imageUrl && (template.imageUrl.startsWith('http://') || template.imageUrl.startsWith('https://'))) {
+      console.log(`[PDF Generator] Fetching remote image for ${certId}: ${template.imageUrl}`);
+      const response = await fetch(template.imageUrl);
+      const arrayBuffer = await response.arrayBuffer();
+      templateBytes = Buffer.from(arrayBuffer);
     } else {
-      throw new Error(`Template file not found locally and no Base64 backup exists.`);
+      // Try fetching over HTTP if imageUrl is relative and server runs on remote host
+      const backendUrl = process.env.BACKEND_URL || process.env.SERVER_URL || 'http://localhost:5000';
+      const fullUrl = `${backendUrl.replace(/\/$/, '')}/${cleanUrl.replace(/^\//, '')}`;
+      console.log(`[PDF Generator] Local file missing, attempting HTTP fetch from ${fullUrl}`);
+      try {
+        const response = await fetch(fullUrl);
+        if (response.ok) {
+          const arrayBuffer = await response.arrayBuffer();
+          templateBytes = Buffer.from(arrayBuffer);
+        } else {
+          throw new Error(`HTTP ${response.status}`);
+        }
+      } catch (httpErr) {
+        throw new Error(`Template file not found locally and no Base64 backup exists.`);
+      }
     }
   } catch (err) {
     // Final fallback

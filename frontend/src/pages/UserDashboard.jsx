@@ -121,7 +121,7 @@ export default function UserDashboard() {
       alert(res.data?.message || `Successfully resent email to ${email}`);
       loadTab("managed", false);
     } catch (err) {
-      alert("Failed to resend email: " + (err.response?.data?.message || err.message));
+      alert(err.response?.data?.message || err.message);
     } finally {
       setResendingCertId(null);
     }
