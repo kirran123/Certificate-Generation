@@ -16,6 +16,7 @@ import {
   getEmailLogsHandler,
   cleanupDbHandler,
   getAdminStatsHandler,
+  getBrevoStatusHandler,
 } from "./httpAdmin";
 
 // Template
@@ -109,6 +110,7 @@ http.route({ pathPrefix: "/api/admin/certificates/", method: "DELETE", handler: 
 http.route({ path: "/api/admin/emaillogs",           method: "GET",    handler: withCors(getEmailLogsHandler) });
 http.route({ path: "/api/admin/cleanup-db",          method: "POST",   handler: withCors(cleanupDbHandler) });
 http.route({ path: "/api/admin/stats",               method: "GET",    handler: withCors(getAdminStatsHandler) });
+http.route({ path: "/api/admin/brevo-status",        method: "GET",    handler: withCors(getBrevoStatusHandler) });
 
 // ── Template ──────────────────────────────────────────────────────────────
 http.route({ path: "/api/template/upload-image", method: "POST", handler: withCors(uploadImageHandler) });

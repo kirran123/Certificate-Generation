@@ -331,3 +331,98 @@ export const sendEmail = internalAction({
     throw new Error(`All ${keys.length} Brevo API key(s) failed or exceeded limits. Last error: ${lastError}`);
   },
 });
+
+export const getBrevoPoolStatusAction = internalAction({
+  args: {},
+  handler: async () => {
+    const keys: string[] = [];
+    if (process.env.BREVO_API_KEYS) {
+      keys.push(...process.env.BREVO_API_KEYS.split(",").map((k) => k.trim()).filter(Boolean));
+    }
+    for (let i = 1; i <= 5; i++) {
+      const k = process.env[`BREVO_API_KEY_${i}`];
+      if (k && !keys.includes(k.trim())) keys.push(k.trim());
+    }
+    if (process.env.BREVO_API_KEY && !keys.includes(process.env.BREVO_API_KEY.trim())) {
+      keys.push(process.env.BREVO_API_KEY.trim());
+    }
+
+    const poolStatus: any[] = [];
+    for (let i = 0; i < keys.length; i++) {
+      const apiKey = keys[i];
+      const masked = apiKey.length > 12 ? `${apiKey.substring(0, 8)}...${apiKey.slice(-4)}` : `Key #${i + 1}`;
+      let keyInfo: any = {
+        index: i + 1,
+        keyMasked: masked,
+        email: masked,
+        creditsRemaining: 300,
+        dailyQuota: 300,
+        creditsType: 'daily',
+        status: 'standby',
+        error: null
+      };
+
+      try {
+        const resp = await axios.get('https://api.brevo.com/v3/account', {
+          headers: { 'api-key': apiKey, 'accept': 'application/json' },
+          timeout: 5000
+        });
+
+        if (resp.data) {
+          if (resp.data.email) {
+            keyInfo.email = resp.data.email;
+          }
+          if (Array.isArray(resp.data.plan)) {
+            const sendPlan = resp.data.plan.find((p: any) => p.credits !== undefined) || resp.data.plan[0];
+            if (sendPlan) {
+              keyInfo.creditsRemaining = sendPlan.credits !== undefined ? sendPlan.credits : 300;
+              keyInfo.creditsType = sendPlan.creditsType || 'daily';
+              if (sendPlan.creditsType === 'daily') keyInfo.dailyQuota = 300;
+            }
+          }
+        }
+
+        if (keyInfo.creditsRemaining <= 0) {
+          keyInfo.status = 'exceeded';
+          keyInfo.email = `${keyInfo.email} (Limit Reached)`;
+        }
+      } catch (err: any) {
+        keyInfo.error = err.response?.data?.message || err.message;
+        const httpStatus = err.response?.status;
+        if (httpStatus === 401) {
+          keyInfo.status = 'invalid';
+          keyInfo.email = `${masked} (Invalid Key)`;
+          keyInfo.creditsRemaining = 0;
+        } else {
+          keyInfo.status = 'exceeded';
+          keyInfo.email = `${masked} (Quota Exceeded)`;
+          keyInfo.creditsRemaining = 0;
+        }
+      }
+
+      poolStatus.push(keyInfo);
+    }
+
+    let activeFound = false;
+    for (let k of poolStatus) {
+      if (k.status !== 'exceeded' && k.status !== 'invalid' && k.creditsRemaining > 0) {
+        if (!activeFound) {
+          k.status = 'active';
+          activeFound = true;
+        } else {
+          k.status = 'standby';
+        }
+      }
+    }
+
+    const totalRemaining = poolStatus.reduce((acc, k) => acc + (k.creditsRemaining || 0), 0);
+    const totalCapacity = poolStatus.reduce((acc, k) => acc + (k.dailyQuota || 300), 0);
+
+    return {
+      totalKeys: keys.length,
+      totalRemaining,
+      totalCapacity,
+      keys: poolStatus
+    };
+  },
+});

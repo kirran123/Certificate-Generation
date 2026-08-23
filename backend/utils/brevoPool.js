@@ -165,14 +165,15 @@ async function getBrevoPoolStatus() {
 
   for (let i = 0; i < keys.length; i++) {
     const apiKey = keys[i];
+    const masked = apiKey.length > 12 ? `${apiKey.substring(0, 8)}...${apiKey.slice(-4)}` : `Key #${i + 1}`;
     let keyInfo = {
       index: i + 1,
-      keyMasked: apiKey.length > 12 ? `${apiKey.substring(0, 8)}...${apiKey.slice(-4)}` : '***',
-      email: `Key #${i + 1}`,
+      keyMasked: masked,
+      email: masked,
       creditsRemaining: 300,
       dailyQuota: 300,
       creditsType: 'daily',
-      status: i === activeKeyIndex ? 'active' : 'standby',
+      status: 'standby',
       error: null
     };
 
@@ -195,15 +196,39 @@ async function getBrevoPoolStatus() {
           }
         }
       }
+
+      if (keyInfo.creditsRemaining <= 0) {
+        keyInfo.status = 'exceeded';
+        keyInfo.email = `${keyInfo.email} (Limit Reached)`;
+      }
     } catch (err) {
       keyInfo.error = err.response?.data?.message || err.message;
-      if (err.response?.status === 401 || err.response?.status === 402 || err.response?.status === 429) {
+      const httpStatus = err.response?.status;
+      if (httpStatus === 401) {
+        keyInfo.status = 'invalid';
+        keyInfo.email = `${masked} (Invalid Key)`;
+        keyInfo.creditsRemaining = 0;
+      } else {
         keyInfo.status = 'exceeded';
+        keyInfo.email = `${masked} (Quota Exceeded)`;
         keyInfo.creditsRemaining = 0;
       }
     }
 
     poolStatus.push(keyInfo);
+  }
+
+  // Mark the first key that has available credits as 'active'
+  let activeFound = false;
+  for (let k of poolStatus) {
+    if (k.status !== 'exceeded' && k.status !== 'invalid' && k.creditsRemaining > 0) {
+      if (!activeFound) {
+        k.status = 'active';
+        activeFound = true;
+      } else {
+        k.status = 'standby';
+      }
+    }
   }
 
   const totalRemaining = poolStatus.reduce((acc, k) => acc + (k.creditsRemaining || 0), 0);
