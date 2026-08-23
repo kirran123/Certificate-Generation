@@ -261,17 +261,57 @@ export const sendEmail = internalAction({
     senderEmail: v.optional(v.string()),
   },
   handler: async (_ctx, args): Promise<void> => {
-    const brevoApiKey = process.env.BREVO_API_KEY;
+    // 1. Sanitize & clean recipient email (strip quotes, whitespace, lowercase)
+    const cleanTo = String(args.to || "").replace(/^["'\s]+|["'\s]+$/g, "").trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!cleanTo || !emailRegex.test(cleanTo)) {
+      throw new Error(`Invalid recipient email address: "${args.to}"`);
+    }
+
+    // 2. Build Brevo API key pool
+    const keys: string[] = [];
+    if (process.env.BREVO_API_KEYS) {
+      keys.push(...process.env.BREVO_API_KEYS.split(",").map((k) => k.trim()).filter(Boolean));
+    }
+    for (let i = 1; i <= 5; i++) {
+      const k = process.env[`BREVO_API_KEY_${i}`];
+      if (k && !keys.includes(k.trim())) keys.push(k.trim());
+    }
+    if (process.env.BREVO_API_KEY && !keys.includes(process.env.BREVO_API_KEY.trim())) {
+      keys.push(process.env.BREVO_API_KEY.trim());
+    }
+
+    if (keys.length === 0) {
+      throw new Error("No Brevo API keys configured.");
+    }
+
     const payload = {
       sender: { name: args.senderName || "DigiCertify", email: args.senderEmail || "digicertify00@gmail.com" },
-      to: [{ email: args.to }],
+      to: [{ email: cleanTo, name: args.name }],
       subject: args.subject,
       htmlContent: args.htmlContent,
       attachment: [{ content: args.pdfBase64, name: `${args.certId}.pdf` }],
     };
-    const resp = await axios.post("https://api.brevo.com/v3/smtp/email", payload, {
-      headers: { "api-key": brevoApiKey, "Content-Type": "application/json" },
-    });
-    if (resp.status >= 400) throw new Error(`Brevo error: ${JSON.stringify(resp.data)}`);
+
+    let lastError = "";
+    for (const key of keys) {
+      try {
+        const resp = await axios.post("https://api.brevo.com/v3/smtp/email", payload, {
+          headers: { "api-key": key, "Content-Type": "application/json" },
+          timeout: 20000,
+        });
+        if (resp.status >= 200 && resp.status < 300) return;
+      } catch (e: any) {
+        const status = e.response?.status;
+        const errDetail = e.response?.data?.message || e.response?.data?.code || e.message;
+        lastError = String(errDetail);
+
+        if (status === 400 || (typeof errDetail === "string" && (errDetail.toLowerCase().includes("invalid") || errDetail.toLowerCase().includes("format")))) {
+          throw new Error(`Invalid recipient email or payload: ${errDetail}`);
+        }
+      }
+    }
+
+    throw new Error(`All ${keys.length} Brevo API key(s) failed or exceeded limits. Last error: ${lastError}`);
   },
 });

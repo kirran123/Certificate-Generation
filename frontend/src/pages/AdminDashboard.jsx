@@ -76,11 +76,12 @@ export default function AdminDashboard() {
     const token = sessionStorage.getItem('token');
     const headers = { Authorization: `Bearer ${token}` };
     try {
+      // Always fetch stats so top Stat Cards (Users, Certificates, Sent, Failed) remain accurate across all tabs
+      await fetchOverviewStats(headers);
+
       if (tab === 'certificates') {
         await axios.delete(`${API_BASE}/api/certificate/form-automations/cleanup`, { headers }).catch(() => { });
         await fetchCertificates(headers);
-      } else if (tab === 'overview') {
-        await fetchOverviewStats(headers);
       } else if (tab === 'users') {
         await fetchUsers(headers);
       } else if (tab === 'logs') {

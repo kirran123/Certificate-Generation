@@ -54,7 +54,7 @@ async function sendEmailWithFailover(emailOptions) {
   }
 
   const {
-    to,
+    to: rawTo,
     name,
     subject,
     htmlContent,
@@ -63,6 +63,15 @@ async function sendEmailWithFailover(emailOptions) {
     senderName = 'DigiCertify',
     senderEmail = 'digicertify00@gmail.com',
   } = emailOptions;
+
+  // 1. Sanitize & clean recipient email (strip quotes, whitespace, lowercase)
+  const to = String(rawTo || '').replace(/^["'\s]+|["'\s]+$/g, '').trim().toLowerCase();
+
+  // 2. Validate email syntax before sending
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!to || !emailRegex.test(to)) {
+    throw new Error(`Invalid recipient email address: "${rawTo}"`);
+  }
 
   const payload = {
     sender: { name: senderName, email: senderEmail },
@@ -74,6 +83,7 @@ async function sendEmailWithFailover(emailOptions) {
 
   let attempts = 0;
   const maxAttempts = keys.length;
+  let lastErrorData = '';
 
   while (attempts < maxAttempts) {
     // Ensure activeKeyIndex stays within bounds
@@ -94,11 +104,20 @@ async function sendEmailWithFailover(emailOptions) {
       }
     } catch (err) {
       const status = err.response ? err.response.status : null;
+      const errorMsg = err.response?.data?.message || err.response?.data?.code || err.message;
       const errorData = err.response ? JSON.stringify(err.response.data) : err.message;
+      lastErrorData = errorMsg || errorData;
+
+      console.warn(`[Brevo Pool] Key #${activeKeyIndex + 1} failed (Status: ${status || 'Network/Error'}). Error: ${errorData}`);
+
+      // If status === 400 or error indicates invalid email / payload, DO NOT switch keys — throw actual error immediately
+      if (status === 400 || errorData.toLowerCase().includes('invalid') || errorData.toLowerCase().includes('format')) {
+        throw new Error(`Invalid recipient email or payload: ${errorMsg || errorData}`);
+      }
+
       const isQuotaOrLimit =
         status === 402 ||
         status === 429 ||
-        status === 400 ||
         status === 401 ||
         errorData.toLowerCase().includes('quota') ||
         errorData.toLowerCase().includes('limit') ||
@@ -106,25 +125,22 @@ async function sendEmailWithFailover(emailOptions) {
         errorData.toLowerCase().includes('unauthorized') ||
         errorData.toLowerCase().includes('credit');
 
-      console.warn(`[Brevo Pool] Key #${activeKeyIndex + 1} failed (Status: ${status || 'Network/Error'}). Error: ${errorData}`);
-
       if (isQuotaOrLimit && keys.length > 1) {
-        // Silently switch to the next key without throwing an error to the caller
+        // Silently switch to the next key
         console.log(`[Brevo Pool] Silently auto-switching from Key #${activeKeyIndex + 1} to Key #${((activeKeyIndex + 1) % keys.length) + 1}...`);
         activeKeyIndex = (activeKeyIndex + 1) % keys.length;
         attempts++;
       } else {
-        // If it's not a quota issue or we've tried all keys, increment index for next attempt & rethrow
         activeKeyIndex = (activeKeyIndex + 1) % keys.length;
         attempts++;
         if (attempts >= maxAttempts) {
-          throw new Error(`All ${keys.length} Brevo API key(s) failed or exceeded limits: ${errorData}`);
+          throw new Error(`All ${keys.length} Brevo API key(s) failed or exceeded limits: ${lastErrorData}`);
         }
       }
     }
   }
 
-  throw new Error(`All ${keys.length} Brevo API key(s) in pool exceeded daily sending limits.`);
+  throw new Error(`All ${keys.length} Brevo API key(s) in pool exceeded daily sending limits. Last error: ${lastErrorData}`);
 }
 
 module.exports = {
