@@ -87,10 +87,14 @@ export default function AdminDashboard() {
 
   const fetchCertificates = async (headers) => {
     try {
-      const [certsRes, autosRes] = await Promise.all([
-        axios.get(`${API_BASE}/api/admin/certificates`, { headers }),
-        axios.get(`${API_BASE}/api/certificate/form-automations`, { headers })
-      ]);
+      const certsRes = await axios.get(`${API_BASE}/api/admin/certificates`, { headers }).catch(e => {
+        console.error('Failed certsRes:', e);
+        return { data: [] };
+      });
+      const autosRes = await axios.get(`${API_BASE}/api/certificate/form-automations`, { headers }).catch(e => {
+        console.error('Failed autosRes:', e);
+        return { data: [] };
+      });
       setCertificates(certsRes.data || []);
       setAutomations(autosRes.data || []);
     } catch (e) { console.error('Failed to fetch certificates:', e); }
