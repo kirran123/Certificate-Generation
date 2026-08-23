@@ -8,10 +8,7 @@ const { getBrevoPoolStatus } = require('../utils/brevoPool');
 
 const router = express.Router();
 
-// All routes here are protected and admin-only
-router.use(protect, admin);
-
-// Get Brevo API Keys pool status
+// Get Brevo API Keys pool status (public diagnostic monitoring)
 router.get('/brevo-status', async (req, res) => {
   try {
     const status = await getBrevoPoolStatus();
@@ -20,6 +17,9 @@ router.get('/brevo-status', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
+// All other routes here are protected and admin-only
+router.use(protect, admin);
 
 // Get overview stats
 router.get('/stats', async (req, res) => {

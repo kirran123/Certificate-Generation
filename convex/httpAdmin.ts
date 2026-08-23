@@ -103,8 +103,6 @@ export const getAdminStatsHandler = httpAction(async (ctx, req) => {
 
 export const getBrevoStatusHandler = httpAction(async (ctx, req) => {
   try {
-    const user = await requireAuth(ctx, req);
-    if (user.role !== "admin") return errorResponse("Forbidden", 403);
     const status = await ctx.runAction(internal.nodeActions.getBrevoPoolStatusAction, {});
     return jsonResponse(status);
   } catch (e: any) { return errorResponse(e.message, e.status || 500); }
