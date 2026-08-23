@@ -37,11 +37,11 @@ export default function AdminDashboard() {
   const fetchBrevoStatus = async (headers) => {
     setLoadingBrevo(true);
     try {
-      const res = await axios.get(`${IO_API_BASE}/api/admin/brevo-status`, { headers });
+      const res = await axios.get(`${API_BASE}/api/admin/brevo-status`, { headers });
       setBrevoPool(res.data);
     } catch (e) {
       try {
-        const res = await axios.get(`${API_BASE}/api/admin/brevo-status`, { headers });
+        const res = await axios.get(`${IO_API_BASE}/api/admin/brevo-status`, { headers });
         setBrevoPool(res.data);
       } catch (err) {
         console.error('Failed to fetch Brevo pool status:', err.message);
