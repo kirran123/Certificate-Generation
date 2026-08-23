@@ -109,6 +109,24 @@ export default function UserDashboard() {
     }
   };
 
+  const [resendingCertId, setResendingCertId] = useState(null);
+
+  const handleResendSingleCertificate = async (certId, email) => {
+    setResendingCertId(certId);
+    try {
+      const token = sessionStorage.getItem("token");
+      const res = await axios.post(`${IO_API_BASE}/api/certificate/resend-single/${encodeURIComponent(certId)}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert(res.data?.message || `Successfully resent email to ${email}`);
+      loadTab("managed", false);
+    } catch (err) {
+      alert("Failed to resend email: " + (err.response?.data?.message || err.message));
+    } finally {
+      setResendingCertId(null);
+    }
+  };
+
   const handleDeleteCertificate = async (certId) => {
     if (!window.confirm(`Are you sure you want to delete certificate "${certId}"? This cannot be undone.`)) return;
     try {
@@ -442,6 +460,14 @@ export default function UserDashboard() {
                                           : <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 text-amber-600 border border-amber-500/20 text-xs font-semibold rounded-full"><div className="w-1.5 h-1.5 rounded-full bg-amber-500" />No Email</span>}
                                     </td>
                                     <td className="px-6 py-4 text-right">
+                                        <button
+                                          onClick={() => handleResendSingleCertificate(cert.certificateId, cert.email)}
+                                          disabled={resendingCertId === cert.certificateId}
+                                          className="p-2 text-amber-400 hover:bg-amber-500/10 hover:text-amber-500 rounded-lg transition-all disabled:opacity-50"
+                                          title="Resend email for this certificate"
+                                        >
+                                          <RefreshCw className={`w-3.5 h-3.5 ${resendingCertId === cert.certificateId ? "animate-spin" : ""}`} />
+                                        </button>
                                       <div className="flex items-center justify-end gap-2">
                                         <a
                                           href={`${IO_API_BASE}/api/certificate/download/${cert.certificateId}`}

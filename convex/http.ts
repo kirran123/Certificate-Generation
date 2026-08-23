@@ -35,6 +35,7 @@ import {
   deleteCert,
   deleteBatchSecure,
   resendBatch,
+  resendSingle,
   createAutomation,
   listAutomations,
   toggleAutomation,
@@ -129,6 +130,7 @@ http.route({ path: "/api/certificate/form-automations",    method: "GET",    han
 http.route({ pathPrefix: "/api/certificate/download/",           method: "GET",    handler: withCors(downloadCert) });
 http.route({ pathPrefix: "/api/certificate/delete-certificate/",  method: "DELETE", handler: withCors(deleteCert) });
 http.route({ pathPrefix: "/api/certificate/resend-batch/",       method: "POST",   handler: withCors(resendBatch) });
+http.route({ pathPrefix: "/api/certificate/resend-single/",      method: "POST",   handler: withCors(resendSingle) });
 http.route({ pathPrefix: "/api/certificate/form-automation/",    method: "PATCH",  handler: withCors(toggleAutomation) });
 http.route({ pathPrefix: "/api/certificate/form-automation/",    method: "DELETE", handler: withCors(deleteAutomation) });
 http.route({ path: "/api/certificate/form-automations/cleanup",  method: "DELETE", handler: withCors(cleanupAutomations) });

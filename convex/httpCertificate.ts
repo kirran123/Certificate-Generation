@@ -548,6 +548,57 @@ const resendBatch = httpAction(async (ctx, req) => {
   }
 });
 
+const resendSingle = httpAction(async (ctx, req) => {
+  try {
+    const user = await requireAuth(ctx, req);
+    const url = new URL(req.url);
+    const certId = decodeURIComponent(url.pathname.split("/resend-single/")[1]);
+
+    const cert = await ctx.runQuery(internal.certificates.findByCertId, { certificateId: certId });
+    if (!cert) return errorResponse("Certificate not found.", 404);
+    if (user.role !== "admin" && cert.createdBy !== user._id) {
+      return errorResponse("Forbidden", 403);
+    }
+    if (!cert.email) return errorResponse("Certificate has no recipient email.", 400);
+
+    // Clean & normalize email
+    let cleanEmail = String(cert.email).replace(/\s+/g, "").replace(/^[<"'\s]+|[>'"\s]+$/g, "").replace(/[\s.,;:)]+$/g, "").replace(/^[\s.,;:(]+/g, "").toLowerCase();
+
+    const template = await ctx.runQuery(internal.templates.findMetadataById, { id: cert.templateId });
+    if (!template) return errorResponse("Template not found.", 404);
+
+    const templateBase64 = await getTemplateBytesBase64(ctx, template);
+    const itemData = { name: cert.name, email: cleanEmail, course: cert.course, certificateId: cert.certificateId, ...(cert.metadata || {}) };
+
+    const pdfBase64 = await ctx.runAction(internal.nodeActions.generatePdf, {
+      templateBase64,
+      layoutConfig: template.layoutConfig,
+      qrCode: template.qrCode,
+      showId: template.showId,
+      showQr: template.showQr,
+      data: itemData,
+      certId: cert.certificateId,
+      frontendUrl: FRONTEND_URL,
+    });
+
+    await ctx.runAction(internal.nodeActions.sendEmail, {
+      to: cleanEmail,
+      name: cert.name,
+      subject: "Your Certificate of Achievement",
+      htmlContent: buildCertEmailHtml(cert.name, cert.certificateId, "Your certificate has been re-sent successfully.", "DigiCertify"),
+      pdfBase64,
+      certId: cert.certificateId,
+    });
+
+    await ctx.runMutation(internal.certificates.updateStatus, { id: cert._id, status: "Sent" });
+    await ctx.runMutation(internal.emailLogs.create, { certificateId: cert.certificateId, recipient: cleanEmail, status: "Sent" });
+
+    return jsonResponse({ message: `Successfully resent email to ${cleanEmail}` });
+  } catch (e: any) {
+    return errorResponse(e.message);
+  }
+});
+
 // ── Form Automations ──────────────────────────────────────────────────────
 const createAutomation = httpAction(async (ctx, req) => {
   try {
@@ -673,6 +724,7 @@ export {
   deleteCert,
   deleteBatchSecure,
   resendBatch,
+  resendSingle,
   createAutomation,
   listAutomations,
   toggleAutomation,
