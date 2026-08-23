@@ -4,11 +4,22 @@ const Certificate = require('../models/Certificate');
 const EmailLog = require('../models/EmailLog');
 const Feedback = require('../models/Feedback');
 const { protect, admin } = require('../middleware/auth');
+const { getBrevoPoolStatus } = require('../utils/brevoPool');
 
 const router = express.Router();
 
 // All routes here are protected and admin-only
 router.use(protect, admin);
+
+// Get Brevo API Keys pool status
+router.get('/brevo-status', async (req, res) => {
+  try {
+    const status = await getBrevoPoolStatus();
+    res.json(status);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
 // Get overview stats
 router.get('/stats', async (req, res) => {

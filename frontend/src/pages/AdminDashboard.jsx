@@ -31,6 +31,25 @@ export default function AdminDashboard() {
   const [expandedBatch, setExpandedBatch] = useState(null);
   const [automations, setAutomations] = useState([]);
   const [feedbacks, setFeedbacks] = useState([]);
+  const [brevoPool, setBrevoPool] = useState(null);
+  const [loadingBrevo, setLoadingBrevo] = useState(false);
+
+  const fetchBrevoStatus = async (headers) => {
+    setLoadingBrevo(true);
+    try {
+      const res = await axios.get(`${IO_API_BASE}/api/admin/brevo-status`, { headers });
+      setBrevoPool(res.data);
+    } catch (e) {
+      try {
+        const res = await axios.get(`${API_BASE}/api/admin/brevo-status`, { headers });
+        setBrevoPool(res.data);
+      } catch (err) {
+        console.error('Failed to fetch Brevo pool status:', err.message);
+      }
+    } finally {
+      setLoadingBrevo(false);
+    }
+  };
 
   const fetchOverviewStats = async (headers) => {
     try {
@@ -79,6 +98,7 @@ export default function AdminDashboard() {
     try {
       // Always fetch stats so top Stat Cards (Users, Certificates, Sent, Failed) remain accurate across all tabs
       await fetchOverviewStats(headers);
+      fetchBrevoStatus(headers);
 
       if (tab === 'certificates') {
         await axios.delete(`${API_BASE}/api/certificate/form-automations/cleanup`, { headers }).catch(() => { });
@@ -332,6 +352,78 @@ export default function AdminDashboard() {
         <div className="space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-16 bg-[var(--border-subtle)] rounded-2xl animate-pulse" />)}</div>
       ) : activeTab === 'overview' ? (
         <div className="space-y-6">
+          {/* ── Brevo Email Pool Status Widget ────────────────────────────────────── */}
+          <div className="glass rounded-2xl p-5 border border-[var(--border-subtle)] space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--border-subtle)] pb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                  <Zap className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-[var(--text-primary)] tracking-tight">Brevo Email Pool Status</h3>
+                  <p className="text-xs text-[var(--text-secondary)] font-medium">Real-time daily sending credits & key failover status</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                {brevoPool && (
+                  <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                    Pool Total: {brevoPool.totalRemaining} / {brevoPool.totalCapacity} Available Today
+                  </span>
+                )}
+                <button
+                  onClick={() => fetchBrevoStatus({ Authorization: `Bearer ${sessionStorage.getItem('token')}` })}
+                  disabled={loadingBrevo}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl border border-[var(--border-subtle)] hover:bg-[var(--border-subtle)] text-[var(--text-secondary)] transition-all disabled:opacity-50"
+                  title="Refresh Brevo API usage"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${loadingBrevo ? 'animate-spin' : ''}`} />
+                  Refresh Pool
+                </button>
+              </div>
+            </div>
+
+            {loadingBrevo && !brevoPool ? (
+              <div className="h-16 bg-[var(--border-subtle)] rounded-xl animate-pulse" />
+            ) : brevoPool && brevoPool.keys ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                {brevoPool.keys.map((k) => {
+                  const usedPercent = Math.min(100, Math.round(((k.dailyQuota - k.creditsRemaining) / k.dailyQuota) * 100));
+                  return (
+                    <div key={k.index} className={`p-3.5 rounded-xl border transition-all ${k.status === 'active' ? 'bg-indigo-500/5 border-indigo-500/30' : k.status === 'exceeded' ? 'bg-red-500/5 border-red-500/30' : 'bg-[var(--border-subtle)]/40 border-[var(--border-subtle)]'}`}>
+                      <div className="flex items-center justify-between gap-1 mb-2">
+                        <span className="text-xs font-bold text-[var(--text-primary)] truncate" title={k.email}>
+                          Key #{k.index}
+                        </span>
+                        <span className={`px-2 py-0.5 text-[10px] font-black rounded-full uppercase tracking-wider ${k.status === 'active' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : k.status === 'exceeded' ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-slate-500/10 text-slate-400 border border-slate-500/20'}`}>
+                          {k.status}
+                        </span>
+                      </div>
+                      
+                      <p className="text-[11px] font-mono text-[var(--text-secondary)] truncate mb-2" title={k.email}>
+                        {k.email}
+                      </p>
+
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-[11px] font-medium">
+                          <span className="text-[var(--text-secondary)]">Remaining</span>
+                          <span className="font-bold text-[var(--text-primary)]">{k.creditsRemaining} / {k.dailyQuota}</span>
+                        </div>
+                        <div className="w-full h-1.5 bg-[var(--border-subtle)] rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all ${k.status === 'exceeded' ? 'bg-red-500' : k.status === 'active' ? 'bg-emerald-500' : 'bg-indigo-500'}`}
+                            style={{ width: `${Math.max(5, 100 - usedPercent)}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-xs text-[var(--text-secondary)] opacity-60">Brevo key usage status unavailable.</p>
+            )}
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
             {/* Column 1: Email Logs */}
             <div className="glass rounded-2xl border border-[var(--border-subtle)] overflow-hidden h-full flex flex-col">

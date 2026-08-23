@@ -159,7 +159,67 @@ async function sendEmailWithFailover(emailOptions) {
   throw new Error(`All ${keys.length} Brevo API key(s) in pool exceeded daily sending limits. Last error: ${lastErrorData}`);
 }
 
+async function getBrevoPoolStatus() {
+  const keys = getBrevoKeys();
+  const poolStatus = [];
+
+  for (let i = 0; i < keys.length; i++) {
+    const apiKey = keys[i];
+    let keyInfo = {
+      index: i + 1,
+      keyMasked: apiKey.length > 12 ? `${apiKey.substring(0, 8)}...${apiKey.slice(-4)}` : '***',
+      email: `Key #${i + 1}`,
+      creditsRemaining: 300,
+      dailyQuota: 300,
+      creditsType: 'daily',
+      status: i === activeKeyIndex ? 'active' : 'standby',
+      error: null
+    };
+
+    try {
+      const resp = await axios.get('https://api.brevo.com/v3/account', {
+        headers: { 'api-key': apiKey, 'accept': 'application/json' },
+        timeout: 5000
+      });
+
+      if (resp.data) {
+        if (resp.data.email) {
+          keyInfo.email = resp.data.email;
+        }
+        if (Array.isArray(resp.data.plan)) {
+          const sendPlan = resp.data.plan.find(p => p.credits !== undefined) || resp.data.plan[0];
+          if (sendPlan) {
+            keyInfo.creditsRemaining = sendPlan.credits !== undefined ? sendPlan.credits : 300;
+            keyInfo.creditsType = sendPlan.creditsType || 'daily';
+            if (sendPlan.creditsType === 'daily') keyInfo.dailyQuota = 300;
+          }
+        }
+      }
+    } catch (err) {
+      keyInfo.error = err.response?.data?.message || err.message;
+      if (err.response?.status === 401 || err.response?.status === 402 || err.response?.status === 429) {
+        keyInfo.status = 'exceeded';
+        keyInfo.creditsRemaining = 0;
+      }
+    }
+
+    poolStatus.push(keyInfo);
+  }
+
+  const totalRemaining = poolStatus.reduce((acc, k) => acc + (k.creditsRemaining || 0), 0);
+  const totalCapacity = poolStatus.reduce((acc, k) => acc + (k.dailyQuota || 300), 0);
+
+  return {
+    totalKeys: keys.length,
+    activeKeyIndex: activeKeyIndex + 1,
+    totalRemaining,
+    totalCapacity,
+    keys: poolStatus
+  };
+}
+
 module.exports = {
   sendEmailWithFailover,
   getBrevoKeysCount: () => getBrevoKeys().length,
+  getBrevoPoolStatus
 };
