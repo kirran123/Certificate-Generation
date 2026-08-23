@@ -33,6 +33,22 @@ function getBrevoKeys() {
 
 let activeKeyIndex = 0;
 
+function normalizeEmail(rawEmail) {
+  if (!rawEmail) return '';
+  let email = String(rawEmail);
+  email = email.replace(/\s+/g, '');
+  email = email.replace(/^[<"'\s]+|[>'"\s]+$/g, '');
+  email = email.replace(/[\s.,;:)]+$/g, '');
+  email = email.replace(/^[\s.,;:(]+/g, '');
+  if (email.includes('@')) {
+    const parts = email.split('@');
+    const local = parts[0];
+    const domain = parts.slice(1).join('@').replace(/\.{2,}/g, '.').replace(/^\.+|\.+$/g, '');
+    email = `${local}@${domain}`;
+  }
+  return email.toLowerCase();
+}
+
 /**
  * Sends an email with automatic, silent failover across available Brevo API keys.
  * 
@@ -64,8 +80,8 @@ async function sendEmailWithFailover(emailOptions) {
     senderEmail = 'digicertify00@gmail.com',
   } = emailOptions;
 
-  // 1. Sanitize & clean recipient email (strip quotes, whitespace, lowercase)
-  const to = String(rawTo || '').replace(/^["'\s]+|["'\s]+$/g, '').trim().toLowerCase();
+  // 1. Sanitize, normalize & clean recipient email (autofixes spaces, trailing dots, quotes)
+  const to = normalizeEmail(rawTo);
 
   // 2. Validate email syntax before sending
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

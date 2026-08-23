@@ -17,6 +17,22 @@ const { protect, admin } = require('../middleware/auth');
 const { createCertificatePDF, calculateUniqueHash, getRelativePath } = require('../utils/pdfGenerator');
 const { sendEmailWithFailover } = require('../utils/brevoPool');
 
+function normalizeEmail(rawEmail) {
+  if (!rawEmail) return '';
+  let email = String(rawEmail);
+  email = email.replace(/\s+/g, '');
+  email = email.replace(/^[<"'\s]+|[>'"\s]+$/g, '');
+  email = email.replace(/[\s.,;:)]+$/g, '');
+  email = email.replace(/^[\s.,;:(]+/g, '');
+  if (email.includes('@')) {
+    const parts = email.split('@');
+    const local = parts[0];
+    const domain = parts.slice(1).join('@').replace(/\.{2,}/g, '.').replace(/^\.+|\.+$/g, '');
+    email = `${local}@${domain}`;
+  }
+  return email.toLowerCase();
+}
+
 const router = express.Router();
 
 const uploadMem = multer({ storage: multer.memoryStorage() });
@@ -277,8 +293,8 @@ router.post('/generate', protect, async (req, res) => {
         let value = row[sourceHeader] || '';
 
         // Normalize email
-        if (key === 'email' && typeof value === 'string') {
-          value = value.trim().toLowerCase();
+        if (key === 'email' && value) {
+          value = normalizeEmail(value);
         }
 
         itemData[key] = value;

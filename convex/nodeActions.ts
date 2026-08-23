@@ -248,6 +248,22 @@ export const createBulkZip = internalAction({
   },
 });
 
+function normalizeEmail(rawEmail: any): string {
+  if (!rawEmail) return "";
+  let email = String(rawEmail);
+  email = email.replace(/\s+/g, "");
+  email = email.replace(/^[<"'\s]+|[>'"\s]+$/g, "");
+  email = email.replace(/[\s.,;:)]+$/g, "");
+  email = email.replace(/^[\s.,;:(]+/g, "");
+  if (email.includes("@")) {
+    const parts = email.split("@");
+    const local = parts[0];
+    const domain = parts.slice(1).join("@").replace(/\.{2,}/g, ".").replace(/^\.+|\.+$/g, "");
+    email = `${local}@${domain}`;
+  }
+  return email.toLowerCase();
+}
+
 // ── Send email via Brevo ──────────────────────────────────────────────────
 export const sendEmail = internalAction({
   args: {
@@ -261,8 +277,8 @@ export const sendEmail = internalAction({
     senderEmail: v.optional(v.string()),
   },
   handler: async (_ctx, args): Promise<void> => {
-    // 1. Sanitize & clean recipient email (strip quotes, whitespace, lowercase)
-    const cleanTo = String(args.to || "").replace(/^["'\s]+|["'\s]+$/g, "").trim().toLowerCase();
+    // 1. Sanitize, normalize & clean recipient email (autofixes spaces, trailing dots, quotes)
+    const cleanTo = normalizeEmail(args.to);
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!cleanTo || !emailRegex.test(cleanTo)) {
       throw new Error(`Invalid recipient email address: "${args.to}"`);
