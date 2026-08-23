@@ -711,6 +711,7 @@ export default function AdminDashboard() {
                                         </span>
                                       </td>
                                       <td className="px-6 py-4 text-right align-middle">
+                                        <div className="flex items-center justify-end gap-2">
                                           <button
                                             onClick={() => handleResendSingleCertificate(cert.certificateId, cert.email)}
                                             disabled={resendingCertId === cert.certificateId}
@@ -719,7 +720,6 @@ export default function AdminDashboard() {
                                           >
                                             <RefreshCw className={`w-3.5 h-3.5 ${resendingCertId === cert.certificateId ? "animate-spin" : ""}`} />
                                           </button>
-                                        <div className="flex items-center justify-end gap-2">
                                           <a
                                             href={`${API_BASE}/api/certificate/download/${cert.certificateId}`}
                                             download
