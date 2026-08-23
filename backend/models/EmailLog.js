@@ -17,9 +17,19 @@ const EmailLog = {
   find: async (filter = {}) => {
     let query = col();
     if (filter.certificateId) query = query.where('certificateId', '==', filter.certificateId);
-    // Sort by sentAt descending if needed
-    const snap = await query.orderBy('sentAt', 'desc').get();
-    return snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+    
+    try {
+      let q = query.orderBy('sentAt', 'desc');
+      if (filter.limit) q = q.limit(filter.limit);
+      const snap = await q.get();
+      return snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+    } catch (e) {
+      // Fallback if index missing or simple query
+      const snap = await query.get();
+      const docs = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+      docs.sort((a, b) => new Date(b.sentAt || 0) - new Date(a.sentAt || 0));
+      return filter.limit ? docs.slice(0, filter.limit) : docs;
+    }
   },
 
   countDocuments: async () => {

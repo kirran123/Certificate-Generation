@@ -16,18 +16,33 @@ const Feedback = {
 
   find: async (filter = {}) => {
     let query = col();
-    const snap = await query.orderBy('createdAt', 'desc').get();
-    return snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+    try {
+      let q = query.orderBy('createdAt', 'desc');
+      if (filter.limit) q = q.limit(filter.limit);
+      const snap = await q.get();
+      return snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+    } catch (e) {
+      const snap = await query.get();
+      const docs = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+      docs.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      return filter.limit ? docs.slice(0, filter.limit) : docs;
+    }
   },
 
   findById: async (id) => {
-    const doc = await col().doc(id).get();
-    if (!doc.exists) return null;
-    return { _id: doc.id, ...doc.data() };
+    if (!id) return null;
+    try {
+      const doc = await col().doc(String(id)).get();
+      if (!doc.exists) return null;
+      return { _id: doc.id, ...doc.data() };
+    } catch (e) {
+      return null;
+    }
   },
 
   deleteOne: async (id) => {
-    await col().doc(id).delete();
+    if (!id) return;
+    await col().doc(String(id)).delete();
   },
 };
 
