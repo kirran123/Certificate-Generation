@@ -376,8 +376,8 @@ export const getBrevoPoolStatusAction = internalAction({
             const sendPlan = resp.data.plan.find((p: any) => p.credits !== undefined) || resp.data.plan[0];
             if (sendPlan) {
               keyInfo.creditsRemaining = sendPlan.credits !== undefined ? sendPlan.credits : 300;
-              keyInfo.creditsType = sendPlan.creditsType || 'daily';
-              if (sendPlan.creditsType === 'daily') keyInfo.dailyQuota = 300;
+              keyInfo.creditsType = sendPlan.creditsType || 'sendLimit';
+              keyInfo.dailyQuota = 300;
             }
           }
         }
@@ -387,10 +387,19 @@ export const getBrevoPoolStatusAction = internalAction({
           keyInfo.email = `${keyInfo.email} (Limit Reached)`;
         }
       } catch (err: any) {
-        keyInfo.error = err.response?.data?.message || err.message;
-        keyInfo.status = 'exceeded';
-        keyInfo.email = `${masked} (Quota Exceeded)`;
+        const errMsg = err.response?.data?.message || err.message || '';
+        keyInfo.error = errMsg;
         keyInfo.creditsRemaining = 0;
+        if (errMsg.toLowerCase().includes('ip') || errMsg.toLowerCase().includes('recognised')) {
+          keyInfo.status = 'invalid';
+          keyInfo.email = `${masked} (IP Security Restricted)`;
+        } else if (err.response?.status === 401) {
+          keyInfo.status = 'invalid';
+          keyInfo.email = `${masked} (Unauthorized / Revoked)`;
+        } else {
+          keyInfo.status = 'exceeded';
+          keyInfo.email = `${masked} (Quota Exceeded)`;
+        }
       }
 
       poolStatus.push(keyInfo);
