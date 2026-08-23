@@ -24,21 +24,23 @@ router.use(protect, admin);
 // Get overview stats
 router.get('/stats', async (req, res) => {
   try {
-    const usersCount = await User.countDocuments({});
-    const certificatesCount = await Certificate.countDocuments({ isArchived: { $ne: true } });
-    const sentCount = await Certificate.countDocuments({ status: 'Sent', isArchived: { $ne: true } });
-    const failedCount = await Certificate.countDocuments({ status: 'Failed', isArchived: { $ne: true } });
+    const usersCount = await User.countDocuments();
     
-    const recentLogs = await EmailLog.find({}).sort({ sentAt: -1 }).limit(20);
-    const recentFeedbacks = await Feedback.find({}).sort({ createdAt: -1 }).limit(10);
+    const allCerts = await Certificate.find({ isArchived: { $ne: true } });
+    const certificatesCount = allCerts.length;
+    const sentCount = allCerts.filter(c => c.status === 'Sent').length;
+    const failedCount = allCerts.filter(c => c.status === 'Failed').length;
+
+    const recentLogs = await EmailLog.find({});
+    const recentFeedbacks = await Feedback.find({});
 
     res.json({
       usersCount,
       certificatesCount,
       sentCount,
       failedCount,
-      recentLogs,
-      recentFeedbacks
+      recentLogs: recentLogs.slice(0, 20),
+      recentFeedbacks: recentFeedbacks.slice(0, 10),
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -48,7 +50,7 @@ router.get('/stats', async (req, res) => {
 // Get all users
 router.get('/users', async (req, res) => {
   try {
-    const users = await User.find({}).select('-password');
+    const users = await User.find({});
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -63,7 +65,7 @@ router.delete('/users/:id', async (req, res) => {
       if (user.role === 'admin') {
         return res.status(400).json({ message: 'Cannot delete the admin account' });
       }
-      await user.deleteOne();
+      await User.deleteOne(req.params.id);
       res.json({ message: 'User removed' });
     } else {
       res.status(404).json({ message: 'User not found' });
@@ -76,8 +78,10 @@ router.delete('/users/:id', async (req, res) => {
 // Get all certificates
 router.get('/certificates', async (req, res) => {
   try {
-    const certs = await Certificate.find({ isArchived: { $ne: true } }).populate('templateId', 'name').populate('createdBy', 'name email');
-    res.json(certs);
+    const certs = await Certificate.find({ isArchived: { $ne: true } });
+    // Populate template and user info
+    const populated = await Certificate.populate(certs, 'templateId');
+    res.json(populated);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -86,9 +90,9 @@ router.get('/certificates', async (req, res) => {
 // Delete certificate
 router.delete('/certificates/:id', async (req, res) => {
   try {
-    const cert = await Certificate.findById(req.params.id);
+    const cert = await Certificate.findByDocId(req.params.id);
     if (cert) {
-      await cert.deleteOne();
+      await Certificate.deleteOne({ certificateId: cert.certificateId });
       res.json({ message: 'Certificate removed' });
     } else {
       res.status(404).json({ message: 'Certificate not found' });
@@ -101,7 +105,7 @@ router.delete('/certificates/:id', async (req, res) => {
 // Get email logs
 router.get('/emaillogs', async (req, res) => {
   try {
-    const logs = await EmailLog.find({}).sort({ sentAt: -1 });
+    const logs = await EmailLog.find({});
     res.json(logs);
   } catch (error) {
     res.status(500).json({ message: error.message });

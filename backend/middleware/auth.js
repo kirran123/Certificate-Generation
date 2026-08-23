@@ -12,8 +12,12 @@ const protect = async (req, res, next) => {
   if (token) {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = await User.findById(decoded.id).select('-password');
-      if (!req.user) return res.status(401).json({ message: 'Not authorized, user not found' });
+      // Fetch user from Firestore by ID
+      const user = await User.findById(decoded.id);
+      if (!user) return res.status(401).json({ message: 'Not authorized, user not found' });
+      // Remove passwordHash before attaching to req
+      const { passwordHash, ...safeUser } = user;
+      req.user = safeUser;
       next();
     } catch (error) {
       res.status(401).json({ message: 'Not authorized, token failed' });

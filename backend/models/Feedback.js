@@ -1,31 +1,34 @@
-const mongoose = require('mongoose');
+/**
+ * Firestore Feedback helper — replaces Mongoose Feedback model.
+ */
+const { getDb } = require('../config/firebase');
 
-const feedbackSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true
-  },
-  email: {
-    type: String,
-    required: false
-  },
-  type: {
-    type: String,
-    required: false,
-    default: 'Suggestion'
-  },
-  message: {
-    type: String,
-    required: true
-  },
-  certificateId: {
-    type: String,
-    required: false
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  }
-});
+const col = () => getDb().collection('feedback');
 
-module.exports = mongoose.model('Feedback', feedbackSchema);
+const Feedback = {
+  create: async (data) => {
+    const now = new Date().toISOString();
+    const ref = col().doc();
+    const doc = { ...data, type: data.type || 'Suggestion', createdAt: now };
+    await ref.set(doc);
+    return { _id: ref.id, ...doc };
+  },
+
+  find: async (filter = {}) => {
+    let query = col();
+    const snap = await query.orderBy('createdAt', 'desc').get();
+    return snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+  },
+
+  findById: async (id) => {
+    const doc = await col().doc(id).get();
+    if (!doc.exists) return null;
+    return { _id: doc.id, ...doc.data() };
+  },
+
+  deleteOne: async (id) => {
+    await col().doc(id).delete();
+  },
+};
+
+module.exports = Feedback;

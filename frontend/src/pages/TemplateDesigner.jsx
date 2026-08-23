@@ -297,6 +297,7 @@ export default function TemplateDesigner() {
       );
       localStorage.setItem("lastSavedTemplateId", res.data._id);
       setSavedTemplateId(res.data._id);
+      if (res.data.imageUrl) setImageUrl(res.data.imageUrl);
       setSaving("done");
 
       setSaving("done");

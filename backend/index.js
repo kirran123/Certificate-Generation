@@ -4,19 +4,26 @@ const dotenv = require('dotenv');
 const dns = require('dns');
 dns.setDefaultResultOrder('ipv4first');
 
-const connectDB = require('./config/db');
-const User = require('./models/User');
-const Certificate = require('./models/Certificate');
-const EmailLog = require('./models/EmailLog');
+// Load env vars FIRST before any other requires
+dotenv.config();
+
+const { initFirebase } = require('./config/firebase');
+const { initCloudinary } = require('./config/cloudinary');
 const { startFormPoller } = require('./jobs/formPoller');
 const { getBrevoKeysCount } = require('./utils/brevoPool');
 
-// Load env vars
-dotenv.config();
+// Initialize Firebase + Cloudinary
+initFirebase();
+initCloudinary();
+
+// Import Firestore models (after Firebase init)
+const User = require('./models/User');
+const Certificate = require('./models/Certificate');
+const EmailLog = require('./models/EmailLog');
 
 const app = express();
 
-// Middleware — allow both localhost dev and production frontend
+// CORS
 const allowedOrigins = [
   'http://localhost:5173',
   process.env.FRONTEND_URL,
@@ -24,27 +31,17 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (Postman, curl, server-to-server)
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error(`CORS: origin ${origin} not allowed`));
-    }
+    if (!origin || allowedOrigins.includes(origin)) callback(null, true);
+    else callback(new Error(`CORS: origin ${origin} not allowed`));
   },
   credentials: true,
 }));
 
 app.use(express.json());
-// Serve uploads folder as static with explicit CORS for canvas usage
-app.use('/uploads', express.static('uploads', {
-  setHeaders: (res) => {
-    res.set('Access-Control-Allow-Origin', '*');
-  }
-}));
 
-// Health route for Render keep-alive (UptimeRobot / Cron pinger)
+// Health route for Render keep-alive
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', server: 'Render Node.js Heavy IO Backend', time: new Date().toISOString() });
+  res.json({ status: 'ok', server: 'DigiCertify Firebase Backend', time: new Date().toISOString() });
 });
 
 // Routes
@@ -62,64 +59,61 @@ const createDefaultAdmin = async () => {
     const adminEmail = 'kirranvijay@gmail.com';
     const adminPassword = 'Kirranst@14';
 
-    // 1. Demote any other admins to user
+    // Demote any other admins to user
     await User.updateMany(
       { email: { $ne: adminEmail }, role: 'admin' },
-      { role: 'user' }
+      { $set: { role: 'user' } }
     );
 
-    // 2. Ensure the primary admin exists and has the correct password
-    let admin = await User.findOne({ email: adminEmail });
-    
+    const admin = await User.findOne({ email: adminEmail });
     if (admin) {
-      admin.password = adminPassword;
-      admin.role = 'admin';
-      await admin.save();
+      // Update password and ensure admin role
+      const bcrypt = require('bcrypt');
+      const salt = await bcrypt.genSalt(10);
+      const passwordHash = await bcrypt.hash(adminPassword, salt);
+      await User.save({ ...admin, passwordHash, role: 'admin' });
       console.log('Primary admin credentials verified and updated.');
     } else {
-      await User.create({
-        name: 'Super Admin',
-        email: adminEmail,
-        password: adminPassword,
-        role: 'admin'
-      });
+      await User.create({ name: 'Super Admin', email: adminEmail, password: adminPassword, role: 'admin' });
       console.log('Primary admin created successfully.');
     }
   } catch (err) {
-    console.error('Error enforcing admin credentials:', err);
+    console.error('Error enforcing admin credentials:', err.message);
   }
 };
 
 const PORT = process.env.PORT || 5000;
 
-// Connect DB → seed admin → start background jobs → listen
-connectDB().then(async () => {
-  await createDefaultAdmin();
-  
-  // Diagnostic counts
+// Start server: init admin → diagnostics → poller → listen
+(async () => {
   try {
-    const usersCount = await User.countDocuments({});
-    const certsCount = await Certificate.countDocuments({});
-    const logsCount = await EmailLog.countDocuments({});
-    const brevoKeys = getBrevoKeysCount();
-    console.log(`\n==================================================`);
-    console.log(`[Database Diagnosis]`);
-    console.log(`  - Total Users in MongoDB: ${usersCount}`);
-    console.log(`  - Total Certificates in MongoDB: ${certsCount}`);
-    console.log(`  - Total Email Logs in MongoDB: ${logsCount}`);
-    console.log(`[Brevo Pool]`);
-    console.log(`  - Active Brevo API Keys: ${brevoKeys} key(s) loaded`);
-    console.log(`  - Daily email capacity: ~${brevoKeys * 300} emails/day`);
-    console.log(`==================================================\n`);
-  } catch (err) {
-    console.error('Error fetching diagnostic counts:', err);
-  }
+    await createDefaultAdmin();
 
-  startFormPoller();
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
-}).catch((err) => {
-  console.error('Failed to start server:', err.message);
-  process.exit(1);
-});
+    // Diagnostic counts
+    try {
+      const usersCount = await User.countDocuments();
+      const certsSnap = await Certificate.find({});
+      const certsCount = certsSnap.length;
+      const logsSnap = await EmailLog.find({});
+      const logsCount = logsSnap.length;
+      const brevoKeys = getBrevoKeysCount();
+      console.log(`\n==================================================`);
+      console.log(`[Database Diagnosis — Firestore]`);
+      console.log(`  - Total Users in Firestore: ${usersCount}`);
+      console.log(`  - Total Certificates in Firestore: ${certsCount}`);
+      console.log(`  - Total Email Logs in Firestore: ${logsCount}`);
+      console.log(`[Brevo Pool]`);
+      console.log(`  - Active Brevo API Keys: ${brevoKeys} key(s) loaded`);
+      console.log(`  - Daily email capacity: ~${brevoKeys * 300} emails/day`);
+      console.log(`==================================================\n`);
+    } catch (err) {
+      console.error('Error fetching diagnostic counts:', err.message);
+    }
+
+    startFormPoller();
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  } catch (err) {
+    console.error('Failed to start server:', err.message);
+    process.exit(1);
+  }
+})();

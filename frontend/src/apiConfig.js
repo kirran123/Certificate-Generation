@@ -1,6 +1,7 @@
-// Centralized API configuration
-// API_BASE: Convex HTTP Base URL for Auth & lightweight DB queries
-export const API_BASE = import.meta.env.VITE_CONVEX_URL || import.meta.env.VITE_API_URL || 'https://hearty-blackbird-795.convex.site';
+// Centralized API configuration — All requests go to the Express backend (Render)
+// Firebase Firestore + Cloudinary handles storage. Express handles all logic.
 
-// IO_API_BASE: Render Node.js Backend for Heavy IO (PDF Generation, ZIP downloads, 5-Brevo Key Bulk Mail dispatching, Excel parsing)
-export const IO_API_BASE = import.meta.env.VITE_BACKEND_URL || 'https://certificate-generation-8gbo.onrender.com';
+export const API_BASE = import.meta.env.VITE_BACKEND_URL || 'https://certificate-generation-8gbo.onrender.com';
+
+// IO_API_BASE kept as alias for backward compatibility with existing page components
+export const IO_API_BASE = API_BASE;

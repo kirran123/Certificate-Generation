@@ -1,15 +1,12 @@
 /**
- * formPoller.js
- * Runs every 10 seconds. Checks all active FormAutomation docs,
+ * formPoller.js — Runs every 10 seconds.
+ * Checks all active FormAutomation docs in Firestore,
  * fetches their linked Google Sheet, and auto-generates + emails
  * certificates for any new rows not yet processed.
  */
 
 const axios = require('axios');
 const xlsx = require('xlsx');
-const crypto = require('crypto');
-const path = require('path');
-const fs = require('fs');
 
 const FormAutomation = require('../models/FormAutomation');
 const Template = require('../models/Template');
@@ -21,8 +18,7 @@ const { sendEmailWithFailover } = require('../utils/brevoPool');
 const POLL_INTERVAL_MS = 10_000; // 10 seconds
 let isPollerExecuting = false;
 
-// ── Helpers ──
-
+// ── Generate unique cert ID ──────────────────────────────────────────────────
 const generateUniqueId = async () => {
   let certId, isUnique = false;
   while (!isUnique) {
@@ -34,33 +30,17 @@ const generateUniqueId = async () => {
   return certId;
 };
 
+// ── Send certificate email ───────────────────────────────────────────────────
 const sendCertEmail = async (cert, template, auto = {}) => {
-  let pdfBuffer = null;
-  const pdfPath = cert.pdfUrl ? path.join(__dirname, '..', cert.pdfUrl) : null;
-  if (pdfPath && fs.existsSync(pdfPath)) {
-    pdfBuffer = fs.readFileSync(pdfPath);
-  } else if (template && template.imageUrl) {
-    const itemData = {
-      name: cert.name,
-      email: cert.email,
-      course: cert.course,
-      certificateId: cert.certificateId,
-      ...(cert.metadata ? Object.fromEntries(cert.metadata) : {})
-    };
-    const pdfBytes = await createCertificatePDF(template, itemData, cert.certificateId);
-    pdfBuffer = Buffer.from(pdfBytes);
-  }
+  const itemData = { name: cert.name, email: cert.email, course: cert.course, certificateId: cert.certificateId, ...(cert.metadata || {}) };
+  const pdfBytes = await createCertificatePDF(template, itemData, cert.certificateId);
+  const base64Pdf = Buffer.from(pdfBytes).toString('base64');
 
-  if (!pdfBuffer) {
-    throw new Error(`PDF for certificate ${cert.certificateId} not found`);
-  }
-
-  const base64Pdf = pdfBuffer.toString('base64');
   const htmlContent = `
     <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;border:1px solid #eee;border-radius:10px;">
       <h2 style="color:#4f46e5;">Your Certificate is Ready! 🎉</h2>
       <p>Hi <strong>${cert.name}</strong>,</p>
-      <p>${auto.emailMessage || 'Congratulations! Your certificate has been generated and is attached to this email.'}</p>
+      <p>${auto.emailMessage || 'Congratulations! Your certificate has been generated and is attached.'}</p>
       <div style="margin:20px 0;padding:15px;background:#f9fafb;border-radius:8px;">
         <p style="margin:0;font-size:12px;color:#6b7280;">Certificate ID:</p>
         <p style="margin:0;font-weight:bold;font-family:monospace;">${cert.certificateId}</p>
@@ -76,21 +56,22 @@ const sendCertEmail = async (cert, template, auto = {}) => {
     pdfBase64: base64Pdf,
     certId: cert.certificateId,
     senderName: 'DigiCertify',
-    senderEmail: process.env.SMTP_USER || 'digicertify00@gmail.com'
+    senderEmail: process.env.SMTP_USER || 'digicertify00@gmail.com',
   });
 };
 
-// ── Main polling function ──────────────────────────────────────────────────
-
+// ── Main polling function ────────────────────────────────────────────────────
 const pollOnce = async () => {
   if (isPollerExecuting) return;
   isPollerExecuting = true;
 
   let automations;
   try {
-    automations = await FormAutomation.find({ active: true }).populate('templateId');
+    // Fetch active automations and populate their template
+    automations = await FormAutomation.findAndPopulate({ active: true });
   } catch (e) {
-    console.error('[Poll] DB error:', e.message);
+    console.error('[Poll] Firestore error:', e.message);
+    isPollerExecuting = false;
     return;
   }
 
@@ -99,40 +80,27 @@ const pollOnce = async () => {
       const urlsToTry = [
         `https://docs.google.com/spreadsheets/d/${auto.sheetId}/export?format=csv&gid=${auto.gid || 0}`,
         `https://docs.google.com/spreadsheets/d/${auto.sheetId}/export?format=csv`,
-        `https://docs.google.com/spreadsheets/d/${auto.sheetId}/gviz/tq?tqx=out:csv`
+        `https://docs.google.com/spreadsheets/d/${auto.sheetId}/gviz/tq?tqx=out:csv`,
       ];
 
       let rows = null;
       for (const exportUrl of urlsToTry) {
         try {
-          const response = await axios.get(exportUrl, {
-            responseType: 'arraybuffer',
-            timeout: 10000,
-            headers: { 'User-Agent': 'Mozilla/5.0' }
-          });
+          const response = await axios.get(exportUrl, { responseType: 'arraybuffer', timeout: 10000, headers: { 'User-Agent': 'Mozilla/5.0' } });
           const text = Buffer.from(response.data).toString('utf8', 0, 200);
           if (text.includes('<html') && (text.includes('accounts.google.com') || text.includes('ServiceLogin'))) continue;
           const workbook = xlsx.read(response.data, { type: 'buffer' });
-          const sheet = workbook.Sheets[workbook.SheetNames[0]];
-          rows = xlsx.utils.sheet_to_json(sheet, { raw: false, defval: '' });
+          rows = xlsx.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { raw: false, defval: '' });
           if (rows && rows.length > 0) break;
-        } catch (e) {
-          // try next url candidate
-        }
+        } catch (e) { /* try next url */ }
       }
 
       if (!rows || rows.length === 0) continue;
 
-      const template = auto.templateId;
+      const template = auto.templateId; // already populated
       if (!template || !template.imageUrl) continue;
 
-      const uploadDir = path.join(__dirname, '../uploads');
-      const certsDir = path.join(uploadDir, 'certificates');
-      if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-      if (!fs.existsSync(certsDir)) fs.mkdirSync(certsDir, { recursive: true });
-
       let newlyGenerated = 0;
-
       const now = new Date();
       const runTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
       const currentPollBatchId = `${auto.batchId} [Run ${runTime}]`;
@@ -140,25 +108,15 @@ const pollOnce = async () => {
       for (const row of rows) {
         const name = String(row[auto.nameColumn] || '').trim();
         const email = String(row[auto.emailColumn] || '').trim().toLowerCase();
+        if (!name || !email) continue;
 
-        if (!name || !email) continue; // skip incomplete rows
-
-        // Dedup check using shared hasher
-        const uniqueHash = calculateUniqueHash(template._id, name, email, auto.batchId);
-
+        const uniqueHash = calculateUniqueHash(String(template._id), name, email, auto.batchId);
         const existing = await Certificate.findOne({ uniqueHash });
-        if (existing) continue; // already processed
+        if (existing) continue;
 
         const certId = await generateUniqueId();
-        // Pass original row data + normalized fields so PDF generator can find keys
-        const itemData = {
-          ...row,
-          name,
-          email,
-          certificateId: certId
-        };
+        const itemData = { ...row, name, email, certificateId: certId };
 
-        // Generate PDF using shared utility
         let pdfBytes;
         try {
           pdfBytes = await createCertificatePDF(template, itemData, certId);
@@ -167,36 +125,27 @@ const pollOnce = async () => {
           continue;
         }
 
-        const pdfFileName = `${certId}.pdf`;
-        const pdfPath = path.join(certsDir, pdfFileName);
-        fs.writeFileSync(pdfPath, pdfBytes);
-
-        // Save certificate
         const cert = await Certificate.create({
           certificateId: certId,
           name,
           email,
           course: row.course || row.Course || auto.emailSubject || 'Achievement',
-          templateId: template._id,
-          pdfUrl: `/uploads/certificates/${pdfFileName}`,
+          templateId: String(template._id),
           status: 'Pending',
-          createdBy: auto.userId,
+          createdBy: String(auto.userId),
           batchId: currentPollBatchId,
           isAutomation: true,
           uniqueHash,
-          metadata: row
+          metadata: row,
         });
 
-        // Send email immediately
         try {
           await sendCertEmail(cert, template, auto);
-          cert.status = 'Sent';
-          await cert.save();
+          await Certificate.save({ ...cert, status: 'Sent' });
           await EmailLog.create({ certificateId: certId, recipient: email, status: 'Sent' });
           console.log(`[Poll] ✅ Cert sent to ${email}`);
         } catch (mailErr) {
-          cert.status = 'Failed';
-          await cert.save();
+          await Certificate.save({ ...cert, status: 'Failed' });
           await EmailLog.create({ certificateId: certId, recipient: email, status: 'Failed', error: mailErr.message });
           console.error(`[Poll] ❌ Email failed for ${email}:`, mailErr.message);
         }
@@ -204,10 +153,10 @@ const pollOnce = async () => {
         newlyGenerated++;
       }
 
-      // Update the original automation's stats (no snapshot — prevents duplicate sidebar entries)
+      // Update automation stats in Firestore
       await FormAutomation.findByIdAndUpdate(auto._id, {
-        lastChecked: new Date(),
-        ...(newlyGenerated > 0 && { $inc: { certCount: newlyGenerated } })
+        lastChecked: new Date().toISOString(),
+        ...(newlyGenerated > 0 ? { $inc: { certCount: newlyGenerated } } : {}),
       });
 
       if (newlyGenerated > 0) {
@@ -217,14 +166,13 @@ const pollOnce = async () => {
       console.error(`[Poll] Error for automation ${auto._id}:`, err.message);
     }
   }
+
   isPollerExecuting = false;
 };
 
-// ── Exported starter ───────────────────────────────────────────────────────
-
+// ── Exported starter ─────────────────────────────────────────────────────────
 const startFormPoller = () => {
   console.log(`[Poll] Form poller started — checking every ${POLL_INTERVAL_MS / 1000}s`);
-  // Run immediately on start, then on interval
   pollOnce();
   setInterval(pollOnce, POLL_INTERVAL_MS);
 };
