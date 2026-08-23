@@ -1,0 +1,2498 @@
+[
+  {
+    "_id": "69dd175b8f9bbc8eef20d57b",
+    "certificateId": "CERT4096884546",
+    "recipient": "kirranmass@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-13T16:18:35.285Z"
+  },
+  {
+    "_id": "69dd17de8f9bbc8eef20d57f",
+    "certificateId": "CERT4802168742",
+    "recipient": "kirranmass@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-13T16:20:46.454Z"
+  },
+  {
+    "_id": "69dd1dd58f9bbc8eef20d583",
+    "certificateId": "CERT8672695327",
+    "recipient": "953623205025@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-13T16:46:13.534Z"
+  },
+  {
+    "_id": "69dd23e78f9bbc8eef20d588",
+    "certificateId": "CERT2004354419",
+    "recipient": "kirranmass@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-13T17:12:07.434Z"
+  },
+  {
+    "_id": "69dd23f18f9bbc8eef20d589",
+    "certificateId": "CERT5544267140",
+    "recipient": "953623205025@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-13T17:12:17.157Z"
+  },
+  {
+    "_id": "69dd267b8f9bbc8eef20d58e",
+    "certificateId": "CERT7091346740",
+    "recipient": "kirranmass@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-13T17:23:07.959Z"
+  },
+  {
+    "_id": "69dd26868f9bbc8eef20d58f",
+    "certificateId": "CERT4136775821",
+    "recipient": "953623205025@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-13T17:23:18.052Z"
+  },
+  {
+    "_id": "69ddbe5522907f67d660a18d",
+    "certificateId": "CERT1071323002",
+    "recipient": "kirranvijay@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-14T04:11:01.259Z"
+  },
+  {
+    "_id": "69ddbf5122907f67d660a190",
+    "certificateId": "CERT9408262156",
+    "recipient": "kirranvijay@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-14T04:15:13.533Z"
+  },
+  {
+    "_id": "69ddf6bbae2c14b6a49c4619",
+    "certificateId": "CERT620593",
+    "recipient": "kirranvijay@gmail.com",
+    "status": "Failed",
+    "error": "Connection timeout",
+    "sentAt": "2026-04-14T08:11:39.893Z"
+  },
+  {
+    "_id": "69ddf753ae2c14b6a49c461a",
+    "certificateId": "CERT620593",
+    "recipient": "kirranvijay@gmail.com",
+    "status": "Failed",
+    "error": "Connection timeout",
+    "sentAt": "2026-04-14T08:14:11.923Z"
+  },
+  {
+    "_id": "69ddf78aae2c14b6a49c461b",
+    "certificateId": "CERT620593",
+    "recipient": "kirranvijay@gmail.com",
+    "status": "Failed",
+    "error": "connect ENETUNREACH 2607:f8b0:400e:c0a::6c:587 - Local (:::0)",
+    "sentAt": "2026-04-14T08:15:06.863Z"
+  },
+  {
+    "_id": "69ddf7edae2c14b6a49c461c",
+    "certificateId": "CERT620593",
+    "recipient": "kirranvijay@gmail.com",
+    "status": "Failed",
+    "error": "connect ENETUNREACH 2607:f8b0:400e:c0a::6c:587 - Local (:::0)",
+    "sentAt": "2026-04-14T08:16:45.301Z"
+  },
+  {
+    "_id": "69ddf9c16262d7743327ed07",
+    "certificateId": "CERT620593",
+    "recipient": "kirranvijay@gmail.com",
+    "status": "Failed",
+    "error": "connect ENETUNREACH 2607:f8b0:400e:c05::6d:587 - Local (:::0)",
+    "sentAt": "2026-04-14T08:24:33.791Z"
+  },
+  {
+    "_id": "69ddf9eb6262d7743327ed08",
+    "certificateId": "CERT620593",
+    "recipient": "kirranvijay@gmail.com",
+    "status": "Failed",
+    "error": "connect ENETUNREACH 2607:f8b0:400e:c05::6d:587 - Local (:::0)",
+    "sentAt": "2026-04-14T08:25:15.232Z"
+  },
+  {
+    "_id": "69ddfa216262d7743327ed09",
+    "certificateId": "CERT620593",
+    "recipient": "kirranvijay@gmail.com",
+    "status": "Failed",
+    "error": "connect ENETUNREACH 2607:f8b0:400e:c05::6d:587 - Local (:::0)",
+    "sentAt": "2026-04-14T08:26:09.604Z"
+  },
+  {
+    "_id": "69ddfbe054ba3d9c1b909d32",
+    "certificateId": "CERT677275",
+    "recipient": "kirranvijay@gmail.com",
+    "status": "Failed",
+    "error": "connect ENETUNREACH 2607:f8b0:400e:c0d::6c:587 - Local (:::0)",
+    "sentAt": "2026-04-14T08:33:36.840Z"
+  },
+  {
+    "_id": "69de05066d715de9a525c0b9",
+    "certificateId": "CERT207124",
+    "recipient": "kirranvijay@gmail.com",
+    "status": "Failed",
+    "error": "The gmail.com domain is not verified. Please, add and verify your domain on https://resend.com/domains",
+    "sentAt": "2026-04-14T09:12:38.344Z"
+  },
+  {
+    "_id": "69de05196d715de9a525c0ba",
+    "certificateId": "CERT207124",
+    "recipient": "kirranvijay@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-14T09:12:57.718Z"
+  },
+  {
+    "_id": "69de058b6d715de9a525c0be",
+    "certificateId": "CERT704305",
+    "recipient": "kirranvijay@gmail.com",
+    "status": "Failed",
+    "error": "The gmail.com domain is not verified. Please, add and verify your domain on https://resend.com/domains",
+    "sentAt": "2026-04-14T09:14:51.251Z"
+  },
+  {
+    "_id": "69de0848ffa01c93344feadf",
+    "certificateId": "CERT516484",
+    "recipient": "kirranvijay@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-14T09:26:32.679Z"
+  },
+  {
+    "_id": "69de0a409e31cf7dd8799827",
+    "certificateId": "CERT677905",
+    "recipient": "kirranvijay@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-14T09:34:56.764Z"
+  },
+  {
+    "_id": "69de0ac89e31cf7dd879982b",
+    "certificateId": "CERT2299187415",
+    "recipient": "kirranmass@gmail.com",
+    "status": "Failed",
+    "error": "You can only send testing emails to your own email address (kirranvijay@gmail.com). To send emails to other recipients, please verify a domain at resend.com/domains, and change the `from` address to an email using this domain.",
+    "sentAt": "2026-04-14T09:37:12.532Z"
+  },
+  {
+    "_id": "69de0ace9e31cf7dd879982d",
+    "certificateId": "CERT3493346926",
+    "recipient": "953623205025@ritrjpm.ac.in",
+    "status": "Failed",
+    "error": "You can only send testing emails to your own email address (kirranvijay@gmail.com). To send emails to other recipients, please verify a domain at resend.com/domains, and change the `from` address to an email using this domain.",
+    "sentAt": "2026-04-14T09:37:18.319Z"
+  },
+  {
+    "_id": "69de0e8a959449bc9a26bf1a",
+    "certificateId": "CERT7710433609",
+    "recipient": "kirranmass@gmail.com",
+    "status": "Failed",
+    "error": "You can only send testing emails to your own email address (kirranvijay@gmail.com). To send emails to other recipients, please verify a domain at resend.com/domains, and change the `from` address to an email using this domain.",
+    "sentAt": "2026-04-14T09:53:14.830Z"
+  },
+  {
+    "_id": "69de0e90959449bc9a26bf1c",
+    "certificateId": "CERT2431521264",
+    "recipient": "953623205025@ritrjpm.ac.in",
+    "status": "Failed",
+    "error": "You can only send testing emails to your own email address (kirranvijay@gmail.com). To send emails to other recipients, please verify a domain at resend.com/domains, and change the `from` address to an email using this domain.",
+    "sentAt": "2026-04-14T09:53:20.958Z"
+  },
+  {
+    "_id": "69de0fea959449bc9a26bf1f",
+    "certificateId": "CERT286919",
+    "recipient": "kirranmass@gmail.com",
+    "status": "Failed",
+    "error": "You can only send testing emails to your own email address (kirranvijay@gmail.com). To send emails to other recipients, please verify a domain at resend.com/domains, and change the `from` address to an email using this domain.",
+    "sentAt": "2026-04-14T09:59:06.542Z"
+  },
+  {
+    "_id": "69de15985b53b32e130de10e",
+    "certificateId": "CERT1942637414",
+    "recipient": "kirranmass@gmail.com",
+    "status": "Failed",
+    "error": "Key not found",
+    "sentAt": "2026-04-14T10:23:20.760Z"
+  },
+  {
+    "_id": "69de159d5b53b32e130de110",
+    "certificateId": "CERT5536202302",
+    "recipient": "953623205025@ritrjpm.ac.in",
+    "status": "Failed",
+    "error": "Key not found",
+    "sentAt": "2026-04-14T10:23:25.527Z"
+  },
+  {
+    "_id": "69de15ed5b53b32e130de111",
+    "certificateId": "CERT286919",
+    "recipient": "kirranmass@gmail.com",
+    "status": "Failed",
+    "error": "PDF not found on server (likely cleared by a recent app deployment). Please regenerate this certificate batch.",
+    "sentAt": "2026-04-14T10:24:45.812Z"
+  },
+  {
+    "_id": "69de162e5b53b32e130de115",
+    "certificateId": "CERT433869",
+    "recipient": "953623205025@ritrjpm.ac.in",
+    "status": "Failed",
+    "error": "Request failed with status code 401",
+    "sentAt": "2026-04-14T10:25:50.626Z"
+  },
+  {
+    "_id": "69de162f5b53b32e130de116",
+    "certificateId": "CERT537248",
+    "recipient": "kirranmass@gmail.com",
+    "status": "Failed",
+    "error": "Request failed with status code 401",
+    "sentAt": "2026-04-14T10:25:51.456Z"
+  },
+  {
+    "_id": "69de18dc2ed66781aa5d0261",
+    "certificateId": "CERT9335549712",
+    "recipient": "kirranmass@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-14T10:37:16.563Z"
+  },
+  {
+    "_id": "69de18e12ed66781aa5d0263",
+    "certificateId": "CERT8094216275",
+    "recipient": "953623205025@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-14T10:37:21.732Z"
+  },
+  {
+    "_id": "69de19bd2ed66781aa5d0267",
+    "certificateId": "CERT712046",
+    "recipient": "kirranmass@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-14T10:41:01.283Z"
+  },
+  {
+    "_id": "69de19be2ed66781aa5d0268",
+    "certificateId": "CERT808262",
+    "recipient": "953623205025@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-14T10:41:02.109Z"
+  },
+  {
+    "_id": "69de1a9d2ed66781aa5d026b",
+    "certificateId": "CERT8045552272",
+    "recipient": "kirranmass@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-14T10:44:45.890Z"
+  },
+  {
+    "_id": "69de1aa22ed66781aa5d026d",
+    "certificateId": "CERT6526910125",
+    "recipient": "953623205025@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-14T10:44:50.218Z"
+  },
+  {
+    "_id": "69de1b2a2ed66781aa5d0272",
+    "certificateId": "CERT8961951546",
+    "recipient": "kirranmass@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-14T10:47:06.488Z"
+  },
+  {
+    "_id": "69de1b2e2ed66781aa5d0274",
+    "certificateId": "CERT1732569668",
+    "recipient": "953623205025@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-14T10:47:10.246Z"
+  },
+  {
+    "_id": "69de1c942ed66781aa5d0278",
+    "certificateId": "CERT3091980125",
+    "recipient": "kirransudhakar9@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-14T10:53:08.702Z"
+  },
+  {
+    "_id": "69de1fab2ed66781aa5d027b",
+    "certificateId": "CERT2908265218",
+    "recipient": "kirransudhakar9@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-14T11:06:19.291Z"
+  },
+  {
+    "_id": "69de20b92ed66781aa5d027f",
+    "certificateId": "CERT6968522997",
+    "recipient": "kirranmass@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-14T11:10:49.609Z"
+  },
+  {
+    "_id": "69de21312ed66781aa5d0281",
+    "certificateId": "CERT8087510231",
+    "recipient": "kirransujatha@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-14T11:12:49.426Z"
+  },
+  {
+    "_id": "69dfcec203447a504a35aa7c",
+    "certificateId": "CERT981185",
+    "recipient": "kirranvijay@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-15T17:45:38.872Z"
+  },
+  {
+    "_id": "69e3450efbe3eb109b68d49a",
+    "certificateId": "CERT470843",
+    "recipient": "kirranvijay@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-18T08:47:10.139Z"
+  },
+  {
+    "_id": "69e34709fbe3eb109b68d49e",
+    "certificateId": "CERT2768840793",
+    "recipient": "kirranmass@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-18T08:55:37.493Z"
+  },
+  {
+    "_id": "69e3470afbe3eb109b68d4a0",
+    "certificateId": "CERT3118406967",
+    "recipient": "kirransujatha@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-18T08:55:38.728Z"
+  },
+  {
+    "_id": "69e34957fbe3eb109b68d4a3",
+    "certificateId": "CERT6876409524",
+    "recipient": "kirranmass@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-18T09:05:27.741Z"
+  },
+  {
+    "_id": "69e34959fbe3eb109b68d4a5",
+    "certificateId": "CERT2550575071",
+    "recipient": "kirransujatha@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-18T09:05:29.126Z"
+  },
+  {
+    "_id": "69e3499dfbe3eb109b68d4a8",
+    "certificateId": "CERT6615833368",
+    "recipient": "kirranmass@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-18T09:06:37.643Z"
+  },
+  {
+    "_id": "69e3499efbe3eb109b68d4aa",
+    "certificateId": "CERT8901487699",
+    "recipient": "kirransujatha@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-18T09:06:38.703Z"
+  },
+  {
+    "_id": "69e34a79fbe3eb109b68d4ad",
+    "certificateId": "CERT2026608402",
+    "recipient": "kirranmass@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-18T09:10:17.790Z"
+  },
+  {
+    "_id": "69e34a7bfbe3eb109b68d4af",
+    "certificateId": "CERT3285688119",
+    "recipient": "kirransujatha@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-18T09:10:19.287Z"
+  },
+  {
+    "_id": "69e34b25fbe3eb109b68d4b2",
+    "certificateId": "CERT7941325829",
+    "recipient": "kirranmass@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-18T09:13:09.279Z"
+  },
+  {
+    "_id": "69e34b26fbe3eb109b68d4b4",
+    "certificateId": "CERT4751880335",
+    "recipient": "kirransujatha@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-18T09:13:10.699Z"
+  },
+  {
+    "_id": "69e34ebdfbe3eb109b68d4b7",
+    "certificateId": "CERT2784221115",
+    "recipient": "kirranmass@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-18T09:28:29.038Z"
+  },
+  {
+    "_id": "69e34ebefbe3eb109b68d4b9",
+    "certificateId": "CERT8871430011",
+    "recipient": "kirransujatha@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-18T09:28:30.732Z"
+  },
+  {
+    "_id": "69e3509cfbe3eb109b68d4bc",
+    "certificateId": "CERT5145496293",
+    "recipient": "kirranmass@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-18T09:36:28.913Z"
+  },
+  {
+    "_id": "69e3509efbe3eb109b68d4be",
+    "certificateId": "CERT8876587105",
+    "recipient": "kirransujatha@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-18T09:36:30.423Z"
+  },
+  {
+    "_id": "69e351a2fbe3eb109b68d4c1",
+    "certificateId": "CERT456789",
+    "recipient": "kirranvijay@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-18T09:40:50.173Z"
+  },
+  {
+    "_id": "69e3527f232ddf6238f5a34b",
+    "certificateId": "CERT376002",
+    "recipient": "kirranmass@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-18T09:44:31.431Z"
+  },
+  {
+    "_id": "69e35280232ddf6238f5a34d",
+    "certificateId": "CERT255890",
+    "recipient": "kirransujatha@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-18T09:44:32.750Z"
+  },
+  {
+    "_id": "69e35351232ddf6238f5a352",
+    "certificateId": "CERT925209",
+    "recipient": "kirranmass@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-18T09:48:01.695Z"
+  },
+  {
+    "_id": "69e35353232ddf6238f5a354",
+    "certificateId": "CERT230215",
+    "recipient": "kirransujatha@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-18T09:48:03.159Z"
+  },
+  {
+    "_id": "69e3551e5f5e7c9d46daf502",
+    "certificateId": "CERT842996",
+    "recipient": "kirranmass@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-18T09:55:42.445Z"
+  },
+  {
+    "_id": "69e3551f5f5e7c9d46daf504",
+    "certificateId": "CERT951255",
+    "recipient": "kirransujatha@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-18T09:55:43.688Z"
+  },
+  {
+    "_id": "69e39df9de3ab5a387757ee8",
+    "certificateId": "CERT680060",
+    "recipient": "kirransudhakar9@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-18T15:06:33.240Z"
+  },
+  {
+    "_id": "69e39dffde3ab5a387757eea",
+    "certificateId": "CERT192724",
+    "recipient": "kirransudhakar9@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-18T15:06:39.993Z"
+  },
+  {
+    "_id": "69e39e05de3ab5a387757eec",
+    "certificateId": "CERT497169",
+    "recipient": "kirransudhakar9@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-18T15:06:45.228Z"
+  },
+  {
+    "_id": "69e3a0c3de3ab5a387757ef1",
+    "certificateId": "CERT359959",
+    "recipient": "kirranmass@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-18T15:18:27.195Z"
+  },
+  {
+    "_id": "69ef701bcc2eace4b78e401a",
+    "certificateId": "CERT881984",
+    "recipient": "953623205025@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-27T14:18:03.736Z"
+  },
+  {
+    "_id": "69ef72adcc2eace4b78e401c",
+    "certificateId": "CERT449469",
+    "recipient": "poornimaarunachalam1905@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-04-27T14:29:01.596Z"
+  },
+  {
+    "_id": "6a000879d347de13617f6764",
+    "certificateId": "CERT446969",
+    "recipient": "kirranvijay@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T04:24:25.709Z"
+  },
+  {
+    "_id": "6a0011b9703f6e27542221aa",
+    "certificateId": "CERT563814",
+    "recipient": "953623205025@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T05:03:53.826Z"
+  },
+  {
+    "_id": "6a002f74edbcbd8ea7741685",
+    "certificateId": "CERT923578",
+    "recipient": "kirransudhakar9@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T07:10:44.705Z"
+  },
+  {
+    "_id": "6a00320fedbcbd8ea774168a",
+    "certificateId": "CERT544903",
+    "recipient": "953624205024@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T07:21:51.467Z"
+  },
+  {
+    "_id": "6a00336fedbcbd8ea774168c",
+    "certificateId": "CERT978606",
+    "recipient": "kirranvijay@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T07:27:43.434Z"
+  },
+  {
+    "_id": "6a003469edbcbd8ea7741690",
+    "certificateId": "CERT160528",
+    "recipient": "953624205024@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T07:31:53.364Z"
+  },
+  {
+    "_id": "6a00346eedbcbd8ea7741692",
+    "certificateId": "CERT590494",
+    "recipient": "kirranvijay@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T07:31:58.219Z"
+  },
+  {
+    "_id": "6a0036c519a87593d1e07538",
+    "certificateId": "CERT930889",
+    "recipient": "953624205024@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T07:41:57.795Z"
+  },
+  {
+    "_id": "6a0036cc19a87593d1e0753a",
+    "certificateId": "CERT648676",
+    "recipient": "kirranvijay@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T07:42:04.393Z"
+  },
+  {
+    "_id": "6a0039340020f5cb5f9ea028",
+    "certificateId": "CERT280099",
+    "recipient": "953624205024@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T07:52:20.905Z"
+  },
+  {
+    "_id": "6a00393c0020f5cb5f9ea02a",
+    "certificateId": "CERT967529",
+    "recipient": "kirranvijay@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T07:52:28.564Z"
+  },
+  {
+    "_id": "6a003ac0fc3b4bd1aafa0478",
+    "certificateId": "CERT543587",
+    "recipient": "953624205024@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T07:58:56.028Z"
+  },
+  {
+    "_id": "6a003ac7fc3b4bd1aafa047a",
+    "certificateId": "CERT462171",
+    "recipient": "kirranvijay@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T07:59:03.338Z"
+  },
+  {
+    "_id": "6a003c9efc3b4bd1aafa047c",
+    "certificateId": "CERT304555",
+    "recipient": "953624205055@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T08:06:54.357Z"
+  },
+  {
+    "_id": "6a003e60fc3b4bd1aafa047e",
+    "certificateId": "CERT944938",
+    "recipient": "953624205057@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T08:14:24.099Z"
+  },
+  {
+    "_id": "6a004054fc3b4bd1aafa0480",
+    "certificateId": "CERT257273",
+    "recipient": "953624205004@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T08:22:44.595Z"
+  },
+  {
+    "_id": "6a004091fc3b4bd1aafa0482",
+    "certificateId": "CERT955242",
+    "recipient": "sureshr8107@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T08:23:45.336Z"
+  },
+  {
+    "_id": "6a0040a5fc3b4bd1aafa0484",
+    "certificateId": "CERT825151",
+    "recipient": "953624205301@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T08:24:05.572Z"
+  },
+  {
+    "_id": "6a0040b9fc3b4bd1aafa0486",
+    "certificateId": "CERT995176",
+    "recipient": "953624205060@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T08:24:25.857Z"
+  },
+  {
+    "_id": "6a0040cdfc3b4bd1aafa0488",
+    "certificateId": "CERT437986",
+    "recipient": "953624205015@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T08:24:45.892Z"
+  },
+  {
+    "_id": "6a00416efc3b4bd1aafa048a",
+    "certificateId": "CERT822531",
+    "recipient": "953624205009@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T08:27:26.168Z"
+  },
+  {
+    "_id": "6a004172fc3b4bd1aafa048c",
+    "certificateId": "CERT891228",
+    "recipient": "953624205014@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T08:27:30.841Z"
+  },
+  {
+    "_id": "6a004178fc3b4bd1aafa048e",
+    "certificateId": "CERT209726",
+    "recipient": "953624205016@ritrjpm.ac.in.",
+    "status": "Failed",
+    "error": "email is not valid in to",
+    "sentAt": "2026-05-10T08:27:36.074Z"
+  },
+  {
+    "_id": "6a00418dfc3b4bd1aafa0490",
+    "certificateId": "CERT115846",
+    "recipient": "953624205045@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T08:27:57.529Z"
+  },
+  {
+    "_id": "6a004243fc3b4bd1aafa0492",
+    "certificateId": "CERT780783",
+    "recipient": "953624205048@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T08:30:59.484Z"
+  },
+  {
+    "_id": "6a004248fc3b4bd1aafa0494",
+    "certificateId": "CERT173534",
+    "recipient": "953624205013@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T08:31:04.716Z"
+  },
+  {
+    "_id": "6a0042b0fc3b4bd1aafa0496",
+    "certificateId": "CERT342651",
+    "recipient": "953624205012@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T08:32:48.965Z"
+  },
+  {
+    "_id": "6a0042d8fc3b4bd1aafa0498",
+    "certificateId": "CERT829480",
+    "recipient": "953624205016@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T08:33:28.836Z"
+  },
+  {
+    "_id": "6a0042edfc3b4bd1aafa049a",
+    "certificateId": "CERT982790",
+    "recipient": "953624205010@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T08:33:49.043Z"
+  },
+  {
+    "_id": "6a0042f1fc3b4bd1aafa049c",
+    "certificateId": "CERT771349",
+    "recipient": "953624205002@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T08:33:53.741Z"
+  },
+  {
+    "_id": "6a00444cfc3b4bd1aafa049e",
+    "certificateId": "CERT881539",
+    "recipient": "953624205025@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T08:39:40.902Z"
+  },
+  {
+    "_id": "6a00447efc3b4bd1aafa04a0",
+    "certificateId": "CERT299070",
+    "recipient": "953624205029@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T08:40:30.639Z"
+  },
+  {
+    "_id": "6a004493fc3b4bd1aafa04a2",
+    "certificateId": "CERT146575",
+    "recipient": "953624205021@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T08:40:51.339Z"
+  },
+  {
+    "_id": "6a0044c5fc3b4bd1aafa04a4",
+    "certificateId": "CERT925601",
+    "recipient": "953624205018@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T08:41:41.939Z"
+  },
+  {
+    "_id": "6a0044e4fc3b4bd1aafa04a6",
+    "certificateId": "CERT752808",
+    "recipient": "953624205035@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T08:42:12.138Z"
+  },
+  {
+    "_id": "6a0044e8fc3b4bd1aafa04a8",
+    "certificateId": "CERT875078",
+    "recipient": "953624205062@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T08:42:16.544Z"
+  },
+  {
+    "_id": "6a004516fc3b4bd1aafa04aa",
+    "certificateId": "CERT241339",
+    "recipient": "953624205008@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T08:43:02.743Z"
+  },
+  {
+    "_id": "6a0045acfc3b4bd1aafa04ac",
+    "certificateId": "CERT419045",
+    "recipient": "953624205020@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T08:45:32.933Z"
+  },
+  {
+    "_id": "6a0045cafc3b4bd1aafa04ae",
+    "certificateId": "CERT857553",
+    "recipient": "953624205034@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T08:46:02.630Z"
+  },
+  {
+    "_id": "6a004675fc3b4bd1aafa04b0",
+    "certificateId": "CERT343644",
+    "recipient": "953624205046@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T08:48:53.103Z"
+  },
+  {
+    "_id": "6a0047fbfc3b4bd1aafa04b2",
+    "certificateId": "CERT532533",
+    "recipient": "953624205038@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T08:55:23.147Z"
+  },
+  {
+    "_id": "6a0049d1fc3b4bd1aafa04b4",
+    "certificateId": "CERT865552",
+    "recipient": "953624205022@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T09:03:13.482Z"
+  },
+  {
+    "_id": "6a004c34fc3b4bd1aafa04b6",
+    "certificateId": "CERT531406",
+    "recipient": "953624205044@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T09:13:24.225Z"
+  },
+  {
+    "_id": "6a00523306910537cb12caee",
+    "certificateId": "CERT356863",
+    "recipient": "953624205036@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T09:38:59.907Z"
+  },
+  {
+    "_id": "6a00523b06910537cb12caf0",
+    "certificateId": "CERT265520",
+    "recipient": "953624205040@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T09:39:07.096Z"
+  },
+  {
+    "_id": "6a00524006910537cb12caf2",
+    "certificateId": "CERT265582",
+    "recipient": "953624205047@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T09:39:12.474Z"
+  },
+  {
+    "_id": "6a0052d406910537cb12caf4",
+    "certificateId": "CERT246818",
+    "recipient": "953624205028@ritrjpm. ac. in",
+    "status": "Failed",
+    "error": "email is not valid in to",
+    "sentAt": "2026-05-10T09:41:40.272Z"
+  },
+  {
+    "_id": "6a0055cd06910537cb12caf6",
+    "certificateId": "CERT536000",
+    "recipient": "953624205051@ritrjpm. ac. in",
+    "status": "Failed",
+    "error": "email is not valid in to",
+    "sentAt": "2026-05-10T09:54:21.745Z"
+  },
+  {
+    "_id": "6a00795b5218f076e1a3b101",
+    "certificateId": "CERT711433",
+    "recipient": "953624205007@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T12:26:03.203Z"
+  },
+  {
+    "_id": "6a0079625218f076e1a3b103",
+    "certificateId": "CERT101675",
+    "recipient": "953624205003@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T12:26:10.587Z"
+  },
+  {
+    "_id": "6a0079675218f076e1a3b105",
+    "certificateId": "CERT694090",
+    "recipient": "953624205054@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T12:26:15.407Z"
+  },
+  {
+    "_id": "6a00796b5218f076e1a3b107",
+    "certificateId": "CERT349575",
+    "recipient": "953624205039@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T12:26:19.820Z"
+  },
+  {
+    "_id": "6a0079705218f076e1a3b109",
+    "certificateId": "CERT330714",
+    "recipient": "953624205043@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T12:26:24.283Z"
+  },
+  {
+    "_id": "6a0079745218f076e1a3b10b",
+    "certificateId": "CERT509166",
+    "recipient": "surulivelan2007@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T12:26:28.830Z"
+  },
+  {
+    "_id": "6a0079795218f076e1a3b10d",
+    "certificateId": "CERT399427",
+    "recipient": "953624205001@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T12:26:33.408Z"
+  },
+  {
+    "_id": "6a00797e5218f076e1a3b10f",
+    "certificateId": "CERT352662",
+    "recipient": "953624205049@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T12:26:38.034Z"
+  },
+  {
+    "_id": "6a0079825218f076e1a3b111",
+    "certificateId": "CERT204523",
+    "recipient": "953624205032@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T12:26:42.607Z"
+  },
+  {
+    "_id": "6a007db95218f076e1a3b113",
+    "certificateId": "CERT853239",
+    "recipient": "953624205006@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T12:44:41.871Z"
+  },
+  {
+    "_id": "6a007dce5218f076e1a3b115",
+    "certificateId": "CERT835666",
+    "recipient": "953624205059@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T12:45:02.640Z"
+  },
+  {
+    "_id": "6a007de35218f076e1a3b117",
+    "certificateId": "CERT821886",
+    "recipient": "953624205019@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T12:45:23.224Z"
+  },
+  {
+    "_id": "6a007eb55218f076e1a3b119",
+    "certificateId": "CERT297447",
+    "recipient": "953624205041@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T12:48:53.527Z"
+  },
+  {
+    "_id": "6a007f5e5218f076e1a3b11b",
+    "certificateId": "CERT707884",
+    "recipient": "953624205061@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T12:51:42.907Z"
+  },
+  {
+    "_id": "6a007f735218f076e1a3b11d",
+    "certificateId": "CERT319659",
+    "recipient": "953624205037@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T12:52:03.889Z"
+  },
+  {
+    "_id": "6a007f7ccc5e92fe9e2825b8",
+    "certificateId": "CERT285709",
+    "recipient": "953624205016@ritrjpm.ac.in.",
+    "status": "Failed",
+    "error": "email is not valid in to",
+    "sentAt": "2026-05-10T12:52:12.392Z"
+  },
+  {
+    "_id": "6a007fcccc5e92fe9e2825ba",
+    "certificateId": "CERT748303",
+    "recipient": "953624205052@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T12:53:32.201Z"
+  },
+  {
+    "_id": "6a008089cc5e92fe9e2825bc",
+    "certificateId": "CERT784473",
+    "recipient": "953624205051@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T12:56:41.606Z"
+  },
+  {
+    "_id": "6a008282cc5e92fe9e2825be",
+    "certificateId": "CERT511466",
+    "recipient": "953624205051@ritrjpm. ac. in",
+    "status": "Failed",
+    "error": "email is not valid in to",
+    "sentAt": "2026-05-10T13:05:06.995Z"
+  },
+  {
+    "_id": "6a00828ccc5e92fe9e2825c0",
+    "certificateId": "CERT311041",
+    "recipient": "953624205023@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T13:05:16.573Z"
+  },
+  {
+    "_id": "6a0082b8cc5e92fe9e2825c2",
+    "certificateId": "CERT666698",
+    "recipient": "953624205017@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T13:06:00.655Z"
+  },
+  {
+    "_id": "6a008647cc5e92fe9e2825c4",
+    "certificateId": "CERT970883",
+    "recipient": "953624205056@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T13:21:11.372Z"
+  },
+  {
+    "_id": "6a0086ddcc5e92fe9e2825c6",
+    "certificateId": "CERT468117",
+    "recipient": "953624205027@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T13:23:41.496Z"
+  },
+  {
+    "_id": "6a0089b59b041934356c5c9c",
+    "certificateId": "CERT114295",
+    "recipient": "kirransudhakar9@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T13:35:49.130Z"
+  },
+  {
+    "_id": "6a008b569b041934356c5c9f",
+    "certificateId": "CERT270161",
+    "recipient": "kirransudhakar9@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T13:42:46.206Z"
+  },
+  {
+    "_id": "6a008d559b041934356c5ca1",
+    "certificateId": "CERT341685",
+    "recipient": "953624205028@ritrjpm. ac. in",
+    "status": "Failed",
+    "error": "email is not valid in to",
+    "sentAt": "2026-05-10T13:51:17.978Z"
+  },
+  {
+    "_id": "6a008fd7f7d2fffaf89be0a9",
+    "certificateId": "CERT582090",
+    "recipient": "kirransudhakar9@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T14:01:59.079Z"
+  },
+  {
+    "_id": "6a00911f094893cd7f1ea82b",
+    "certificateId": "CERT270127",
+    "recipient": "kirransudhakar9@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-10T14:07:27.289Z"
+  },
+  {
+    "_id": "6a01abc9944bd9a9287f4315",
+    "certificateId": "CERT127458",
+    "recipient": "953624205042@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-11T10:13:29.358Z"
+  },
+  {
+    "_id": "6a01abd0944bd9a9287f4317",
+    "certificateId": "CERT816595",
+    "recipient": "953624205026@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-11T10:13:36.624Z"
+  },
+  {
+    "_id": "6a01b4aaa880822be45d66a7",
+    "certificateId": "CERT610893",
+    "recipient": "953624205058@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-11T10:51:22.064Z"
+  },
+  {
+    "_id": "6a01b4b1a880822be45d66a9",
+    "certificateId": "CERT581754",
+    "recipient": "niraipandiasuppliers@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-11T10:51:29.504Z"
+  },
+  {
+    "_id": "6a01b4b6a880822be45d66ab",
+    "certificateId": "CERT895061",
+    "recipient": "953624205028@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-11T10:51:34.664Z"
+  },
+  {
+    "_id": "6a01b4d2a880822be45d66ad",
+    "certificateId": "CERT284112",
+    "recipient": "mathanraja2519@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-11T10:52:02.469Z"
+  },
+  {
+    "_id": "6a01b5f3a880822be45d66af",
+    "certificateId": "CERT161473",
+    "recipient": "953624205031@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-11T10:56:51.619Z"
+  },
+  {
+    "_id": "6a01baed11ddc19375baac97",
+    "certificateId": "CERT987180",
+    "recipient": "953624205011@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-11T11:18:05.496Z"
+  },
+  {
+    "_id": "6a01d1ffd15e57d2204f0569",
+    "certificateId": "CERT592212",
+    "recipient": "akshay1905m@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-11T12:56:31.455Z"
+  },
+  {
+    "_id": "6a01f7d6d08d79b425be509d",
+    "certificateId": "CERT997425",
+    "recipient": "zainubtech28@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-11T15:37:58.246Z"
+  },
+  {
+    "_id": "6a04640581d880b209afad60",
+    "certificateId": "CERT900559",
+    "recipient": "subamala.2007@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-13T11:44:05.384Z"
+  },
+  {
+    "_id": "6a04640c81d880b209afad62",
+    "certificateId": "CERT774132",
+    "recipient": "953624205050@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-05-13T11:44:12.419Z"
+  },
+  {
+    "_id": "6a89e1c248e5dc045a173fdb",
+    "certificateId": "CERT203896",
+    "recipient": "kirranmass@gmail.com",
+    "status": "Failed",
+    "error": "authentication not found in headers",
+    "sentAt": "2026-08-22T17:52:02.623Z"
+  },
+  {
+    "_id": "6a89e3731545a32204abc29f",
+    "certificateId": "CERT594329",
+    "recipient": "kirransudhakar09@gmail.com",
+    "status": "Failed",
+    "error": "authentication not found in headers",
+    "sentAt": "2026-08-22T17:59:15.613Z"
+  },
+  {
+    "_id": "6a89e3981545a32204abc2a0",
+    "certificateId": "CERT594329",
+    "recipient": "kirransudhakar09@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-22T17:59:52.119Z"
+  },
+  {
+    "_id": "6a89e46999e58522dd77261b",
+    "certificateId": "CERT110041",
+    "recipient": "kirransujatha@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-22T18:03:21.476Z"
+  },
+  {
+    "_id": "6a89e4ad99e58522dd77261d",
+    "certificateId": "CERT997757",
+    "recipient": "kirransudhakar9@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-22T18:04:29.083Z"
+  },
+  {
+    "_id": "6a89e8c699e58522dd772624",
+    "certificateId": "CERT418627",
+    "recipient": "kirranmass@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-22T18:21:58.956Z"
+  },
+  {
+    "_id": "6a89e8ca99e58522dd772626",
+    "certificateId": "CERT322903",
+    "recipient": "kirransudhakar9@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-22T18:22:02.870Z"
+  },
+  {
+    "_id": "6a89e94d99e58522dd77262a",
+    "certificateId": "CERT939944",
+    "recipient": "kirranmass@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-22T18:24:13.834Z"
+  },
+  {
+    "_id": "6a89e94e99e58522dd77262b",
+    "certificateId": "CERT950016",
+    "recipient": "kirransudhakar9@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-22T18:24:14.799Z"
+  },
+  {
+    "_id": "6a8a81e803929f7eed44ef14",
+    "certificateId": "CERT130051",
+    "recipient": "953624205057@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:20.344Z"
+  },
+  {
+    "_id": "6a8a81e903929f7eed44ef15",
+    "certificateId": "CERT136006",
+    "recipient": "953624205037@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:21.162Z"
+  },
+  {
+    "_id": "6a8a81e903929f7eed44ef16",
+    "certificateId": "CERT139207",
+    "recipient": "niraipandiasuppliers@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:21.973Z"
+  },
+  {
+    "_id": "6a8a81ea03929f7eed44ef17",
+    "certificateId": "CERT152375",
+    "recipient": "953624205301@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:22.784Z"
+  },
+  {
+    "_id": "6a8a81eb03929f7eed44ef18",
+    "certificateId": "CERT161772",
+    "recipient": "953624205016@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:23.602Z"
+  },
+  {
+    "_id": "6a8a81ec03929f7eed44ef19",
+    "certificateId": "CERT164104",
+    "recipient": "953624205034@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:24.421Z"
+  },
+  {
+    "_id": "6a8a81ed03929f7eed44ef1a",
+    "certificateId": "CERT178456",
+    "recipient": "953624205038@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:25.245Z"
+  },
+  {
+    "_id": "6a8a81ee03929f7eed44ef1b",
+    "certificateId": "CERT194380",
+    "recipient": "953624205011@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:26.065Z"
+  },
+  {
+    "_id": "6a8a81ee03929f7eed44ef1c",
+    "certificateId": "CERT212318",
+    "recipient": "953624205048@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:26.877Z"
+  },
+  {
+    "_id": "6a8a81ef03929f7eed44ef1d",
+    "certificateId": "CERT223517",
+    "recipient": "953624205058@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:27.679Z"
+  },
+  {
+    "_id": "6a8a81f003929f7eed44ef1e",
+    "certificateId": "CERT227485",
+    "recipient": "sureshr8107@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:28.513Z"
+  },
+  {
+    "_id": "6a8a81f103929f7eed44ef1f",
+    "certificateId": "CERT233298",
+    "recipient": "953624205024@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:29.333Z"
+  },
+  {
+    "_id": "6a8a81f203929f7eed44ef20",
+    "certificateId": "CERT258686",
+    "recipient": "953624205005@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:30.136Z"
+  },
+  {
+    "_id": "6a8a81f203929f7eed44ef21",
+    "certificateId": "CERT262337",
+    "recipient": "953624205032@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:30.949Z"
+  },
+  {
+    "_id": "6a8a81f303929f7eed44ef22",
+    "certificateId": "CERT263197",
+    "recipient": "953624205002@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:31.763Z"
+  },
+  {
+    "_id": "6a8a81f403929f7eed44ef23",
+    "certificateId": "CERT283779",
+    "recipient": "953624205020@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:32.567Z"
+  },
+  {
+    "_id": "6a8a81f503929f7eed44ef24",
+    "certificateId": "CERT289409",
+    "recipient": "953624205012@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:33.388Z"
+  },
+  {
+    "_id": "6a8a81f603929f7eed44ef25",
+    "certificateId": "CERT306999",
+    "recipient": "953624205021@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:34.210Z"
+  },
+  {
+    "_id": "6a8a81f703929f7eed44ef26",
+    "certificateId": "CERT316984",
+    "recipient": "953624205060@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:35.009Z"
+  },
+  {
+    "_id": "6a8a81f703929f7eed44ef27",
+    "certificateId": "CERT321259",
+    "recipient": "953624205019@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:35.819Z"
+  },
+  {
+    "_id": "6a8a81f803929f7eed44ef28",
+    "certificateId": "CERT345993",
+    "recipient": "953624205029@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:36.623Z"
+  },
+  {
+    "_id": "6a8a81f903929f7eed44ef29",
+    "certificateId": "CERT347214",
+    "recipient": "yamunadevi12032007@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:37.434Z"
+  },
+  {
+    "_id": "6a8a81fa03929f7eed44ef2a",
+    "certificateId": "CERT365558",
+    "recipient": "953624205026@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:38.239Z"
+  },
+  {
+    "_id": "6a8a81fb03929f7eed44ef2b",
+    "certificateId": "CERT418357",
+    "recipient": "953624205055@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:39.050Z"
+  },
+  {
+    "_id": "6a8a81fb03929f7eed44ef2c",
+    "certificateId": "CERT493645",
+    "recipient": "953624205017@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:39.862Z"
+  },
+  {
+    "_id": "6a8a81fc03929f7eed44ef2d",
+    "certificateId": "CERT509569",
+    "recipient": "953624205015@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:40.667Z"
+  },
+  {
+    "_id": "6a8a81fd03929f7eed44ef2e",
+    "certificateId": "CERT516005",
+    "recipient": "953624205018@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:41.470Z"
+  },
+  {
+    "_id": "6a8a81fe03929f7eed44ef2f",
+    "certificateId": "CERT524424",
+    "recipient": "953624205054@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:42.294Z"
+  },
+  {
+    "_id": "6a8a820003929f7eed44ef30",
+    "certificateId": "CERT536693",
+    "recipient": "953624205009@ritrjpm.ac.in.",
+    "status": "Failed",
+    "error": "All 5 Brevo API key(s) in pool exceeded daily sending limits.",
+    "sentAt": "2026-08-23T05:15:44.475Z"
+  },
+  {
+    "_id": "6a8a820103929f7eed44ef31",
+    "certificateId": "CERT563625",
+    "recipient": "953624205046@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:45.289Z"
+  },
+  {
+    "_id": "6a8a820203929f7eed44ef32",
+    "certificateId": "CERT574290",
+    "recipient": "953624205001@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:46.130Z"
+  },
+  {
+    "_id": "6a8a820203929f7eed44ef33",
+    "certificateId": "CERT580501",
+    "recipient": "953624205047@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:46.928Z"
+  },
+  {
+    "_id": "6a8a820303929f7eed44ef34",
+    "certificateId": "CERT581819",
+    "recipient": "953624205004@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:47.747Z"
+  },
+  {
+    "_id": "6a8a820403929f7eed44ef35",
+    "certificateId": "CERT627024",
+    "recipient": "953624205023@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:48.556Z"
+  },
+  {
+    "_id": "6a8a820503929f7eed44ef36",
+    "certificateId": "CERT635934",
+    "recipient": "953624205049@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:49.356Z"
+  },
+  {
+    "_id": "6a8a820603929f7eed44ef37",
+    "certificateId": "CERT645944",
+    "recipient": "953624205061@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:50.208Z"
+  },
+  {
+    "_id": "6a8a820703929f7eed44ef38",
+    "certificateId": "CERT648452",
+    "recipient": "953624205002@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:51.019Z"
+  },
+  {
+    "_id": "6a8a820703929f7eed44ef39",
+    "certificateId": "CERT651023",
+    "recipient": "953624205018@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:51.849Z"
+  },
+  {
+    "_id": "6a8a820803929f7eed44ef3a",
+    "certificateId": "CERT651157",
+    "recipient": "953624205048@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:52.659Z"
+  },
+  {
+    "_id": "6a8a820903929f7eed44ef3b",
+    "certificateId": "CERT679021",
+    "recipient": "953624205007@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:53.493Z"
+  },
+  {
+    "_id": "6a8a820a03929f7eed44ef3c",
+    "certificateId": "CERT696558",
+    "recipient": "953624205008@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:54.317Z"
+  },
+  {
+    "_id": "6a8a820b03929f7eed44ef3d",
+    "certificateId": "CERT703763",
+    "recipient": "953624205035@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:55.124Z"
+  },
+  {
+    "_id": "6a8a820b03929f7eed44ef3e",
+    "certificateId": "CERT728149",
+    "recipient": "953624205003@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:55.939Z"
+  },
+  {
+    "_id": "6a8a820c03929f7eed44ef3f",
+    "certificateId": "CERT745637",
+    "recipient": "953624205044@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:56.771Z"
+  },
+  {
+    "_id": "6a8a820d03929f7eed44ef40",
+    "certificateId": "CERT746407",
+    "recipient": "sudharsan20200916@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:57.586Z"
+  },
+  {
+    "_id": "6a8a820e03929f7eed44ef41",
+    "certificateId": "CERT769694",
+    "recipient": "953624205050@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:58.398Z"
+  },
+  {
+    "_id": "6a8a820f03929f7eed44ef42",
+    "certificateId": "CERT793169",
+    "recipient": "953624205059@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:15:59.214Z"
+  },
+  {
+    "_id": "6a8a821103929f7eed44ef43",
+    "certificateId": "CERT799476",
+    "recipient": "953624205051@ritrjpm.ac. in",
+    "status": "Failed",
+    "error": "All 5 Brevo API key(s) in pool exceeded daily sending limits.",
+    "sentAt": "2026-08-23T05:16:01.280Z"
+  },
+  {
+    "_id": "6a8a821203929f7eed44ef44",
+    "certificateId": "CERT822741",
+    "recipient": "953624205041@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:16:02.085Z"
+  },
+  {
+    "_id": "6a8a821403929f7eed44ef45",
+    "certificateId": "CERT831923",
+    "recipient": "953624205028@ritrjpm.ac. in",
+    "status": "Failed",
+    "error": "All 5 Brevo API key(s) in pool exceeded daily sending limits.",
+    "sentAt": "2026-08-23T05:16:04.154Z"
+  },
+  {
+    "_id": "6a8a821403929f7eed44ef46",
+    "certificateId": "CERT836758",
+    "recipient": "953624205056@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:16:04.966Z"
+  },
+  {
+    "_id": "6a8a821503929f7eed44ef47",
+    "certificateId": "CERT852726",
+    "recipient": "953624205006@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:16:05.785Z"
+  },
+  {
+    "_id": "6a8a821603929f7eed44ef48",
+    "certificateId": "CERT853519",
+    "recipient": "zainubtech28@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:16:06.601Z"
+  },
+  {
+    "_id": "6a8a821703929f7eed44ef49",
+    "certificateId": "CERT856980",
+    "recipient": "sandhiyasaravanakarthikeyan@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:16:07.411Z"
+  },
+  {
+    "_id": "6a8a821803929f7eed44ef4a",
+    "certificateId": "CERT863224",
+    "recipient": "murugalakshmivel954@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:16:08.215Z"
+  },
+  {
+    "_id": "6a8a821903929f7eed44ef4b",
+    "certificateId": "CERT867660",
+    "recipient": "953624205014@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:16:09.042Z"
+  },
+  {
+    "_id": "6a8a821903929f7eed44ef4c",
+    "certificateId": "CERT869506",
+    "recipient": "953624205013@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:16:09.839Z"
+  },
+  {
+    "_id": "6a8a821a03929f7eed44ef4d",
+    "certificateId": "CERT886990",
+    "recipient": "953624205040@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:16:10.645Z"
+  },
+  {
+    "_id": "6a8a821b03929f7eed44ef4e",
+    "certificateId": "CERT894127",
+    "recipient": "953624205039@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:16:11.459Z"
+  },
+  {
+    "_id": "6a8a821c03929f7eed44ef4f",
+    "certificateId": "CERT921505",
+    "recipient": "niraipandiasuppliers@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:16:12.263Z"
+  },
+  {
+    "_id": "6a8a821d03929f7eed44ef50",
+    "certificateId": "CERT925673",
+    "recipient": "953624205010@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:16:13.082Z"
+  },
+  {
+    "_id": "6a8a821f03929f7eed44ef51",
+    "certificateId": "CERT949866",
+    "recipient": "\"953624205034@ritrjpm.ac.in\"",
+    "status": "Failed",
+    "error": "All 5 Brevo API key(s) in pool exceeded daily sending limits.",
+    "sentAt": "2026-08-23T05:16:15.142Z"
+  },
+  {
+    "_id": "6a8a821f03929f7eed44ef52",
+    "certificateId": "CERT967439",
+    "recipient": "953624205042@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:16:15.948Z"
+  },
+  {
+    "_id": "6a8a822003929f7eed44ef53",
+    "certificateId": "CERT981177",
+    "recipient": "953624205036@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:16:16.747Z"
+  },
+  {
+    "_id": "6a8a822103929f7eed44ef54",
+    "certificateId": "CERT981478",
+    "recipient": "953624205045@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:16:17.560Z"
+  },
+  {
+    "_id": "6a8a822203929f7eed44ef55",
+    "certificateId": "CERT990599",
+    "recipient": "953624205022@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:16:18.367Z"
+  },
+  {
+    "_id": "6a8a822303929f7eed44ef56",
+    "certificateId": "CERT997503",
+    "recipient": "953624205027@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:16:19.169Z"
+  },
+  {
+    "_id": "6a8a84875934f5bd9678bca6",
+    "certificateId": "CERT102023",
+    "recipient": "953624205020@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:26:31.752Z"
+  },
+  {
+    "_id": "6a8a84885934f5bd9678bca7",
+    "certificateId": "CERT102729",
+    "recipient": "953624205058@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:26:32.542Z"
+  },
+  {
+    "_id": "6a8a84895934f5bd9678bca8",
+    "certificateId": "CERT108551",
+    "recipient": "sudharsan20200916@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:26:33.301Z"
+  },
+  {
+    "_id": "6a8a848a5934f5bd9678bca9",
+    "certificateId": "CERT112311",
+    "recipient": "953624205044@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:26:34.051Z"
+  },
+  {
+    "_id": "6a8a848a5934f5bd9678bcaa",
+    "certificateId": "CERT136547",
+    "recipient": "953624205018@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:26:34.822Z"
+  },
+  {
+    "_id": "6a8a848b5934f5bd9678bcab",
+    "certificateId": "CERT140850",
+    "recipient": "953624205032@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:26:35.584Z"
+  },
+  {
+    "_id": "6a8a848c5934f5bd9678bcac",
+    "certificateId": "CERT145138",
+    "recipient": "953624205037@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:26:36.345Z"
+  },
+  {
+    "_id": "6a8a848d5934f5bd9678bcad",
+    "certificateId": "CERT155883",
+    "recipient": "953624205048@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:26:37.094Z"
+  },
+  {
+    "_id": "6a8a848d5934f5bd9678bcae",
+    "certificateId": "CERT175859",
+    "recipient": "953624205024@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:26:37.852Z"
+  },
+  {
+    "_id": "6a8a848e5934f5bd9678bcaf",
+    "certificateId": "CERT177405",
+    "recipient": "953624205007@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:26:38.617Z"
+  },
+  {
+    "_id": "6a8a848f5934f5bd9678bcb0",
+    "certificateId": "CERT189662",
+    "recipient": "953624205056@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:26:39.369Z"
+  },
+  {
+    "_id": "6a8a84905934f5bd9678bcb1",
+    "certificateId": "CERT250084",
+    "recipient": "953624205039@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:26:40.120Z"
+  },
+  {
+    "_id": "6a8a84905934f5bd9678bcb2",
+    "certificateId": "CERT274048",
+    "recipient": "953624205026@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:26:40.877Z"
+  },
+  {
+    "_id": "6a8a84915934f5bd9678bcb3",
+    "certificateId": "CERT294412",
+    "recipient": "953624205004@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:26:41.637Z"
+  },
+  {
+    "_id": "6a8a84925934f5bd9678bcb4",
+    "certificateId": "CERT320298",
+    "recipient": "953624205061@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:26:42.392Z"
+  },
+  {
+    "_id": "6a8a84935934f5bd9678bcb5",
+    "certificateId": "CERT338754",
+    "recipient": "murugalakshmivel954@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:26:43.163Z"
+  },
+  {
+    "_id": "6a8a84935934f5bd9678bcb6",
+    "certificateId": "CERT340552",
+    "recipient": "953624205023@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:26:43.990Z"
+  },
+  {
+    "_id": "6a8a84945934f5bd9678bcb7",
+    "certificateId": "CERT345553",
+    "recipient": "953624205060@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:26:44.766Z"
+  },
+  {
+    "_id": "6a8a84955934f5bd9678bcb8",
+    "certificateId": "CERT350993",
+    "recipient": "niraipandiasuppliers@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:26:45.520Z"
+  },
+  {
+    "_id": "6a8a84965934f5bd9678bcb9",
+    "certificateId": "CERT378746",
+    "recipient": "953624205055@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:26:46.380Z"
+  },
+  {
+    "_id": "6a8a84975934f5bd9678bcba",
+    "certificateId": "CERT383620",
+    "recipient": "953624205027@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:26:47.146Z"
+  },
+  {
+    "_id": "6a8a84975934f5bd9678bcbb",
+    "certificateId": "CERT385485",
+    "recipient": "yamunadevi12032007@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:26:47.899Z"
+  },
+  {
+    "_id": "6a8a84985934f5bd9678bcbc",
+    "certificateId": "CERT393216",
+    "recipient": "953624205014@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:26:48.663Z"
+  },
+  {
+    "_id": "6a8a84995934f5bd9678bcbd",
+    "certificateId": "CERT406813",
+    "recipient": "953624205059@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:26:49.426Z"
+  },
+  {
+    "_id": "6a8a849a5934f5bd9678bcbe",
+    "certificateId": "CERT434867",
+    "recipient": "953624205041@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:26:50.182Z"
+  },
+  {
+    "_id": "6a8a849a5934f5bd9678bcbf",
+    "certificateId": "CERT438909",
+    "recipient": "953624205028@ritrjpm.ac. in",
+    "status": "Failed",
+    "error": "Invalid recipient email address: \"953624205028@ritrjpm.ac. in\"",
+    "sentAt": "2026-08-23T05:26:50.657Z"
+  },
+  {
+    "_id": "6a8a849b5934f5bd9678bcc0",
+    "certificateId": "CERT438972",
+    "recipient": "953624205012@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:26:51.408Z"
+  },
+  {
+    "_id": "6a8a849c5934f5bd9678bcc1",
+    "certificateId": "CERT452773",
+    "recipient": "953624205047@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:26:52.170Z"
+  },
+  {
+    "_id": "6a8a849c5934f5bd9678bcc2",
+    "certificateId": "CERT471279",
+    "recipient": "953624205049@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:26:52.929Z"
+  },
+  {
+    "_id": "6a8a849d5934f5bd9678bcc3",
+    "certificateId": "CERT473229",
+    "recipient": "953624205009@ritrjpm.ac.in.",
+    "status": "Failed",
+    "error": "Invalid recipient email or payload: email is not valid in to",
+    "sentAt": "2026-08-23T05:26:53.669Z"
+  },
+  {
+    "_id": "6a8a849e5934f5bd9678bcc4",
+    "certificateId": "CERT495694",
+    "recipient": "953624205021@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:26:54.431Z"
+  },
+  {
+    "_id": "6a8a849e5934f5bd9678bcc5",
+    "certificateId": "CERT496001",
+    "recipient": "953624205051@ritrjpm.ac. in",
+    "status": "Failed",
+    "error": "Invalid recipient email address: \"953624205051@ritrjpm.ac. in\"",
+    "sentAt": "2026-08-23T05:26:54.905Z"
+  },
+  {
+    "_id": "6a8a849f5934f5bd9678bcc6",
+    "certificateId": "CERT499857",
+    "recipient": "zainubtech28@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:26:55.670Z"
+  },
+  {
+    "_id": "6a8a84a05934f5bd9678bcc7",
+    "certificateId": "CERT513073",
+    "recipient": "953624205005@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:26:56.435Z"
+  },
+  {
+    "_id": "6a8a84a15934f5bd9678bcc8",
+    "certificateId": "CERT517987",
+    "recipient": "953624205038@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:26:57.193Z"
+  },
+  {
+    "_id": "6a8a84a15934f5bd9678bcc9",
+    "certificateId": "CERT522799",
+    "recipient": "953624205046@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:26:57.961Z"
+  },
+  {
+    "_id": "6a8a84a25934f5bd9678bcca",
+    "certificateId": "CERT525947",
+    "recipient": "953624205029@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:26:58.730Z"
+  },
+  {
+    "_id": "6a8a84a35934f5bd9678bccb",
+    "certificateId": "CERT531162",
+    "recipient": "953624205002@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:26:59.478Z"
+  },
+  {
+    "_id": "6a8a84a45934f5bd9678bccc",
+    "certificateId": "CERT549143",
+    "recipient": "953624205006@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:27:00.234Z"
+  },
+  {
+    "_id": "6a8a84a45934f5bd9678bccd",
+    "certificateId": "CERT596964",
+    "recipient": "sandhiyasaravanakarthikeyan@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:27:00.992Z"
+  },
+  {
+    "_id": "6a8a84a55934f5bd9678bcce",
+    "certificateId": "CERT601118",
+    "recipient": "953624205036@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:27:01.749Z"
+  },
+  {
+    "_id": "6a8a84a65934f5bd9678bccf",
+    "certificateId": "CERT607884",
+    "recipient": "953624205035@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:27:02.507Z"
+  },
+  {
+    "_id": "6a8a84a75934f5bd9678bcd0",
+    "certificateId": "CERT620011",
+    "recipient": "953624205011@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:27:03.266Z"
+  },
+  {
+    "_id": "6a8a84a85934f5bd9678bcd1",
+    "certificateId": "CERT622664",
+    "recipient": "niraipandiasuppliers@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:27:04.019Z"
+  },
+  {
+    "_id": "6a8a84a85934f5bd9678bcd2",
+    "certificateId": "CERT643687",
+    "recipient": "953624205040@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:27:04.779Z"
+  },
+  {
+    "_id": "6a8a84a95934f5bd9678bcd3",
+    "certificateId": "CERT648544",
+    "recipient": "953624205022@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:27:05.539Z"
+  },
+  {
+    "_id": "6a8a84aa5934f5bd9678bcd4",
+    "certificateId": "CERT689372",
+    "recipient": "953624205018@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:27:06.295Z"
+  },
+  {
+    "_id": "6a8a84ab5934f5bd9678bcd5",
+    "certificateId": "CERT701710",
+    "recipient": "953624205015@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:27:07.060Z"
+  },
+  {
+    "_id": "6a8a84ab5934f5bd9678bcd6",
+    "certificateId": "CERT709881",
+    "recipient": "953624205019@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:27:07.813Z"
+  },
+  {
+    "_id": "6a8a84ac5934f5bd9678bcd7",
+    "certificateId": "CERT714242",
+    "recipient": "953624205002@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:27:08.566Z"
+  },
+  {
+    "_id": "6a8a84ad5934f5bd9678bcd8",
+    "certificateId": "CERT737588",
+    "recipient": "953624205016@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:27:09.325Z"
+  },
+  {
+    "_id": "6a8a84ae5934f5bd9678bcd9",
+    "certificateId": "CERT772050",
+    "recipient": "953624205003@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:27:10.082Z"
+  },
+  {
+    "_id": "6a8a84ae5934f5bd9678bcda",
+    "certificateId": "CERT779302",
+    "recipient": "953624205054@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:27:10.841Z"
+  },
+  {
+    "_id": "6a8a84af5934f5bd9678bcdb",
+    "certificateId": "CERT782396",
+    "recipient": "953624205042@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:27:11.596Z"
+  },
+  {
+    "_id": "6a8a84b05934f5bd9678bcdc",
+    "certificateId": "CERT821239",
+    "recipient": "\"953624205034@ritrjpm.ac.in\"",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:27:12.350Z"
+  },
+  {
+    "_id": "6a8a84b15934f5bd9678bcdd",
+    "certificateId": "CERT824169",
+    "recipient": "953624205010@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:27:13.096Z"
+  },
+  {
+    "_id": "6a8a84b15934f5bd9678bcde",
+    "certificateId": "CERT826645",
+    "recipient": "953624205301@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:27:13.852Z"
+  },
+  {
+    "_id": "6a8a84b25934f5bd9678bcdf",
+    "certificateId": "CERT846440",
+    "recipient": "953624205057@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:27:14.621Z"
+  },
+  {
+    "_id": "6a8a84b35934f5bd9678bce0",
+    "certificateId": "CERT860917",
+    "recipient": "953624205050@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:27:15.382Z"
+  },
+  {
+    "_id": "6a8a84b45934f5bd9678bce1",
+    "certificateId": "CERT888233",
+    "recipient": "953624205008@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:27:16.132Z"
+  },
+  {
+    "_id": "6a8a84b45934f5bd9678bce2",
+    "certificateId": "CERT893224",
+    "recipient": "953624205045@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:27:16.890Z"
+  },
+  {
+    "_id": "6a8a84b55934f5bd9678bce3",
+    "certificateId": "CERT930095",
+    "recipient": "953624205017@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:27:17.636Z"
+  },
+  {
+    "_id": "6a8a84b65934f5bd9678bce4",
+    "certificateId": "CERT935378",
+    "recipient": "953624205013@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:27:18.392Z"
+  },
+  {
+    "_id": "6a8a84b75934f5bd9678bce5",
+    "certificateId": "CERT977926",
+    "recipient": "953624205001@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:27:19.147Z"
+  },
+  {
+    "_id": "6a8a84b75934f5bd9678bce6",
+    "certificateId": "CERT977967",
+    "recipient": "953624205034@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:27:19.923Z"
+  },
+  {
+    "_id": "6a8a84b85934f5bd9678bce7",
+    "certificateId": "CERT982498",
+    "recipient": "953624205048@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:27:20.676Z"
+  },
+  {
+    "_id": "6a8a84b95934f5bd9678bce8",
+    "certificateId": "CERT985245",
+    "recipient": "sureshr8107@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:27:21.438Z"
+  },
+  {
+    "_id": "6a8a89050c2daeca27455c94",
+    "certificateId": "CERT473229",
+    "recipient": "953624205009@ritrjpm.ac.in",
+    "status": "Failed",
+    "error": "Failed to load template image: Template file not found locally and no Base64 backup exists.",
+    "sentAt": "2026-08-23T05:45:41.989Z"
+  },
+  {
+    "_id": "6a8a8a0dd37ad8f9f21e3f49",
+    "certificateId": "CERT473229",
+    "recipient": "953624205009@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:50:05.208Z"
+  },
+  {
+    "_id": "6a8a8a19d37ad8f9f21e3f4a",
+    "certificateId": "CERT438909",
+    "recipient": "953624205028@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:50:17.072Z"
+  },
+  {
+    "_id": "6a8a8a22d37ad8f9f21e3f4b",
+    "certificateId": "CERT496001",
+    "recipient": "953624205051@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T05:50:26.725Z"
+  },
+  {
+    "_id": "6a8af83c089a2888d3e5d7f1",
+    "certificateId": "CERT737588",
+    "recipient": "953624205016@ritrjpm.ac.in",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T13:40:12.741Z"
+  },
+  {
+    "_id": "6a8b17c35d4e67b05f392dce",
+    "certificateId": "CERT204722",
+    "recipient": "kirransudhakar9@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T15:54:43.290Z"
+  },
+  {
+    "_id": "6a8b17c45d4e67b05f392dcf",
+    "certificateId": "CERT283273",
+    "recipient": "kirranmass@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T15:54:44.066Z"
+  },
+  {
+    "_id": "6a8b17c45d4e67b05f392dd0",
+    "certificateId": "CERT481678",
+    "recipient": "kirransujatha@gmail.com",
+    "status": "Sent",
+    "error": "",
+    "sentAt": "2026-08-23T15:54:44.843Z"
+  }
+]

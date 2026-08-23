@@ -1,0 +1,26 @@
+[
+  {
+    "_id": "6a89e5a599e58522dd77261e",
+    "name": "Lokesh R",
+    "email": "953624205024@ritrjpm.ac.in",
+    "type": "Suggestion",
+    "message": "good",
+    "createdAt": "2026-08-22T18:08:37.368Z"
+  },
+  {
+    "_id": "6a89e66499e58522dd77261f",
+    "name": "Lokesh R",
+    "email": "953624205024@ritrjpm.ac.in",
+    "type": "Bug Report",
+    "message": "lag",
+    "createdAt": "2026-08-22T18:11:48.203Z"
+  },
+  {
+    "_id": "6a89e66999e58522dd772620",
+    "name": "Lokesh R",
+    "email": "953624205024@ritrjpm.ac.in",
+    "type": "Appreciation",
+    "message": "good",
+    "createdAt": "2026-08-22T18:11:53.602Z"
+  }
+]
