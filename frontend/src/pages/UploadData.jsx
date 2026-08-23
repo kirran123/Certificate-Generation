@@ -145,7 +145,7 @@ export default function UploadData() {
             {/* URL input */}
             <div className="relative">
               <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
-              <input type="text" placeholder="Paste Google Sheets public link..."
+              <input type="text" placeholder="Paste Google Sheets link here..."
                 className="w-full pl-10 pr-4 py-3 text-sm rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-main)] text-[var(--text-primary)] focus:outline-none focus:border-violet-500 transition-all"
                 value={sheetUrl} onChange={e => setSheetUrl(e.target.value)} disabled={loading} />
             </div>
@@ -157,14 +157,29 @@ export default function UploadData() {
               Open Editor
             </button>
 
-            <p className="text-xs text-[var(--text-secondary)] text-center opacity-70">
-              Sheet must be set to "Anyone with the link can view"
-            </p>
+            {/* Step-by-Step Sharing Helper */}
+            <div className="p-3.5 bg-violet-500/5 border border-violet-500/15 rounded-xl text-left text-xs space-y-1.5">
+              <p className="font-semibold text-violet-400 flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5 text-violet-400 shrink-0" />
+                How to share your Google Sheet correctly:
+              </p>
+              <ol className="list-decimal list-inside text-[var(--text-secondary)] space-y-1 pl-1 opacity-90">
+                <li>Open your sheet & click top-right <strong className="text-[var(--text-primary)]">Share</strong>.</li>
+                <li>Under <strong className="text-[var(--text-primary)]">General access</strong>, select <strong className="text-violet-400">"Anyone with the link"</strong> (Viewer).</li>
+                <li>Click <strong className="text-[var(--text-primary)]">Copy link</strong> and paste it above!</li>
+              </ol>
+            </div>
 
             {/* Error */}
             {error && (
-              <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
-                <p className="text-red-500 text-xs font-medium">{error}</p>
+              <div className="p-4 bg-red-500/10 border border-red-500/25 rounded-xl space-y-2 text-left">
+                <p className="text-red-400 text-xs font-semibold flex items-center gap-1.5">
+                  ⚠️ {error}
+                </p>
+                <div className="text-[11px] text-red-300/80 pl-4 space-y-1">
+                  <p>• Make sure the Google Sheet permission is set to <strong>"Anyone with the link can view"</strong>.</p>
+                  <p>• Check that the URL is copied directly from your browser address bar while viewing the sheet.</p>
+                </div>
               </div>
             )}
           </div>

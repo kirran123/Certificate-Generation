@@ -96,12 +96,30 @@ const pollOnce = async () => {
 
   for (const auto of automations) {
     try {
-      // Build CSV export URL from stored sheetId + gid
-      const exportUrl = `https://docs.google.com/spreadsheets/d/${auto.sheetId}/export?format=csv&gid=${auto.gid}`;
-      const response = await axios.get(exportUrl, { responseType: 'arraybuffer', timeout: 10000 });
-      const workbook = xlsx.read(response.data, { type: 'buffer' });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const rows = xlsx.utils.sheet_to_json(sheet);
+      const urlsToTry = [
+        `https://docs.google.com/spreadsheets/d/${auto.sheetId}/export?format=csv&gid=${auto.gid || 0}`,
+        `https://docs.google.com/spreadsheets/d/${auto.sheetId}/export?format=csv`,
+        `https://docs.google.com/spreadsheets/d/${auto.sheetId}/gviz/tq?tqx=out:csv`
+      ];
+
+      let rows = null;
+      for (const exportUrl of urlsToTry) {
+        try {
+          const response = await axios.get(exportUrl, {
+            responseType: 'arraybuffer',
+            timeout: 10000,
+            headers: { 'User-Agent': 'Mozilla/5.0' }
+          });
+          const text = Buffer.from(response.data).toString('utf8', 0, 200);
+          if (text.includes('<html') && (text.includes('accounts.google.com') || text.includes('ServiceLogin'))) continue;
+          const workbook = xlsx.read(response.data, { type: 'buffer' });
+          const sheet = workbook.Sheets[workbook.SheetNames[0]];
+          rows = xlsx.utils.sheet_to_json(sheet, { raw: false, defval: '' });
+          if (rows && rows.length > 0) break;
+        } catch (e) {
+          // try next url candidate
+        }
+      }
 
       if (!rows || rows.length === 0) continue;
 

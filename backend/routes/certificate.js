@@ -43,119 +43,108 @@ router.post('/upload-sheet', protect, async (req, res) => {
 
   sheetUrl = sheetUrl.trim();
 
-  // ── Handle Google Forms URL (forms.google.com) ─────────────────────────
-  // Google Forms don't have a direct CSV export; user needs the linked Sheet
   if (sheetUrl.includes('docs.google.com/forms') || sheetUrl.includes('forms.gle')) {
     return res.status(400).json({
-      message: 'This looks like a Google Form URL. Please open the form responses in Google Sheets (click the Sheets icon in the form), then paste that Sheets link here.'
+      message: 'This looks like a Google Form URL. Please open the form responses in Google Sheets (click the green Sheets icon in the form), then paste that Sheets link here.'
     });
   }
 
-  // ── Extract spreadsheet ID ─────────────────────────────────────────────
-  const idMatch = sheetUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
-  if (!idMatch) {
+  let docId = '';
+  let isWebPublished = false;
+
+  const webPubMatch = sheetUrl.match(/\/d\/e\/([a-zA-Z0-9-_]+)/);
+  const standardMatch = sheetUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
+
+  if (webPubMatch) {
+    docId = webPubMatch[1];
+    isWebPublished = true;
+  } else if (standardMatch) {
+    docId = standardMatch[1];
+  } else if (/^[a-zA-Z0-9-_]{20,}$/.test(sheetUrl)) {
+    docId = sheetUrl;
+  } else {
     return res.status(400).json({ message: 'Invalid Google Sheets URL. Please copy the URL from the browser address bar while the sheet is open.' });
   }
 
-  const docId = sheetUrl.match(/\/d\/([a-zA-Z0-9-_]+)/)[1];
-
-  // Extract gid — handles both #gid= and &gid= variants
   const gidMatch = sheetUrl.match(/[#&?]gid=([0-9]+)/);
   const preferredGid = gidMatch ? gidMatch[1] : null;
 
-  // Try preferred gid, then 0, 1, 2 as fallbacks
-  const gidsToTry = preferredGid
-    ? [preferredGid, '0', '1', '2']
-    : ['0', '1', '2'];
-
-  // Helper: fetch + parse one gid
-  const tryFetchGid = async (gid) => {
-    const exportUrl = `https://docs.google.com/spreadsheets/d/${docId}/export?format=csv&gid=${gid}`;
-    const response = await axios.get(exportUrl, {
-      responseType: 'arraybuffer',
-      timeout: 15000,
-      headers: { 'User-Agent': 'Mozilla/5.0' }
+  const candidateUrls = [];
+  if (isWebPublished) {
+    candidateUrls.push(`https://docs.google.com/spreadsheets/d/e/${docId}/pub?output=csv`);
+    if (preferredGid) candidateUrls.push(`https://docs.google.com/spreadsheets/d/e/${docId}/pub?gid=${preferredGid}&single=true&output=csv`);
+  } else {
+    if (preferredGid) candidateUrls.push(`https://docs.google.com/spreadsheets/d/${docId}/export?format=csv&gid=${preferredGid}`);
+    candidateUrls.push(`https://docs.google.com/spreadsheets/d/${docId}/export?format=csv`);
+    candidateUrls.push(`https://docs.google.com/spreadsheets/d/${docId}/gviz/tq?tqx=out:csv`);
+    if (preferredGid) candidateUrls.push(`https://docs.google.com/spreadsheets/d/${docId}/gviz/tq?tqx=out:csv&gid=${preferredGid}`);
+    ['0', '1', '2', '3'].forEach(g => {
+      if (g !== preferredGid) candidateUrls.push(`https://docs.google.com/spreadsheets/d/${docId}/export?format=csv&gid=${g}`);
     });
+  }
 
-    // Detect redirect to login page (sheet is private)
-    const text = Buffer.from(response.data).toString('utf8', 0, 200);
-    if (text.includes('<html') && (text.includes('accounts.google.com') || text.includes('ServiceLogin'))) {
-      throw new Error('PRIVATE');
-    }
+  const uniqueUrls = [...new Set(candidateUrls)];
+  let privateDetected = false;
+  let notFoundDetected = false;
+  let lastError = null;
+  let result = null;
 
-    const workbook = xlsx.read(response.data, { type: 'buffer' });
-    const sheetName = workbook.SheetNames[0];
-    const ws = workbook.Sheets[sheetName];
+  for (const url of uniqueUrls) {
+    try {
+      const response = await axios.get(url, {
+        responseType: 'arraybuffer',
+        timeout: 15000,
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+      });
 
-    // Get the range to detect if there are any cells at all
-    const range = xlsx.utils.decode_range(ws['!ref'] || 'A1:A1');
-    const totalRows = range.e.r; // 0-indexed, so 0 means only header row
-
-    // Parse with raw:false and defval to handle empty cells and date formatting
-    const data = xlsx.utils.sheet_to_json(ws, { raw: false, defval: '' });
-    const headers = xlsx.utils.sheet_to_json(ws, { header: 1, raw: false })[0] || [];
-
-    return { data, headers, totalRows };
-  };
-
-  try {
-    let lastError = null;
-    let result = null;
-
-    for (const gid of [...new Set(gidsToTry)]) {
-      try {
-        const r = await tryFetchGid(gid);
-
-        // If headers found, consider it a valid sheet even with 0 data rows
-        if (r.headers && r.headers.length > 0) {
-          result = r;
-          result.gidUsed = gid;
-          break;
-        }
-      } catch (e) {
-        if (e.message === 'PRIVATE') {
-          return res.status(403).json({
-            message: 'This Google Sheet is private. Go to Share → "Anyone with the link" → Viewer, then try again.'
-          });
-        }
-        lastError = e;
+      const text = Buffer.from(response.data).toString('utf8', 0, 300);
+      if (text.includes('<html') && (text.includes('accounts.google.com') || text.includes('ServiceLogin') || text.includes('Sign in'))) {
+        privateDetected = true;
+        continue;
       }
-    }
 
-    if (!result) {
-      throw lastError || new Error('Could not read any sheet tab.');
-    }
+      const workbook = xlsx.read(response.data, { type: 'buffer' });
+      const sheetName = workbook.SheetNames[0];
+      const ws = workbook.Sheets[sheetName];
 
-    // If data rows are 0 but headers exist, respond with empty data + headers
-    // so the frontend can still show column pickers for auto-cert setup
+      const data = xlsx.utils.sheet_to_json(ws, { raw: false, defval: '' });
+      const headers = (xlsx.utils.sheet_to_json(ws, { header: 1, raw: false })[0] || []).map(String).filter(Boolean);
+
+      if (headers.length > 0 || data.length > 0) {
+        result = { data, headers };
+        break;
+      }
+    } catch (e) {
+      if (e.response?.status === 401 || e.response?.status === 403) privateDetected = true;
+      else if (e.response?.status === 404) notFoundDetected = true;
+      lastError = e;
+    }
+  }
+
+  if (result) {
     if (result.data.length === 0) {
-      console.log(`[Sheet] Sheet "${docId}" gid=${result.gidUsed} has headers but no data rows yet.`);
       return res.json({
         data: [],
-        headers: result.headers.map(String).filter(Boolean),
+        headers: result.headers,
         warning: 'The sheet has column headers but no data rows yet. Auto-cert will generate certificates as new rows are added.'
       });
     }
 
-    res.json({
+    return res.json({
       data: result.data,
-      headers: result.headers.map(String).filter(Boolean)
+      headers: result.headers
     });
-
-  } catch (err) {
-    console.error('[Sheet Sync Error]', err.message);
-
-    let message = 'Failed to access the Google Sheet.';
-    if (err.response?.status === 401 || err.response?.status === 403) {
-      message = 'Access denied. Set the sheet sharing to "Anyone with the link can view".';
-    } else if (err.response?.status === 404) {
-      message = 'Sheet not found. Check the URL is correct.';
-    } else if (err.code === 'ECONNABORTED') {
-      message = 'Request timed out. The sheet may be very large or Google servers are slow.';
-    }
-
-    res.status(500).json({ message, error: err.message });
   }
+
+  if (privateDetected || notFoundDetected) {
+    return res.status(403).json({
+      message: 'Access denied or sheet not found. Go to Share → General access → set to "Anyone with the link can view", then try again.'
+    });
+  }
+
+  res.status(500).json({
+    message: `Failed to access Google Sheet: ${lastError?.message || 'Check sheet link & sharing permissions.'}`
+  });
 });
 
 

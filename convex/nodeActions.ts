@@ -28,47 +28,86 @@ export const parseExcel = internalAction({
 export const parseGoogleSheet = internalAction({
   args: { sheetUrl: v.string() },
   handler: async (_ctx, { sheetUrl }) => {
+    if (!sheetUrl) throw new Error("No Google Sheet URL provided.");
+    const trimmedUrl = sheetUrl.trim();
+
+    if (trimmedUrl.includes("docs.google.com/forms") || trimmedUrl.includes("forms.gle")) {
+      throw new Error("This is a Google Form link. Please open the Form responses in Google Sheets (click the green Sheets icon in the form), then copy and paste that Sheets link here.");
+    }
+
     let docId = "";
     let isWebPublished = false;
 
-    const webPubMatch = sheetUrl.match(/\/d\/e\/([a-zA-Z0-9-_]+)/);
-    const standardMatch = sheetUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
+    const webPubMatch = trimmedUrl.match(/\/d\/e\/([a-zA-Z0-9-_]+)/);
+    const standardMatch = trimmedUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
 
     if (webPubMatch) {
       docId = webPubMatch[1];
       isWebPublished = true;
     } else if (standardMatch) {
       docId = standardMatch[1];
-    } else if (/^[a-zA-Z0-9-_]{20,}$/.test(sheetUrl.trim())) {
-      docId = sheetUrl.trim();
+    } else if (/^[a-zA-Z0-9-_]{20,}$/.test(trimmedUrl)) {
+      docId = trimmedUrl;
     } else {
-      throw new Error("Invalid Google Sheets URL.");
+      throw new Error("Invalid Google Sheets URL format. Copy the URL from your browser address bar while the sheet is open.");
     }
 
-    const gidMatch = sheetUrl.match(/[#&?]gid=([0-9]+)/);
+    const gidMatch = trimmedUrl.match(/[#&?]gid=([0-9]+)/);
     const preferredGid = gidMatch ? gidMatch[1] : null;
-    const gidsToTry = [...new Set(preferredGid ? [preferredGid, "0", "1", "2"] : ["0", "1", "2"])];
 
-    for (const gid of gidsToTry) {
+    const candidateUrls: string[] = [];
+    if (isWebPublished) {
+      candidateUrls.push(`https://docs.google.com/spreadsheets/d/e/${docId}/pub?output=csv`);
+      if (preferredGid) candidateUrls.push(`https://docs.google.com/spreadsheets/d/e/${docId}/pub?gid=${preferredGid}&single=true&output=csv`);
+    } else {
+      if (preferredGid) candidateUrls.push(`https://docs.google.com/spreadsheets/d/${docId}/export?format=csv&gid=${preferredGid}`);
+      candidateUrls.push(`https://docs.google.com/spreadsheets/d/${docId}/export?format=csv`);
+      candidateUrls.push(`https://docs.google.com/spreadsheets/d/${docId}/gviz/tq?tqx=out:csv`);
+      if (preferredGid) candidateUrls.push(`https://docs.google.com/spreadsheets/d/${docId}/gviz/tq?tqx=out:csv&gid=${preferredGid}`);
+      for (const g of ["0", "1", "2", "3"]) {
+        if (g !== preferredGid) candidateUrls.push(`https://docs.google.com/spreadsheets/d/${docId}/export?format=csv&gid=${g}`);
+      }
+    }
+
+    const uniqueUrls = [...new Set(candidateUrls)];
+    let privateDetected = false;
+    let notFoundDetected = false;
+    let lastErrorMsg = "";
+
+    for (const url of uniqueUrls) {
       try {
-        const exportUrl = isWebPublished
-          ? `https://docs.google.com/spreadsheets/d/e/${docId}/pub?output=csv`
-          : `https://docs.google.com/spreadsheets/d/${docId}/export?format=csv&gid=${gid}`;
-        const response = await axios.get(exportUrl, { responseType: "arraybuffer", timeout: 15000, headers: { "User-Agent": "Mozilla/5.0" } });
-        const text = Buffer.from(response.data).toString("utf8", 0, 200);
-        if (text.includes("<html") && (text.includes("accounts.google.com") || text.includes("ServiceLogin"))) {
-          throw new Error("PRIVATE");
+        const response = await axios.get(url, {
+          responseType: "arraybuffer",
+          timeout: 15000,
+          headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" },
+        });
+
+        const text = Buffer.from(response.data).toString("utf8", 0, 300);
+        if (text.includes("<html") && (text.includes("accounts.google.com") || text.includes("ServiceLogin") || text.includes("Sign in"))) {
+          privateDetected = true;
+          continue;
         }
+
         const wb = xlsx.read(response.data, { type: "buffer" });
         const ws = wb.Sheets[wb.SheetNames[0]];
         const data = xlsx.utils.sheet_to_json(ws, { raw: false, defval: "" });
-        const headers = (xlsx.utils.sheet_to_json(ws, { header: 1, raw: false }) as any[][])[0] || [];
-        return { data, headers: headers.map(String).filter(Boolean) };
+        const headers = ((xlsx.utils.sheet_to_json(ws, { header: 1, raw: false }) as any[][])[0] || []).map(String).filter(Boolean);
+
+        if (headers.length > 0 || data.length > 0) {
+          return { data, headers };
+        }
       } catch (e: any) {
-        if (e.message === "PRIVATE") throw new Error("Sheet is private. Set sharing to 'Anyone with the link can view'.");
+        if (e.response?.status === 401 || e.response?.status === 403) privateDetected = true;
+        else if (e.response?.status === 404) notFoundDetected = true;
+        lastErrorMsg = e.message;
       }
     }
-    throw new Error("Failed to access the Google Sheet.");
+
+    if (privateDetected || notFoundDetected) {
+      throw new Error("Access denied or sheet not found. Ensure sheet sharing is set to 'Anyone with the link can view' (Share -> General Access -> Anyone with the link).");
+    }
+
+    throw new Error(`Failed to access Google Sheet: ${lastErrorMsg || "Check sheet link & sharing permissions."}`);
   },
 });
 
