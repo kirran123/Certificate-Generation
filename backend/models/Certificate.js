@@ -11,8 +11,8 @@ const Certificate = {
     const ref = col().doc();
     const doc = {
       ...data,
-      createdBy: String(data.createdBy),
-      templateId: String(data.templateId),
+      createdBy: String(data.createdBy || ''),
+      templateId: typeof data.templateId === 'object' ? String(data.templateId._id || '') : String(data.templateId || ''),
       isArchived: data.isArchived || false,
       createdAt: now,
       updatedAt: now,
@@ -23,9 +23,13 @@ const Certificate = {
 
   findOne: async (filter) => {
     let query = col();
-    if (filter.certificateId) query = query.where('certificateId', '==', filter.certificateId);
-    if (filter.uniqueHash) query = query.where('uniqueHash', '==', filter.uniqueHash);
-    if (filter.templateId) query = query.where('templateId', '==', String(filter.templateId));
+    if (filter.certificateId) {
+      query = query.where('certificateId', '==', filter.certificateId);
+    } else if (filter.uniqueHash) {
+      query = query.where('uniqueHash', '==', filter.uniqueHash);
+    } else if (filter.templateId) {
+      query = query.where('templateId', '==', String(filter.templateId));
+    }
     query = query.limit(1);
     const snap = await query.get();
     if (snap.empty) return null;
@@ -34,17 +38,25 @@ const Certificate = {
   },
 
   findById: async (id) => {
-    if (!id) return null;
-    const doc = await col().doc(String(id)).get();
-    if (!doc.exists) return null;
-    return { _id: doc.id, ...doc.data() };
+    if (!id || typeof id !== 'string' || id.trim() === '' || id === '[object Object]') return null;
+    try {
+      const doc = await col().doc(String(id)).get();
+      if (!doc.exists) return null;
+      return { _id: doc.id, ...doc.data() };
+    } catch (err) {
+      return null;
+    }
   },
 
   findByDocId: async (id) => {
-    if (!id) return null;
-    const doc = await col().doc(String(id)).get();
-    if (!doc.exists) return null;
-    return { _id: doc.id, ...doc.data() };
+    if (!id || typeof id !== 'string' || id.trim() === '' || id === '[object Object]') return null;
+    try {
+      const doc = await col().doc(String(id)).get();
+      if (!doc.exists) return null;
+      return { _id: doc.id, ...doc.data() };
+    } catch (err) {
+      return null;
+    }
   },
 
   find: async (filter = {}) => {
@@ -78,8 +90,12 @@ const Certificate = {
     const Template = require('./Template');
     return Promise.all(certs.map(async (cert) => {
       if (field === 'templateId' && cert.templateId) {
-        const tmpl = await Template.findById(cert.templateId);
-        return { ...cert, templateId: tmpl || cert.templateId };
+        const rawTid = typeof cert.templateId === 'object' ? (cert.templateId._id || cert.templateId.id) : cert.templateId;
+        const tid = String(rawTid || '').trim();
+        if (tid && tid !== '[object Object]') {
+          const tmpl = await Template.findById(tid);
+          return { ...cert, templateId: tmpl || cert.templateId };
+        }
       }
       return cert;
     }));
@@ -100,37 +116,59 @@ const Certificate = {
   updateMany: async (filter, update) => {
     let query = col();
     if (filter.batchId) query = query.where('batchId', '==', filter.batchId);
-    if (filter.createdBy) query = query.where('createdBy', '==', String(filter.createdBy));
     const snap = await query.get();
     if (snap.empty) return { modifiedCount: 0 };
 
-    const batch = getDb().batch();
+    let batch = getDb().batch();
+    let counter = 0;
     const data = update.$set || update;
+
     for (const doc of snap.docs) {
       batch.update(doc.ref, { ...data, updatedAt: new Date().toISOString() });
+      counter++;
+      if (counter === 450) {
+        await batch.commit();
+        batch = getDb().batch();
+        counter = 0;
+      }
     }
-    await batch.commit();
+    if (counter > 0) await batch.commit();
     return { modifiedCount: snap.size };
   },
 
   deleteOne: async (filter) => {
     let query = col();
-    if (filter.certificateId) query = query.where('certificateId', '==', filter.certificateId);
-    if (filter.createdBy) query = query.where('createdBy', '==', String(filter.createdBy));
-    const snap = await query.limit(1).get();
-    if (!snap.empty) await snap.docs[0].ref.delete();
+    if (typeof filter === 'string') {
+      query = query.where('certificateId', '==', filter);
+    } else if (filter.certificateId) {
+      query = query.where('certificateId', '==', filter.certificateId);
+    }
+    const snap = await query.get();
+    if (snap.empty) return { deletedCount: 0 };
+    await snap.docs[0].ref.delete();
+    return { deletedCount: 1 };
   },
 
-  countDocuments: async (filter = {}) => {
-    const certs = await Certificate.find(filter);
-    return certs.length;
-  },
+  deleteMany: async (filter) => {
+    let query = col();
+    if (filter.batchId) query = query.where('batchId', '==', filter.batchId);
+    const snap = await query.get();
+    if (snap.empty) return { deletedCount: 0 };
 
-  save: async (cert) => {
-    const { _id, ...data } = cert;
-    await col().doc(String(_id)).update({ ...data, updatedAt: new Date().toISOString() });
-    return cert;
-  },
+    let batch = getDb().batch();
+    let counter = 0;
+    for (const doc of snap.docs) {
+      batch.delete(doc.ref);
+      counter++;
+      if (counter === 450) {
+        await batch.commit();
+        batch = getDb().batch();
+        counter = 0;
+      }
+    }
+    if (counter > 0) await batch.commit();
+    return { deletedCount: snap.size };
+  }
 };
 
 module.exports = Certificate;
