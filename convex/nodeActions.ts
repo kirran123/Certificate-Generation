@@ -388,16 +388,9 @@ export const getBrevoPoolStatusAction = internalAction({
         }
       } catch (err: any) {
         keyInfo.error = err.response?.data?.message || err.message;
-        const httpStatus = err.response?.status;
-        if (httpStatus === 401) {
-          keyInfo.status = 'invalid';
-          keyInfo.email = `${masked} (Invalid Key)`;
-          keyInfo.creditsRemaining = 0;
-        } else {
-          keyInfo.status = 'exceeded';
-          keyInfo.email = `${masked} (Quota Exceeded)`;
-          keyInfo.creditsRemaining = 0;
-        }
+        keyInfo.status = 'exceeded';
+        keyInfo.email = `${masked} (Quota Exceeded)`;
+        keyInfo.creditsRemaining = 0;
       }
 
       poolStatus.push(keyInfo);
