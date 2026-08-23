@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useRef, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 import { Users, FileText, CheckCircle, XCircle, Calendar, Mail, Search, Award, BarChart2, ChevronDown, ChevronUp, ShieldCheck, TrendingUp, Zap, MessageSquare, Trash2, PauseCircle, PlayCircle, RefreshCw, Clock, CheckCircle2, AlertTriangle, Heart, Lightbulb, PenTool, List, Download } from 'lucide-react';
@@ -33,21 +33,33 @@ export default function AdminDashboard() {
   const [feedbacks, setFeedbacks] = useState([]);
   const [brevoPool, setBrevoPool] = useState(null);
   const [loadingBrevo, setLoadingBrevo] = useState(false);
+  const [brevoLastRefreshed, setBrevoLastRefreshed] = useState(null);
+  const brevoAutoRefreshRef = useRef(null);
 
-  const fetchBrevoStatus = async (headers) => {
+  const fetchBrevoStatus = async (headers, isManual = false) => {
     setLoadingBrevo(true);
     try {
       const res = await axios.get(`${API_BASE}/api/admin/brevo-status`, { headers });
       setBrevoPool(res.data);
+      setBrevoLastRefreshed(new Date());
     } catch (e) {
       try {
         const res = await axios.get(`${IO_API_BASE}/api/admin/brevo-status`, { headers });
         setBrevoPool(res.data);
+        setBrevoLastRefreshed(new Date());
       } catch (err) {
         console.error('Failed to fetch Brevo pool status:', err.message);
       }
     } finally {
       setLoadingBrevo(false);
+      // If manual refresh, reset the 5-hour auto-refresh timer
+      if (isManual) {
+        if (brevoAutoRefreshRef.current) clearInterval(brevoAutoRefreshRef.current);
+        brevoAutoRefreshRef.current = setInterval(() => {
+          const token = sessionStorage.getItem('token');
+          fetchBrevoStatus({ Authorization: `Bearer ${token}` });
+        }, 5 * 60 * 60 * 1000); // 5 hours
+      }
     }
   };
 
@@ -231,6 +243,22 @@ export default function AdminDashboard() {
     };
   }, [activeTab]);
 
+  // 5-hour auto-refresh for Brevo pool status
+  useEffect(() => {
+    const token = sessionStorage.getItem('token');
+    const headers = { Authorization: `Bearer ${token}` };
+    // Initial fetch on mount
+    fetchBrevoStatus(headers);
+    // Set up 5-hour interval
+    brevoAutoRefreshRef.current = setInterval(() => {
+      const t = sessionStorage.getItem('token');
+      fetchBrevoStatus({ Authorization: `Bearer ${t}` });
+    }, 5 * 60 * 60 * 1000); // every 5 hours
+    return () => {
+      if (brevoAutoRefreshRef.current) clearInterval(brevoAutoRefreshRef.current);
+    };
+  }, []);
+
 
 
 
@@ -370,11 +398,19 @@ export default function AdminDashboard() {
                     Pool Total: {brevoPool.totalRemaining} / {brevoPool.totalCapacity} Available Today
                   </span>
                 )}
+                {brevoLastRefreshed && (
+                  <span className="text-[10px] text-[var(--text-secondary)] opacity-50 font-medium hidden sm:inline">
+                    <Clock className="w-3 h-3 inline mr-1 opacity-60" />
+                    {Math.round((Date.now() - brevoLastRefreshed.getTime()) / 60000) < 1
+                      ? 'Just now'
+                      : `${Math.round((Date.now() - brevoLastRefreshed.getTime()) / 60000)}m ago`}
+                  </span>
+                )}
                 <button
-                  onClick={() => fetchBrevoStatus({ Authorization: `Bearer ${sessionStorage.getItem('token')}` })}
+                  onClick={() => fetchBrevoStatus({ Authorization: `Bearer ${sessionStorage.getItem('token')}` }, true)}
                   disabled={loadingBrevo}
                   className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl border border-[var(--border-subtle)] hover:bg-[var(--border-subtle)] text-[var(--text-secondary)] transition-all disabled:opacity-50"
-                  title="Refresh Brevo API usage"
+                  title="Refresh Brevo API usage (auto-refreshes every 5 hours)"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${loadingBrevo ? 'animate-spin' : ''}`} />
                   Refresh Pool
