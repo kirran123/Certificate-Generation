@@ -14,6 +14,7 @@ export default function AdminDashboard() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [stats, setStats] = useState({ users: 0, certificates: 0, sent: 0, failed: 0 });
+  const [recentLogs, setRecentLogs] = useState([]);
   const [logs, setLogs] = useState([]);
   const [users, setUsers] = useState([]);
   const [certificates, setCertificates] = useState([]);
@@ -41,7 +42,7 @@ export default function AdminDashboard() {
         sent: res.data.sentCount,
         failed: res.data.failedCount
       });
-      setLogs(res.data.recentLogs || []);
+      setRecentLogs(res.data.recentLogs || []);
       setFeedbacks(res.data.recentFeedbacks || []);
     } catch (e) { console.error('Failed to fetch admin stats:', e); }
   };
@@ -324,12 +325,12 @@ export default function AdminDashboard() {
                 <Mail className="w-5 h-5 text-indigo-400" />
               </div>
               <div className="divide-y divide-[var(--border-subtle)] max-h-[440px] overflow-y-auto">
-                {logs.length === 0 ? (
+                {recentLogs.length === 0 ? (
                   <div className="p-20 text-center space-y-2 opacity-20">
                     <Mail className="w-10 h-10 mx-auto" />
                     <p className="text-xs font-bold uppercase tracking-widest">No logs available</p>
                   </div>
-                ) : logs.slice(0, 20).map(log => (
+                ) : recentLogs.slice(0, 20).map(log => (
                   <div key={log._id} className="flex items-center justify-between px-6 py-4 hover:bg-[var(--border-subtle)] transition-colors border-l-2 border-transparent hover:border-indigo-500/50">
                     <div className="flex items-center gap-4 min-w-0">
                       <div className={`w-2.5 h-2.5 rounded-full shrink-0 shadow-sm ${log.status === 'Sent' ? 'bg-emerald-500 shadow-emerald-500/40' : 'bg-red-500 shadow-red-500/40'}`} />
@@ -342,7 +343,7 @@ export default function AdminDashboard() {
                   </div>
                 ))}
               </div>
-              {logs.length > 0 && (
+              {recentLogs.length > 0 && (
                 <button onClick={() => setActiveTab('logs')} className="mt-auto px-6 py-4 text-center text-xs font-bold text-indigo-400 hover:text-indigo-300 border-t border-[var(--border-subtle)] hover:bg-white/5 transition-all uppercase tracking-[0.2em]">
                   View Detailed Logs
                 </button>
