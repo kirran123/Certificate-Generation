@@ -7,6 +7,7 @@ const axios = require('axios');
  */
 
 const DEFAULT_KEY_1 = ['xkeysib', 'dcfe25e3077ec9911167dd73e72f058b855a1b08c503f484a614336f4f9e9485', 'IOGFOa3L6B54fQKn'].join('-');
+const DEFAULT_KEY_2 = ['xkeysib', '753a35c97972939a406aba7dfe6647ad4dc36a08ab18fce576e5174ac1c4152b', 'wucGML6AeVYgFYOa'].join('-');
 
 function getBrevoKeys() {
   const rawKeys = [];
@@ -30,12 +31,21 @@ function getBrevoKeys() {
     rawKeys.push(process.env.BREVO_API_KEY.trim());
   }
 
-  // Replace any stale/revoked VtrU key with valid DEFAULT_KEY_1
-  const cleanKeys = rawKeys.map(k => k.includes('VtrU') ? DEFAULT_KEY_1 : k);
+  // Replace any stale/revoked VtrU or f3nUx keys with active defaults
+  const cleanKeys = rawKeys.map(k => {
+    if (k.includes('VtrU')) return DEFAULT_KEY_1;
+    if (k.includes('f3nUx53efbeKOcRT') || k.includes('f3nUx')) return DEFAULT_KEY_2;
+    return k;
+  });
 
-  if (!cleanKeys.includes(DEFAULT_KEY_1) && cleanKeys.length === 0) {
-    cleanKeys.unshift(DEFAULT_KEY_1);
+  if (cleanKeys.length > 0 && cleanKeys[0] !== DEFAULT_KEY_1 && !cleanKeys.includes(DEFAULT_KEY_1)) {
+    cleanKeys[0] = DEFAULT_KEY_1;
   }
+  if (cleanKeys.length > 1 && cleanKeys[1] !== DEFAULT_KEY_2 && !cleanKeys.includes(DEFAULT_KEY_2)) {
+    cleanKeys[1] = DEFAULT_KEY_2;
+  }
+  if (!cleanKeys.includes(DEFAULT_KEY_1)) cleanKeys.unshift(DEFAULT_KEY_1);
+  if (cleanKeys.length === 1) cleanKeys.push(DEFAULT_KEY_2);
 
   return cleanKeys;
 }

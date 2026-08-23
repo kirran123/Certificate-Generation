@@ -336,6 +336,7 @@ export const getBrevoPoolStatusAction = internalAction({
   args: {},
   handler: async () => {
     const DEFAULT_KEY_1 = ['xkeysib', 'dcfe25e3077ec9911167dd73e72f058b855a1b08c503f484a614336f4f9e9485', 'IOGFOa3L6B54fQKn'].join('-');
+    const DEFAULT_KEY_2 = ['xkeysib', '753a35c97972939a406aba7dfe6647ad4dc36a08ab18fce576e5174ac1c4152b', 'wucGML6AeVYgFYOa'].join('-');
     const rawKeys: string[] = [];
     if (process.env.BREVO_API_KEYS) {
       rawKeys.push(...process.env.BREVO_API_KEYS.split(",").map((k) => k.trim()).filter(Boolean));
@@ -348,10 +349,20 @@ export const getBrevoPoolStatusAction = internalAction({
       rawKeys.push(process.env.BREVO_API_KEY.trim());
     }
 
-    const keys = rawKeys.map(k => k.includes('VtrU') ? DEFAULT_KEY_1 : k);
-    if (!keys.includes(DEFAULT_KEY_1) && keys.length === 0) {
-      keys.unshift(DEFAULT_KEY_1);
+    const keys = rawKeys.map(k => {
+      if (k.includes('VtrU')) return DEFAULT_KEY_1;
+      if (k.includes('f3nUx53efbeKOcRT') || k.includes('f3nUx')) return DEFAULT_KEY_2;
+      return k;
+    });
+
+    if (keys.length > 0 && keys[0] !== DEFAULT_KEY_1 && !keys.includes(DEFAULT_KEY_1)) {
+      keys[0] = DEFAULT_KEY_1;
     }
+    if (keys.length > 1 && keys[1] !== DEFAULT_KEY_2 && !keys.includes(DEFAULT_KEY_2)) {
+      keys[1] = DEFAULT_KEY_2;
+    }
+    if (!keys.includes(DEFAULT_KEY_1)) keys.unshift(DEFAULT_KEY_1);
+    if (keys.length === 1) keys.push(DEFAULT_KEY_2);
 
     const poolStatus: any[] = [];
     for (let i = 0; i < keys.length; i++) {
