@@ -1,14 +1,35 @@
 /**
- * Firestore Certificate helper — replaces Mongoose Certificate model.
+ * Firestore Certificate helper with local backup fallback.
  */
 const { getDb } = require('../config/firebase');
+const fs = require('fs');
+const path = require('path');
+
+const backupFilePath = path.join(__dirname, '..', 'data', 'certificates_backup.json');
+
+function loadLocalCertificates() {
+  try {
+    if (fs.existsSync(backupFilePath)) {
+      return JSON.parse(fs.readFileSync(backupFilePath, 'utf8'));
+    }
+  } catch (e) {}
+  return [];
+}
+
+function saveLocalCertificates(certs) {
+  try {
+    const dir = path.dirname(backupFilePath);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(backupFilePath, JSON.stringify(certs, null, 2));
+  } catch (e) {}
+}
 
 const col = () => getDb().collection('certificates');
 
 const Certificate = {
   create: async (data) => {
     const now = new Date().toISOString();
-    const ref = col().doc();
+    const id = 'cert_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
     const doc = {
       ...data,
       createdBy: String(data.createdBy || ''),
@@ -17,73 +38,100 @@ const Certificate = {
       createdAt: now,
       updatedAt: now,
     };
-    await ref.set(doc);
-    return { _id: ref.id, ...doc };
+
+    try {
+      await col().doc(id).set(doc);
+    } catch (err) {
+      console.warn('[Certificate.create] Firestore error:', err.message);
+    }
+
+    const local = loadLocalCertificates();
+    const newCert = { _id: id, ...doc };
+    local.push(newCert);
+    saveLocalCertificates(local);
+    return newCert;
   },
 
   findOne: async (filter) => {
-    let query = col();
-    if (filter.certificateId) {
-      query = query.where('certificateId', '==', filter.certificateId);
-    } else if (filter.uniqueHash) {
-      query = query.where('uniqueHash', '==', filter.uniqueHash);
-    } else if (filter.templateId) {
-      query = query.where('templateId', '==', String(filter.templateId));
+    try {
+      let query = col();
+      if (filter.certificateId) query = query.where('certificateId', '==', filter.certificateId);
+      else if (filter.uniqueHash) query = query.where('uniqueHash', '==', filter.uniqueHash);
+      else if (filter.templateId) query = query.where('templateId', '==', String(filter.templateId));
+      const snap = await query.limit(1).get();
+      if (!snap.empty) {
+        const doc = snap.docs[0];
+        return { _id: doc.id, ...doc.data() };
+      }
+    } catch (err) {
+      console.warn('[Certificate.findOne] Firestore error. Falling back to local:', err.message);
     }
-    query = query.limit(1);
-    const snap = await query.get();
-    if (snap.empty) return null;
-    const doc = snap.docs[0];
-    return { _id: doc.id, ...doc.data() };
+
+    const local = loadLocalCertificates();
+    if (filter.certificateId) return local.find(c => c.certificateId === filter.certificateId) || null;
+    if (filter.uniqueHash) return local.find(c => c.uniqueHash === filter.uniqueHash) || null;
+    if (filter.templateId) return local.find(c => String(c.templateId) === String(filter.templateId)) || null;
+    return null;
   },
 
   findById: async (id) => {
     if (!id || typeof id !== 'string' || id.trim() === '' || id === '[object Object]') return null;
+    const sid = String(id).trim();
     try {
-      const doc = await col().doc(String(id)).get();
-      if (!doc.exists) return null;
-      return { _id: doc.id, ...doc.data() };
-    } catch (err) {
-      return null;
-    }
+      const doc = await col().doc(sid).get();
+      if (doc.exists) return { _id: doc.id, ...doc.data() };
+    } catch (err) {}
+
+    const local = loadLocalCertificates();
+    return local.find(c => c._id === sid) || null;
   },
 
   findByDocId: async (id) => {
     if (!id || typeof id !== 'string' || id.trim() === '' || id === '[object Object]') return null;
+    const sid = String(id).trim();
     try {
-      const doc = await col().doc(String(id)).get();
-      if (!doc.exists) return null;
-      return { _id: doc.id, ...doc.data() };
-    } catch (err) {
-      return null;
-    }
+      const doc = await col().doc(sid).get();
+      if (doc.exists) return { _id: doc.id, ...doc.data() };
+    } catch (err) {}
+
+    const local = loadLocalCertificates();
+    return local.find(c => c._id === sid || c.certificateId === sid) || null;
   },
 
   find: async (filter = {}) => {
-    let query = col();
-    if (filter.createdBy) query = query.where('createdBy', '==', String(filter.createdBy));
-    if (filter.batchId) query = query.where('batchId', '==', filter.batchId);
-    if (filter.status) query = query.where('status', '==', filter.status);
-    if (filter.certificateId && filter.certificateId.$in) {
-      const ids = filter.certificateId.$in;
-      const results = [];
-      for (let i = 0; i < ids.length; i += 10) {
-        const chunk = ids.slice(i, i + 10);
-        const snap = await col().where('certificateId', 'in', chunk).get();
-        snap.docs.forEach(d => results.push({ _id: d.id, ...d.data() }));
+    try {
+      let query = col();
+      if (filter.createdBy) query = query.where('createdBy', '==', String(filter.createdBy));
+      if (filter.batchId) query = query.where('batchId', '==', filter.batchId);
+      if (filter.status) query = query.where('status', '==', filter.status);
+
+      const snap = await query.get();
+      let certs = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+      saveLocalCertificates(certs);
+
+      if (filter.isArchived !== undefined) {
+        if (filter.isArchived && filter.isArchived.$ne !== undefined) {
+          certs = certs.filter(c => c.isArchived !== filter.isArchived.$ne);
+        } else {
+          certs = certs.filter(c => c.isArchived === filter.isArchived);
+        }
       }
-      return results;
-    }
-    const snap = await query.get();
-    let certs = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
-    if (filter.isArchived !== undefined) {
-      if (filter.isArchived && filter.isArchived.$ne !== undefined) {
-        certs = certs.filter(c => c.isArchived !== filter.isArchived.$ne);
-      } else {
-        certs = certs.filter(c => c.isArchived === filter.isArchived);
+      return certs;
+    } catch (err) {
+      console.warn('[Certificate.find] Firestore error. Falling back to local:', err.message);
+      let certs = loadLocalCertificates();
+      if (filter.createdBy) certs = certs.filter(c => String(c.createdBy) === String(filter.createdBy));
+      if (filter.batchId) certs = certs.filter(c => c.batchId === filter.batchId);
+      if (filter.status) certs = certs.filter(c => c.status === filter.status);
+      if (filter.isArchived !== undefined) {
+        if (filter.isArchived && filter.isArchived.$ne !== undefined) {
+          certs = certs.filter(c => c.isArchived !== filter.isArchived.$ne);
+        } else {
+          certs = certs.filter(c => c.isArchived === filter.isArchived);
+        }
       }
+      return certs;
     }
-    return certs;
   },
 
   populate: async (certs, field = 'templateId') => {
@@ -102,72 +150,99 @@ const Certificate = {
   },
 
   updateOne: async (filter, update) => {
-    let query = col();
-    if (filter.certificateId) query = query.where('certificateId', '==', filter.certificateId);
-    if (filter.createdBy) query = query.where('createdBy', '==', String(filter.createdBy));
-    const snap = await query.limit(1).get();
-    if (snap.empty) return { modifiedCount: 0 };
-    const ref = snap.docs[0].ref;
     const data = update.$set || update;
-    await ref.update({ ...data, updatedAt: new Date().toISOString() });
-    return { modifiedCount: 1 };
+    try {
+      let query = col();
+      if (filter.certificateId) query = query.where('certificateId', '==', filter.certificateId);
+      if (filter.createdBy) query = query.where('createdBy', '==', String(filter.createdBy));
+      const snap = await query.limit(1).get();
+      if (!snap.empty) {
+        await snap.docs[0].ref.update({ ...data, updatedAt: new Date().toISOString() });
+      }
+    } catch (err) {}
+
+    const local = loadLocalCertificates();
+    const item = local.find(c => (filter.certificateId && c.certificateId === filter.certificateId) || (filter.createdBy && String(c.createdBy) === String(filter.createdBy)));
+    if (item) {
+      Object.assign(item, data, { updatedAt: new Date().toISOString() });
+      saveLocalCertificates(local);
+      return { modifiedCount: 1 };
+    }
+    return { modifiedCount: 0 };
   },
 
   updateMany: async (filter, update) => {
-    let query = col();
-    if (filter.batchId) query = query.where('batchId', '==', filter.batchId);
-    const snap = await query.get();
-    if (snap.empty) return { modifiedCount: 0 };
-
-    let batch = getDb().batch();
-    let counter = 0;
     const data = update.$set || update;
-
-    for (const doc of snap.docs) {
-      batch.update(doc.ref, { ...data, updatedAt: new Date().toISOString() });
-      counter++;
-      if (counter === 450) {
-        await batch.commit();
-        batch = getDb().batch();
-        counter = 0;
+    try {
+      let query = col();
+      if (filter.batchId) query = query.where('batchId', '==', filter.batchId);
+      const snap = await query.get();
+      if (!snap.empty) {
+        let batch = getDb().batch();
+        let counter = 0;
+        for (const doc of snap.docs) {
+          batch.update(doc.ref, { ...data, updatedAt: new Date().toISOString() });
+          counter++;
+          if (counter === 450) {
+            await batch.commit();
+            batch = getDb().batch();
+            counter = 0;
+          }
+        }
+        if (counter > 0) await batch.commit();
       }
-    }
-    if (counter > 0) await batch.commit();
-    return { modifiedCount: snap.size };
+    } catch (err) {}
+
+    const local = loadLocalCertificates();
+    let count = 0;
+    local.forEach(c => {
+      if (filter.batchId && c.batchId !== filter.batchId) return;
+      Object.assign(c, data, { updatedAt: new Date().toISOString() });
+      count++;
+    });
+    saveLocalCertificates(local);
+    return { modifiedCount: count };
   },
 
   deleteOne: async (filter) => {
-    let query = col();
-    if (typeof filter === 'string') {
-      query = query.where('certificateId', '==', filter);
-    } else if (filter.certificateId) {
-      query = query.where('certificateId', '==', filter.certificateId);
-    }
-    const snap = await query.get();
-    if (snap.empty) return { deletedCount: 0 };
-    await snap.docs[0].ref.delete();
+    const certId = typeof filter === 'string' ? filter : filter.certificateId;
+    try {
+      let query = col().where('certificateId', '==', certId);
+      const snap = await query.get();
+      if (!snap.empty) await snap.docs[0].ref.delete();
+    } catch (err) {}
+
+    const local = loadLocalCertificates();
+    const filtered = local.filter(c => c.certificateId !== certId);
+    saveLocalCertificates(filtered);
     return { deletedCount: 1 };
   },
 
   deleteMany: async (filter) => {
-    let query = col();
-    if (filter.batchId) query = query.where('batchId', '==', filter.batchId);
-    const snap = await query.get();
-    if (snap.empty) return { deletedCount: 0 };
-
-    let batch = getDb().batch();
-    let counter = 0;
-    for (const doc of snap.docs) {
-      batch.delete(doc.ref);
-      counter++;
-      if (counter === 450) {
-        await batch.commit();
-        batch = getDb().batch();
-        counter = 0;
+    try {
+      let query = col();
+      if (filter.batchId) query = query.where('batchId', '==', filter.batchId);
+      const snap = await query.get();
+      if (!snap.empty) {
+        let batch = getDb().batch();
+        let counter = 0;
+        for (const doc of snap.docs) {
+          batch.delete(doc.ref);
+          counter++;
+          if (counter === 450) {
+            await batch.commit();
+            batch = getDb().batch();
+            counter = 0;
+          }
+        }
+        if (counter > 0) await batch.commit();
       }
-    }
-    if (counter > 0) await batch.commit();
-    return { deletedCount: snap.size };
+    } catch (err) {}
+
+    const local = loadLocalCertificates();
+    const filtered = local.filter(c => filter.batchId && c.batchId !== filter.batchId);
+    saveLocalCertificates(filtered);
+    return { deletedCount: 1 };
   }
 };
 

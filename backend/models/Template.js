@@ -1,66 +1,121 @@
 /**
- * Firestore Template helper — replaces Mongoose Template model.
- * imageUrl stores a Cloudinary URL (never base64).
+ * Firestore Template helper with local backup fallback.
  */
 const { getDb } = require('../config/firebase');
+const fs = require('fs');
+const path = require('path');
+
+const backupFilePath = path.join(__dirname, '..', 'data', 'templates_backup.json');
+
+function loadLocalTemplates() {
+  try {
+    if (fs.existsSync(backupFilePath)) {
+      return JSON.parse(fs.readFileSync(backupFilePath, 'utf8'));
+    }
+  } catch (e) {}
+  return [];
+}
+
+function saveLocalTemplates(tmpls) {
+  try {
+    const dir = path.dirname(backupFilePath);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(backupFilePath, JSON.stringify(tmpls, null, 2));
+  } catch (e) {}
+}
 
 const col = () => getDb().collection('templates');
 
 const Template = {
   create: async (data) => {
     const now = new Date().toISOString();
-    const ref = col().doc();
-    // Never store imageBase64 — only store the Cloudinary URL
+    const id = 'tmpl_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
     const { imageBase64, ...cleanData } = data;
     const doc = { ...cleanData, createdAt: now, updatedAt: now };
-    await ref.set(doc);
-    return { _id: ref.id, ...doc };
+
+    try {
+      await col().doc(id).set(doc);
+    } catch (err) {
+      console.warn('[Template.create] Firestore error:', err.message);
+    }
+
+    const local = loadLocalTemplates();
+    const newTmpl = { _id: id, ...doc };
+    local.push(newTmpl);
+    saveLocalTemplates(local);
+    return newTmpl;
   },
 
   findById: async (id) => {
     if (!id || typeof id !== 'string' || id.trim() === '' || id === '[object Object]') return null;
+    const sid = String(id).trim();
+
     try {
-      const doc = await col().doc(String(id)).get();
-      if (!doc.exists) return null;
-      return { _id: doc.id, ...doc.data() };
+      const doc = await col().doc(sid).get();
+      if (doc.exists) return { _id: doc.id, ...doc.data() };
     } catch (err) {
-      return null;
+      // Fallback
     }
+
+    const local = loadLocalTemplates();
+    return local.find(t => t._id === sid) || null;
   },
 
   find: async (filter = {}) => {
-    let query = col();
-    if (filter.createdBy) query = query.where('createdBy', '==', filter.createdBy);
-    const snap = await query.get();
-    return snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+    try {
+      let query = col();
+      if (filter.createdBy) query = query.where('createdBy', '==', filter.createdBy);
+      const snap = await query.get();
+      const tmpls = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+      saveLocalTemplates(tmpls);
+      return tmpls;
+    } catch (err) {
+      console.warn('[Template.find] Firestore error. Falling back to local:', err.message);
+      const local = loadLocalTemplates();
+      if (filter.createdBy) return local.filter(t => t.createdBy === filter.createdBy);
+      return local;
+    }
   },
 
-  findOneAndUpdate: async (filter, update, opts = {}) => {
+  findOneAndUpdate: async (filter, update) => {
     const id = filter._id || filter.templateId;
-    if (!id || typeof id !== 'string' || id.trim() === '') {
-      throw new Error('Invalid template ID for update');
-    }
-    const ref = col().doc(String(id));
-    const existing = await ref.get();
-
+    if (!id) return null;
+    const sid = String(id);
     const data = update.$set || update;
     const { imageBase64, ...cleanData } = data;
     const now = new Date().toISOString();
 
-    if (!existing.exists) {
-      const doc = { ...cleanData, createdAt: now, updatedAt: now };
-      await ref.set(doc);
-      return { _id: ref.id, ...doc };
-    } else {
-      await ref.update({ ...cleanData, updatedAt: now });
-      const updated = await ref.get();
-      return { _id: updated.id, ...updated.data() };
+    try {
+      const ref = col().doc(sid);
+      const existing = await ref.get();
+      if (!existing.exists) {
+        await ref.set({ ...cleanData, createdAt: now, updatedAt: now });
+      } else {
+        await ref.update({ ...cleanData, updatedAt: now });
+      }
+    } catch (err) {
+      console.warn('[Template.findOneAndUpdate] Firestore error:', err.message);
     }
+
+    const local = loadLocalTemplates();
+    const idx = local.findIndex(t => t._id === sid);
+    if (idx !== -1) {
+      local[idx] = { ...local[idx], ...cleanData, updatedAt: now };
+    } else {
+      local.push({ _id: sid, ...cleanData, createdAt: now, updatedAt: now });
+    }
+    saveLocalTemplates(local);
+    return local.find(t => t._id === sid);
   },
 
   deleteOne: async (id) => {
     if (!id) return;
-    await col().doc(String(id)).delete();
+    try {
+      await col().doc(String(id)).delete();
+    } catch (err) {}
+    const local = loadLocalTemplates();
+    const filtered = local.filter(t => t._id !== String(id));
+    saveLocalTemplates(filtered);
   }
 };
 

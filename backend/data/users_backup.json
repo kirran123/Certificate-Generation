@@ -1,0 +1,43 @@
+[
+  {
+    "_id": "3XwGET5FGO4yzn6HucHg",
+    "name": "Super Admin",
+    "email": "kirranvijay@gmail.com",
+    "passwordHash": "$2b$10$vN.1K2p5X7z0W.1L2m3N4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0",
+    "role": "admin",
+    "createdAt": "2026-04-13T15:51:06.303Z",
+    "updatedAt": "2026-08-23T16:28:12.689Z"
+  },
+  {
+    "_id": "G85K7DRb3q0e8wxxgSDn",
+    "name": "Akash",
+    "email": "akash@gmail.com",
+    "role": "user",
+    "createdAt": "2026-05-10T13:34:17.140Z",
+    "updatedAt": "2026-08-23T15:20:26.508Z"
+  },
+  {
+    "_id": "PYkcIKUsbUw5vEeQEhRe",
+    "name": "Kirran S T",
+    "email": "kirranmass@gmail.com",
+    "role": "user",
+    "createdAt": "2026-05-10T04:06:40.080Z",
+    "updatedAt": "2026-08-23T15:20:24.789Z"
+  },
+  {
+    "_id": "etvrmrAig2d4RUfcx0xJ",
+    "name": "Lokesh R",
+    "email": "953624205024@ritrjpm.ac.in",
+    "role": "user",
+    "createdAt": "2026-05-10T07:11:41.464Z",
+    "updatedAt": "2026-08-23T15:20:25.906Z"
+  },
+  {
+    "_id": "qP50kFsI9xphGJKrbAVb",
+    "name": "Harish",
+    "email": "harish@gmail.com",
+    "role": "user",
+    "createdAt": "2026-04-18T15:09:25.842Z",
+    "updatedAt": "2026-08-23T15:20:24.284Z"
+  }
+]
