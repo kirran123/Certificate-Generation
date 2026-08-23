@@ -31,35 +31,6 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
-  useEffect(() => {
-    let timeoutId;
-    const resetTimer = () => {
-      clearTimeout(timeoutId);
-      if (user) {
-        timeoutId = setTimeout(() => {
-          logout();
-          window.location.href = '/login';
-        }, 180000); // 3 minutes
-      }
-    };
-
-    if (user) {
-      resetTimer();
-      window.addEventListener('mousemove', resetTimer);
-      window.addEventListener('keydown', resetTimer);
-      window.addEventListener('click', resetTimer);
-      window.addEventListener('scroll', resetTimer);
-    }
-
-    return () => {
-      clearTimeout(timeoutId);
-      window.removeEventListener('mousemove', resetTimer);
-      window.removeEventListener('keydown', resetTimer);
-      window.removeEventListener('click', resetTimer);
-      window.removeEventListener('scroll', resetTimer);
-    };
-  }, [user]);
-
   const login = async (email, password) => {
     const res = await axios.post(`${API_BASE}/api/auth/login`, { email, password });
     sessionStorage.setItem('token', res.data.token);
