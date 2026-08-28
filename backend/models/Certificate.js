@@ -163,7 +163,7 @@ const Certificate = {
         const rawTid = typeof updatedCert.templateId === 'object' ? (updatedCert.templateId._id || updatedCert.templateId.id) : updatedCert.templateId;
         const tid = String(rawTid || '').trim();
         if (tid && tid !== '[object Object]') {
-          const tmpl = tmplMap.get(tid);
+          const tmpl = tmplMap.get(tid) || (allTemplates.length > 0 ? (allTemplates[allTemplates.length - 1] || allTemplates[0]) : null);
           if (tmpl) updatedCert.templateId = tmpl;
         }
       }

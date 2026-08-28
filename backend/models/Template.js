@@ -47,8 +47,17 @@ const Template = {
   },
 
   findById: async (id) => {
-    if (!id || typeof id !== 'string' || id.trim() === '' || id === '[object Object]') return null;
-    const sid = String(id).trim();
+    if (!id) return null;
+    let sid = id;
+    if (typeof id === 'object') {
+      if (id.imageUrl) return id;
+      sid = id._id || id.id || id.templateId || '';
+    }
+    if (!sid || typeof sid !== 'string' || sid.trim() === '' || sid === '[object Object]') {
+      const local = loadLocalTemplates();
+      return local[local.length - 1] || local[0] || null;
+    }
+    sid = String(sid).trim();
 
     try {
       const doc = await col().doc(sid).get();
@@ -58,7 +67,14 @@ const Template = {
     }
 
     const local = loadLocalTemplates();
-    return local.find(t => t._id === sid) || null;
+    const found = local.find(t => t._id === sid || t.id === sid);
+    if (found) return found;
+
+    // Fallback if legacy template ID is not found
+    if (local.length > 0) {
+      return local[local.length - 1] || local[0];
+    }
+    return null;
   },
 
   find: async (filter = {}) => {
