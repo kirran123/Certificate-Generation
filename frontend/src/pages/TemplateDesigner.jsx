@@ -417,22 +417,30 @@ export default function TemplateDesigner() {
     }
   };
 
+  const isSendingRef = useRef(false);
+
   const handleGenerateAndEmail = async (sendEmail = false) => {
+    if (isSendingRef.current) return;
+    isSendingRef.current = true;
+
     const mappedName = selection["name"];
     const mappedEmail = selection["email"];
 
     if (!mappedName) {
       alert('REQUIRED: Please map the "Recipient Name" field in the generation panel.');
+      isSendingRef.current = false;
       return;
     }
 
     if (sendEmail && !mappedEmail) {
       alert('REQUIRED FOR EMAIL: Please map the "Recipient Email" field.');
+      isSendingRef.current = false;
       return;
     }
 
     if (!batchName.trim()) {
       alert('NAME YOUR BATCH: Please enter a name for this batch before proceeding.');
+      isSendingRef.current = false;
       return;
     }
 
@@ -479,6 +487,8 @@ export default function TemplateDesigner() {
       console.error(e);
       alert("Operation failed: " + (e.response?.data?.message || "Server Error"));
       setSaving("done");
+    } finally {
+      isSendingRef.current = false;
     }
   };
 
