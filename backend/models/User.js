@@ -40,6 +40,33 @@ function saveLocalUsers(users) {
   }
 }
 
+let userMemoryCache = null;
+let userCacheTimestamp = 0;
+const USER_CACHE_TTL = 60000; // 60 seconds
+
+function invalidateUserCache() {
+  userMemoryCache = null;
+  userCacheTimestamp = 0;
+}
+
+async function getAllUsersCached() {
+  const now = Date.now();
+  if (userMemoryCache && (now - userCacheTimestamp < USER_CACHE_TTL)) {
+    return userMemoryCache;
+  }
+  try {
+    const snap = await col().get();
+    userMemoryCache = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+    userCacheTimestamp = Date.now();
+    saveLocalUsers(userMemoryCache);
+    return userMemoryCache;
+  } catch (err) {
+    userMemoryCache = loadLocalUsers();
+    userCacheTimestamp = Date.now();
+    return userMemoryCache;
+  }
+}
+
 const col = () => getDb().collection('users');
 
 const User = {
@@ -62,58 +89,31 @@ const User = {
     const newUser = { _id: id, ...data };
     local.push(newUser);
     saveLocalUsers(local);
+    invalidateUserCache();
     return newUser;
   },
 
   // Find by email
   findOne: async ({ email }) => {
     const normalizedEmail = email?.toLowerCase().trim();
-    try {
-      const snap = await col().where('email', '==', normalizedEmail).limit(1).get();
-      if (!snap.empty) {
-        const doc = snap.docs[0];
-        return { _id: doc.id, ...doc.data() };
-      }
-    } catch (err) {
-      console.warn('[User.findOne] Firestore quota exceeded/error. Falling back to local backup:', err.message);
-    }
-
-    const local = loadLocalUsers();
-    const found = local.find(u => u.email?.toLowerCase().trim() === normalizedEmail);
+    const all = await getAllUsersCached();
+    const found = all.find(u => u.email?.toLowerCase().trim() === normalizedEmail);
     return found || null;
   },
 
   // Find by ID
   findById: async (id) => {
     if (!id) return null;
-    try {
-      const doc = await col().doc(String(id)).get();
-      if (doc.exists) return { _id: doc.id, ...doc.data() };
-    } catch (err) {
-      console.warn('[User.findById] Firestore quota exceeded/error. Falling back to local backup:', err.message);
-    }
-
-    const local = loadLocalUsers();
-    const found = local.find(u => u._id === String(id));
+    const sid = String(id).trim();
+    const all = await getAllUsersCached();
+    const found = all.find(u => String(u._id || u.id) === sid);
     return found || null;
   },
 
   // Get all users (excluding passwordHash)
   find: async (filter = {}) => {
-    try {
-      const snap = await col().get();
-      const users = snap.docs.map(d => {
-        const { passwordHash, ...rest } = d.data();
-        return { _id: d.id, ...rest };
-      });
-      // Save snapshot locally
-      saveLocalUsers(snap.docs.map(d => ({ _id: d.id, ...d.data() })));
-      return users;
-    } catch (err) {
-      console.warn('[User.find] Firestore quota exceeded/error. Falling back to local backup:', err.message);
-      const local = loadLocalUsers();
-      return local.map(({ passwordHash, ...rest }) => rest);
-    }
+    const all = await getAllUsersCached();
+    return all.map(({ passwordHash, ...rest }) => rest);
   },
 
   // Update a user by ID
@@ -131,8 +131,10 @@ const User = {
     if (idx !== -1) {
       local[idx] = { ...local[idx], ...updates, updatedAt: now };
       saveLocalUsers(local);
+      invalidateUserCache();
       return local[idx];
     }
+    invalidateUserCache();
     return null;
   },
 
@@ -165,6 +167,7 @@ const User = {
       }
     });
     saveLocalUsers(local);
+    invalidateUserCache();
     return { modifiedCount: count };
   },
 
@@ -178,18 +181,14 @@ const User = {
     const local = loadLocalUsers();
     const filtered = local.filter(u => u._id !== String(id));
     saveLocalUsers(filtered);
+    invalidateUserCache();
     return { deletedCount: 1 };
   },
 
   // Count all users
   countDocuments: async () => {
-    try {
-      const snap = await col().get();
-      return snap.size;
-    } catch (err) {
-      const local = loadLocalUsers();
-      return local.length;
-    }
+    const all = await getAllUsersCached();
+    return all.length;
   },
 
   // Compare a plain password against stored hash

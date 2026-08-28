@@ -34,6 +34,33 @@ function saveLocalTemplates(tmpls) {
   } catch (e) {}
 }
 
+let tmplMemoryCache = null;
+let tmplCacheTimestamp = 0;
+const TMPL_CACHE_TTL = 60000; // 60 seconds
+
+function invalidateTemplateCache() {
+  tmplMemoryCache = null;
+  tmplCacheTimestamp = 0;
+}
+
+async function getAllTemplatesCached() {
+  const now = Date.now();
+  if (tmplMemoryCache && (now - tmplCacheTimestamp < TMPL_CACHE_TTL)) {
+    return tmplMemoryCache;
+  }
+  try {
+    const snap = await col().get();
+    tmplMemoryCache = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+    tmplCacheTimestamp = Date.now();
+    saveLocalTemplates(tmplMemoryCache);
+    return tmplMemoryCache;
+  } catch (err) {
+    tmplMemoryCache = loadLocalTemplates();
+    tmplCacheTimestamp = Date.now();
+    return tmplMemoryCache;
+  }
+}
+
 const col = () => getDb().collection('templates');
 
 const Template = {
@@ -53,6 +80,7 @@ const Template = {
     const newTmpl = { _id: id, ...doc };
     local.push(newTmpl);
     saveLocalTemplates(local);
+    invalidateTemplateCache();
     return newTmpl;
   },
 
@@ -63,44 +91,25 @@ const Template = {
       if (id.imageUrl) return id;
       sid = id._id || id.id || id.templateId || '';
     }
+    const all = await getAllTemplatesCached();
     if (!sid || typeof sid !== 'string' || sid.trim() === '' || sid === '[object Object]') {
-      const local = loadLocalTemplates();
-      return local[local.length - 1] || local[0] || null;
+      return all[all.length - 1] || all[0] || null;
     }
     sid = String(sid).trim();
 
-    try {
-      const doc = await col().doc(sid).get();
-      if (doc.exists) return { _id: doc.id, ...doc.data() };
-    } catch (err) {
-      // Fallback
-    }
-
-    const local = loadLocalTemplates();
-    const found = local.find(t => t._id === sid || t.id === sid);
+    const found = all.find(t => String(t._id || t.id) === sid);
     if (found) return found;
 
-    // Fallback if legacy template ID is not found
-    if (local.length > 0) {
-      return local[local.length - 1] || local[0];
+    if (all.length > 0) {
+      return all[all.length - 1] || all[0];
     }
     return null;
   },
 
   find: async (filter = {}) => {
-    try {
-      let query = col();
-      if (filter.createdBy) query = query.where('createdBy', '==', filter.createdBy);
-      const snap = await query.get();
-      const tmpls = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
-      saveLocalTemplates(tmpls);
-      return tmpls;
-    } catch (err) {
-      console.warn('[Template.find] Firestore error. Falling back to local:', err.message);
-      const local = loadLocalTemplates();
-      if (filter.createdBy) return local.filter(t => t.createdBy === filter.createdBy);
-      return local;
-    }
+    const all = await getAllTemplatesCached();
+    if (filter.createdBy) return all.filter(t => String(t.createdBy) === String(filter.createdBy));
+    return all;
   },
 
   findOneAndUpdate: async (filter, update) => {
@@ -131,6 +140,7 @@ const Template = {
       local.push({ _id: sid, ...cleanData, createdAt: now, updatedAt: now });
     }
     saveLocalTemplates(local);
+    invalidateTemplateCache();
     return local.find(t => t._id === sid);
   },
 
@@ -142,6 +152,7 @@ const Template = {
     const local = loadLocalTemplates();
     const filtered = local.filter(t => t._id !== String(id));
     saveLocalTemplates(filtered);
+    invalidateTemplateCache();
   }
 };
 

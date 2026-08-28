@@ -36,6 +36,33 @@ function saveLocalCertificates(certs) {
   } catch (e) {}
 }
 
+let certsMemoryCache = null;
+let certsCacheTimestamp = 0;
+const CERTS_CACHE_TTL = 30000; // 30 seconds
+
+function invalidateCertificateCache() {
+  certsMemoryCache = null;
+  certsCacheTimestamp = 0;
+}
+
+async function getAllCertificatesCached() {
+  const now = Date.now();
+  if (certsMemoryCache && (now - certsCacheTimestamp < CERTS_CACHE_TTL)) {
+    return certsMemoryCache;
+  }
+  try {
+    const snap = await col().get();
+    certsMemoryCache = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+    certsCacheTimestamp = Date.now();
+    saveLocalCertificates(certsMemoryCache);
+    return certsMemoryCache;
+  } catch (err) {
+    certsMemoryCache = loadLocalCertificates();
+    certsCacheTimestamp = Date.now();
+    return certsMemoryCache;
+  }
+}
+
 const col = () => getDb().collection('certificates');
 
 const Certificate = {
@@ -61,89 +88,47 @@ const Certificate = {
     const newCert = { _id: id, ...doc };
     local.push(newCert);
     saveLocalCertificates(local);
+    invalidateCertificateCache();
     return newCert;
   },
 
   findOne: async (filter) => {
-    try {
-      let query = col();
-      if (filter.certificateId) query = query.where('certificateId', '==', filter.certificateId);
-      else if (filter.uniqueHash) query = query.where('uniqueHash', '==', filter.uniqueHash);
-      else if (filter.templateId) query = query.where('templateId', '==', String(filter.templateId));
-      const snap = await query.limit(1).get();
-      if (!snap.empty) {
-        const doc = snap.docs[0];
-        return { _id: doc.id, ...doc.data() };
-      }
-    } catch (err) {
-      console.warn('[Certificate.findOne] Firestore error. Falling back to local:', err.message);
-    }
-
-    const local = loadLocalCertificates();
-    if (filter.certificateId) return local.find(c => c.certificateId === filter.certificateId) || null;
-    if (filter.uniqueHash) return local.find(c => c.uniqueHash === filter.uniqueHash) || null;
-    if (filter.templateId) return local.find(c => String(c.templateId) === String(filter.templateId)) || null;
+    const all = await getAllCertificatesCached();
+    if (filter.certificateId) return all.find(c => c.certificateId === filter.certificateId) || null;
+    if (filter.uniqueHash) return all.find(c => c.uniqueHash === filter.uniqueHash) || null;
+    if (filter.templateId) return all.find(c => String(c.templateId) === String(filter.templateId)) || null;
     return null;
   },
 
   findById: async (id) => {
     if (!id || typeof id !== 'string' || id.trim() === '' || id === '[object Object]') return null;
     const sid = String(id).trim();
-    try {
-      const doc = await col().doc(sid).get();
-      if (doc.exists) return { _id: doc.id, ...doc.data() };
-    } catch (err) {}
-
-    const local = loadLocalCertificates();
-    return local.find(c => c._id === sid) || null;
+    const all = await getAllCertificatesCached();
+    return all.find(c => String(c._id) === sid || String(c.certificateId) === sid) || null;
   },
 
   findByDocId: async (id) => {
     if (!id || typeof id !== 'string' || id.trim() === '' || id === '[object Object]') return null;
     const sid = String(id).trim();
-    try {
-      const doc = await col().doc(sid).get();
-      if (doc.exists) return { _id: doc.id, ...doc.data() };
-    } catch (err) {}
-
-    const local = loadLocalCertificates();
-    return local.find(c => c._id === sid || c.certificateId === sid) || null;
+    const all = await getAllCertificatesCached();
+    return all.find(c => String(c._id) === sid || String(c.certificateId) === sid) || null;
   },
 
   find: async (filter = {}) => {
-    try {
-      let query = col();
-      if (filter.createdBy) query = query.where('createdBy', '==', String(filter.createdBy));
-      if (filter.batchId) query = query.where('batchId', '==', filter.batchId);
-      if (filter.status) query = query.where('status', '==', filter.status);
+    let certs = await getAllCertificatesCached();
 
-      const snap = await query.get();
-      let certs = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
-      saveLocalCertificates(certs);
+    if (filter.createdBy) certs = certs.filter(c => String(c.createdBy?._id || c.createdBy || '') === String(filter.createdBy));
+    if (filter.batchId) certs = certs.filter(c => c.batchId === filter.batchId);
+    if (filter.status) certs = certs.filter(c => c.status === filter.status);
 
-      if (filter.isArchived !== undefined) {
-        if (filter.isArchived && filter.isArchived.$ne !== undefined) {
-          certs = certs.filter(c => c.isArchived !== filter.isArchived.$ne);
-        } else {
-          certs = certs.filter(c => c.isArchived === filter.isArchived);
-        }
+    if (filter.isArchived !== undefined) {
+      if (filter.isArchived && filter.isArchived.$ne !== undefined) {
+        certs = certs.filter(c => c.isArchived !== filter.isArchived.$ne);
+      } else {
+        certs = certs.filter(c => c.isArchived === filter.isArchived);
       }
-      return certs;
-    } catch (err) {
-      console.warn('[Certificate.find] Firestore error. Falling back to local:', err.message);
-      let certs = loadLocalCertificates();
-      if (filter.createdBy) certs = certs.filter(c => String(c.createdBy) === String(filter.createdBy));
-      if (filter.batchId) certs = certs.filter(c => c.batchId === filter.batchId);
-      if (filter.status) certs = certs.filter(c => c.status === filter.status);
-      if (filter.isArchived !== undefined) {
-        if (filter.isArchived && filter.isArchived.$ne !== undefined) {
-          certs = certs.filter(c => c.isArchived !== filter.isArchived.$ne);
-        } else {
-          certs = certs.filter(c => c.isArchived === filter.isArchived);
-        }
-      }
-      return certs;
     }
+    return certs;
   },
 
   populate: async (certs, fields = 'templateId createdBy') => {
@@ -234,6 +219,7 @@ const Certificate = {
       local.push(dataToSave);
     }
     saveLocalCertificates(local);
+    invalidateCertificateCache();
     return cert;
   },
 
@@ -254,8 +240,10 @@ const Certificate = {
     if (item) {
       Object.assign(item, data, { updatedAt: new Date().toISOString() });
       saveLocalCertificates(local);
+      invalidateCertificateCache();
       return { modifiedCount: 1 };
     }
+    invalidateCertificateCache();
     return { modifiedCount: 0 };
   },
 
@@ -289,6 +277,7 @@ const Certificate = {
       count++;
     });
     saveLocalCertificates(local);
+    invalidateCertificateCache();
     return { modifiedCount: count };
   },
 
@@ -303,6 +292,7 @@ const Certificate = {
     const local = loadLocalCertificates();
     const filtered = local.filter(c => c.certificateId !== certId);
     saveLocalCertificates(filtered);
+    invalidateCertificateCache();
     return { deletedCount: 1 };
   },
 
@@ -330,6 +320,7 @@ const Certificate = {
     const local = loadLocalCertificates();
     const filtered = local.filter(c => filter.batchId && c.batchId !== filter.batchId);
     saveLocalCertificates(filtered);
+    invalidateCertificateCache();
     return { deletedCount: 1 };
   }
 };
