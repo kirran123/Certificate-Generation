@@ -7,32 +7,35 @@ const router = express.Router();
 // Get certificates for logged-in user
 router.get('/my-certificates', protect, async (req, res) => {
   try {
-    const email = req.user.email;
-    const userId = String(req.user._id);
+    const email = (req.user.email || '').toLowerCase();
+    const userId = String(req.user._id || '');
 
-    // Get by createdBy
-    const byUser = await Certificate.find({ createdBy: userId, isArchived: false });
-    // Get by email match
-    const byEmail = await Certificate.find({});
-    const byEmailFiltered = byEmail.filter(c =>
-      c.email && c.email.toLowerCase() === email.toLowerCase() && !c.isArchived
-    );
+    const allCerts = await Certificate.find({ isArchived: false });
+    let certs = [];
 
-    // Merge, deduplicate by _id
-    const merged = [...byUser];
-    for (const c of byEmailFiltered) {
-      if (!merged.find(m => m._id === c._id)) merged.push(c);
+    if (req.user.role === 'admin') {
+      certs = allCerts;
+    } else {
+      certs = allCerts.filter(c => {
+        if (!c) return false;
+        const cEmail = (c.email || '').toLowerCase();
+        const createdById = String(c.createdBy?._id || c.createdBy || '');
+        const createdByEmail = String(c.createdBy?.email || '').toLowerCase();
+        return (email && cEmail === email) || (userId && createdById === userId) || (email && createdByEmail === email);
+      });
     }
 
-    // Populate template name
-    const populated = await Certificate.populate(merged, 'templateId createdBy');
-    // Sort by createdAt desc
-    populated.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const populated = await Certificate.populate(certs, 'templateId createdBy');
+    populated.sort((a, b) => {
+      const tA = new Date(a.createdAt || a._creationTime || 0).getTime();
+      const tB = new Date(b.createdAt || b._creationTime || 0).getTime();
+      return (isNaN(tB) ? 0 : tB) - (isNaN(tA) ? 0 : tA);
+    });
 
-    console.log(`[Dashboard] Found ${populated.length} certificates for ${email}`);
+    console.log(`[Dashboard] Found ${populated.length} certificates for ${email || userId}`);
     res.json(populated);
   } catch (error) {
-    console.error(`[Dashboard Error]:`, error);
+    console.error(`[Dashboard Error /my-certificates]:`, error);
     res.status(500).json({ message: error.message });
   }
 });
@@ -40,10 +43,22 @@ router.get('/my-certificates', protect, async (req, res) => {
 // Get stats for logged-in user
 router.get('/stats', protect, async (req, res) => {
   try {
-    const email = req.user.email;
-    const userId = String(req.user._id);
+    const email = (req.user.email || '').toLowerCase();
+    const userId = String(req.user._id || '');
 
-    const allUserCerts = await Certificate.find({ createdBy: userId, isArchived: false });
+    const allCerts = await Certificate.find({ isArchived: false });
+    
+    let allUserCerts = [];
+    if (req.user.role === 'admin') {
+      allUserCerts = allCerts;
+    } else {
+      allUserCerts = allCerts.filter(c => {
+        if (!c) return false;
+        const createdById = String(c.createdBy?._id || c.createdBy || '');
+        const createdByEmail = String(c.createdBy?.email || '').toLowerCase();
+        return (userId && createdById === userId) || (email && createdByEmail === email);
+      });
+    }
 
     const batchSet = new Set(allUserCerts.map(c => c.batchId).filter(Boolean));
     const batchesCount = batchSet.size;
@@ -51,9 +66,8 @@ router.get('/stats', protect, async (req, res) => {
     const failedCount = allUserCerts.filter(c => c.status === 'Failed').length;
     const pendingCount = allUserCerts.filter(c => c.status === 'Pending').length;
 
-    const allCerts = await Certificate.find({});
     const receivedCount = allCerts.filter(c =>
-      c.email && c.email.toLowerCase() === email.toLowerCase() && !c.isArchived
+      c.email && c.email.toLowerCase() === email && !c.isArchived
     ).length;
 
     res.json({ receivedCount, batchesCount, sentCount, failedCount, pendingCount });

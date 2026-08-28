@@ -268,8 +268,20 @@ export default function AdminDashboard() {
 
 
 
+  const safeDateStr = (dateVal) => {
+    if (!dateVal) return '';
+    try {
+      const d = new Date(dateVal);
+      if (isNaN(d.getTime())) return '';
+      return d.toLocaleDateString();
+    } catch (e) {
+      return '';
+    }
+  };
+
   const groupedBatches = certificates.reduce((acc, cert) => {
-    let bid = cert.batchId || ((cert.createdAt || cert._creationTime) ? `Generated ${new Date(cert.createdAt || cert._creationTime).toLocaleDateString()}` : 'Individual');
+    const dStr = safeDateStr(cert.createdAt || cert._creationTime);
+    let bid = cert.batchId || (dStr ? `Generated ${dStr}` : 'Individual');
     
     // Global Search: Check batch name OR certificate details
     const searchStr = (batchSearch || certSearch).toLowerCase();
@@ -759,7 +771,7 @@ export default function AdminDashboard() {
                                   </span>
                                 )}
                               </p>
-                              <p className="text-xs text-[var(--text-secondary)]">By {certs[0]?.createdBy?.name || (typeof certs[0]?.createdBy === 'string' ? certs[0]?.createdBy : 'Admin')} · {certs[0]?._creationTime || certs[0]?.createdAt ? new Date(certs[0]?.createdAt || certs[0]?._creationTime).toLocaleDateString() : 'Never'} · {certs.length} certificate{certs.length !== 1 ? 's' : ''}</p>
+                              <p className="text-xs text-[var(--text-secondary)]">By {certs[0]?.createdBy?.name || (typeof certs[0]?.createdBy === 'string' ? certs[0]?.createdBy : 'Admin')} · {safeDateStr(certs[0]?.createdAt || certs[0]?._creationTime) || 'Never'} · {certs.length} certificate{certs.length !== 1 ? 's' : ''}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-3">

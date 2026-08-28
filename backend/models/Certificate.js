@@ -153,11 +153,12 @@ const Certificate = {
 
     let tmplMap = new Map();
     let userMap = new Map();
+    let allTemplates = [];
     const fieldsStr = String(fields);
 
     try {
       if (fieldsStr.includes('templateId')) {
-        const allTemplates = await Template.find({});
+        allTemplates = await Template.find({});
         tmplMap = new Map(allTemplates.map(t => [String(t._id), t]));
       }
       if (fieldsStr.includes('createdBy')) {

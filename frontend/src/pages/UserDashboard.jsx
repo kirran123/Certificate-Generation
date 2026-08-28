@@ -161,8 +161,20 @@ export default function UserDashboard() {
 
 
 
+  const safeDateStr = (dateVal) => {
+    if (!dateVal) return '';
+    try {
+      const d = new Date(dateVal);
+      if (isNaN(d.getTime())) return '';
+      return d.toLocaleDateString();
+    } catch (e) {
+      return '';
+    }
+  };
+
   const groupedBatches = generatedCerts.reduce((acc, cert) => {
-    let bid = cert.batchId || ((cert.createdAt || cert._creationTime) ? `Generated ${new Date(cert.createdAt || cert._creationTime).toLocaleDateString()}` : 'Individual');
+    const dStr = safeDateStr(cert.createdAt || cert._creationTime);
+    let bid = cert.batchId || (dStr ? `Generated ${dStr}` : 'Individual Certificates');
 
     // Global Search: Check batch name OR certificate details
     const searchStr = (batchSearch || certSearch).toLowerCase();
@@ -196,7 +208,16 @@ export default function UserDashboard() {
     return acc;
   }, {});
 
-  const fmt = (d) => d ? new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(d)) : '';
+  const fmt = (d) => {
+    if (!d) return '';
+    try {
+      const dt = new Date(d);
+      if (isNaN(dt.getTime())) return '';
+      return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(dt);
+    } catch (e) {
+      return '';
+    }
+  };
 
   const TABS = [
     { id: 'received', label: 'My Certificates', icon: <Inbox className="w-4 h-4" /> },

@@ -381,11 +381,33 @@ router.post('/resend-single/:certId', protect, async (req, res) => {
 // ── My Generations ───────────────────────────────────────────────────────────
 router.get('/my-generations', protect, async (req, res) => {
   try {
-    const certs = await Certificate.find({ createdBy: String(req.user._id), isArchived: false });
+    const userId = String(req.user._id || '');
+    const email = (req.user.email || '').toLowerCase();
+    const allCerts = await Certificate.find({ isArchived: false });
+    
+    let certs = [];
+    if (req.user.role === 'admin') {
+      certs = allCerts;
+    } else {
+      certs = allCerts.filter(c => {
+        if (!c) return false;
+        const createdById = String(c.createdBy?._id || c.createdBy || '');
+        const createdByEmail = String(c.createdBy?.email || '').toLowerCase();
+        const recipientEmail = String(c.email || '').toLowerCase();
+        return (userId && createdById === userId) || (email && createdByEmail === email) || (email && recipientEmail === email);
+      });
+    }
+
     const populated = await Certificate.populate(certs, 'templateId createdBy');
-    populated.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    populated.sort((a, b) => {
+      const tA = new Date(a.createdAt || a._creationTime || 0).getTime();
+      const tB = new Date(b.createdAt || b._creationTime || 0).getTime();
+      return (isNaN(tB) ? 0 : tB) - (isNaN(tA) ? 0 : tA);
+    });
+
     res.json(populated);
   } catch (error) {
+    console.error(`[Dashboard Error /my-generations]:`, error);
     res.status(500).json({ message: error.message });
   }
 });
