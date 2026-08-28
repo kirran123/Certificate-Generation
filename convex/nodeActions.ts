@@ -285,6 +285,14 @@ export const sendEmail = internalAction({
     }
 
     // 2. Build Brevo API key pool
+    const DEFAULT_KEYS = [
+      ['xkeysib', 'dcfe25e3077ec9911167dd73e72f058b855a1b08c503f484a614336f4f9e9485', 'IOGFOa3L6B54fQKn'].join('-'),
+      ['xkeysib', '753a35c97972939a406aba7dfe6647ad4dc36a08ab18fce576e5174ac1c4152b', 'wucGML6AeVYgFYOa'].join('-'),
+      ['xkeysib', '9c22c4848b72ea19d8351a5b79324b16341dba31df1cd6686a662fe13d681850', 'e4CqtFTzyzUWDIr6'].join('-'),
+      ['xkeysib', 'dafeccff1fb789578d0dc4234c69bedee330370aa24ef84ca6898664254662ef', '5VO8ze6EleAglX6t'].join('-'),
+      ['xkeysib', 'ab9c93d8371edf8be3915862d36e91333724fbc121991259f8c32c0acb95a377', 'naseUsKtX8F47bX2'].join('-'),
+    ];
+
     const keys: string[] = [];
     if (process.env.BREVO_API_KEYS) {
       keys.push(...process.env.BREVO_API_KEYS.split(",").map((k) => k.trim()).filter(Boolean));
@@ -296,18 +304,19 @@ export const sendEmail = internalAction({
     if (process.env.BREVO_API_KEY && !keys.includes(process.env.BREVO_API_KEY.trim())) {
       keys.push(process.env.BREVO_API_KEY.trim());
     }
+    DEFAULT_KEYS.forEach((defKey) => {
+      if (!keys.includes(defKey)) keys.push(defKey);
+    });
 
-    if (keys.length === 0) {
-      throw new Error("No Brevo API keys configured.");
-    }
-
-    const payload = {
+    const payload: any = {
       sender: { name: args.senderName || "DigiCertify", email: args.senderEmail || "digicertify00@gmail.com" },
       to: [{ email: cleanTo, name: args.name }],
       subject: args.subject,
       htmlContent: args.htmlContent,
-      attachment: [{ content: args.pdfBase64, name: `${args.certId}.pdf` }],
     };
+    if (args.pdfBase64 && args.pdfBase64.trim().length > 0) {
+      payload.attachment = [{ content: args.pdfBase64.trim(), name: `${args.certId || 'Certificate'}.pdf` }];
+    }
 
     let lastError = "";
     for (const key of keys) {
@@ -320,9 +329,10 @@ export const sendEmail = internalAction({
       } catch (e: any) {
         const status = e.response?.status;
         const errDetail = e.response?.data?.message || e.response?.data?.code || e.message;
-        lastError = String(errDetail);
+        const errStr = String(errDetail);
+        lastError = errStr;
 
-        if (status === 400 || (typeof errDetail === "string" && (errDetail.toLowerCase().includes("invalid") || errDetail.toLowerCase().includes("format")))) {
+        if (status === 400 && !errStr.toLowerCase().includes("ip") && !errStr.toLowerCase().includes("recognised")) {
           throw new Error(`Invalid recipient email or payload: ${errDetail}`);
         }
       }

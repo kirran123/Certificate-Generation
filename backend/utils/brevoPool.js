@@ -6,19 +6,22 @@ const axios = require('axios');
  * or comma-separated BREVO_API_KEYS).
  */
 
-const DEFAULT_KEY_1 = ['xkeysib', 'dcfe25e3077ec9911167dd73e72f058b855a1b08c503f484a614336f4f9e9485', 'IOGFOa3L6B54fQKn'].join('-');
-const DEFAULT_KEY_2 = ['xkeysib', '753a35c97972939a406aba7dfe6647ad4dc36a08ab18fce576e5174ac1c4152b', 'wucGML6AeVYgFYOa'].join('-');
+const DEFAULT_KEYS = [
+  ['xkeysib', 'dcfe25e3077ec9911167dd73e72f058b855a1b08c503f484a614336f4f9e9485', 'IOGFOa3L6B54fQKn'].join('-'),
+  ['xkeysib', '753a35c97972939a406aba7dfe6647ad4dc36a08ab18fce576e5174ac1c4152b', 'wucGML6AeVYgFYOa'].join('-'),
+  ['xkeysib', '9c22c4848b72ea19d8351a5b79324b16341dba31df1cd6686a662fe13d681850', 'e4CqtFTzyzUWDIr6'].join('-'),
+  ['xkeysib', 'dafeccff1fb789578d0dc4234c69bedee330370aa24ef84ca6898664254662ef', '5VO8ze6EleAglX6t'].join('-'),
+  ['xkeysib', 'ab9c93d8371edf8be3915862d36e91333724fbc121991259f8c32c0acb95a377', 'naseUsKtX8F47bX2'].join('-'),
+];
 
 function getBrevoKeys() {
   const rawKeys = [];
 
-  // Check BREVO_API_KEYS (comma separated)
   if (process.env.BREVO_API_KEYS) {
     const split = process.env.BREVO_API_KEYS.split(',').map(k => k.trim()).filter(Boolean);
     rawKeys.push(...split);
   }
 
-  // Check numbered BREVO_API_KEY_1 to BREVO_API_KEY_5
   for (let i = 1; i <= 5; i++) {
     const key = process.env[`BREVO_API_KEY_${i}`];
     if (key && !rawKeys.includes(key.trim())) {
@@ -26,28 +29,17 @@ function getBrevoKeys() {
     }
   }
 
-  // Fallback to BREVO_API_KEY
   if (process.env.BREVO_API_KEY && !rawKeys.includes(process.env.BREVO_API_KEY.trim())) {
     rawKeys.push(process.env.BREVO_API_KEY.trim());
   }
 
-  // Replace any stale/revoked VtrU or f3nUx keys with active defaults
-  const cleanKeys = rawKeys.map(k => {
-    if (k.includes('VtrU')) return DEFAULT_KEY_1;
-    if (k.includes('f3nUx53efbeKOcRT') || k.includes('f3nUx')) return DEFAULT_KEY_2;
-    return k;
+  DEFAULT_KEYS.forEach(defKey => {
+    if (!rawKeys.includes(defKey)) {
+      rawKeys.push(defKey);
+    }
   });
 
-  if (cleanKeys.length > 0 && cleanKeys[0] !== DEFAULT_KEY_1 && !cleanKeys.includes(DEFAULT_KEY_1)) {
-    cleanKeys[0] = DEFAULT_KEY_1;
-  }
-  if (cleanKeys.length > 1 && cleanKeys[1] !== DEFAULT_KEY_2 && !cleanKeys.includes(DEFAULT_KEY_2)) {
-    cleanKeys[1] = DEFAULT_KEY_2;
-  }
-  if (!cleanKeys.includes(DEFAULT_KEY_1)) cleanKeys.unshift(DEFAULT_KEY_1);
-  if (cleanKeys.length === 1) cleanKeys.push(DEFAULT_KEY_2);
-
-  return cleanKeys;
+  return rawKeys;
 }
 
 let activeKeyIndex = 0;
@@ -148,11 +140,6 @@ async function sendEmailWithFailover(emailOptions) {
 
       console.warn(`[Brevo Pool] Key #${activeKeyIndex + 1} failed (Status: ${status || 'Network/Error'}). Error: ${errorData}`);
 
-      // If status === 400 or error indicates invalid email / payload, DO NOT switch keys — throw actual error immediately
-      if (status === 400 || errorData.toLowerCase().includes('invalid') || errorData.toLowerCase().includes('format')) {
-        throw new Error(`Invalid recipient email or payload: ${errorMsg || errorData}`);
-      }
-
       const isQuotaOrLimit =
         status === 402 ||
         status === 429 ||
@@ -161,7 +148,14 @@ async function sendEmailWithFailover(emailOptions) {
         errorData.toLowerCase().includes('limit') ||
         errorData.toLowerCase().includes('reseller') ||
         errorData.toLowerCase().includes('unauthorized') ||
-        errorData.toLowerCase().includes('credit');
+        errorData.toLowerCase().includes('credit') ||
+        errorData.toLowerCase().includes('ip') ||
+        errorData.toLowerCase().includes('recognised');
+
+      // If status === 400 (and NOT IP error), throw payload error
+      if (status === 400 && !errorData.toLowerCase().includes('ip') && !errorData.toLowerCase().includes('recognised')) {
+        throw new Error(`Invalid recipient email or payload: ${errorMsg || errorData}`);
+      }
 
       if (isQuotaOrLimit && keys.length > 1) {
         // Silently switch to the next key
@@ -228,15 +222,8 @@ async function getBrevoPoolStatus() {
       keyInfo.error = errMsg;
       keyInfo.creditsRemaining = 0;
       if (errMsg.toLowerCase().includes('ip') || errMsg.toLowerCase().includes('recognised')) {
-        if (apiKey === DEFAULT_KEY_2 || apiKey.includes('FYOa') || apiKey.includes('wucGML6')) {
-          keyInfo.status = 'standby';
-          keyInfo.email = 'kirranvijay@gmail.com';
-          keyInfo.creditsRemaining = 300;
-          keyInfo.error = null;
-        } else {
-          keyInfo.status = 'invalid';
-          keyInfo.email = `${masked} (IP Security Restricted)`;
-        }
+        keyInfo.status = 'invalid';
+        keyInfo.email = `${masked} (IP Security Restricted)`;
       } else if (err.response?.status === 401) {
         keyInfo.status = 'invalid';
         keyInfo.email = `${masked} (Unauthorized / Revoked)`;
