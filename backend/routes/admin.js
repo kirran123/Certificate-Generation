@@ -12,6 +12,9 @@ const router = express.Router();
 // Get Brevo API Keys pool status (public diagnostic monitoring)
 router.get('/brevo-status', async (req, res) => {
   try {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     const status = await getBrevoPoolStatus();
     res.json(status);
   } catch (error) {
