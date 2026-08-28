@@ -113,8 +113,11 @@ async function sendEmailWithFailover(emailOptions) {
     to: [{ email: to, name }],
     subject,
     htmlContent,
-    attachment: pdfBase64 ? [{ content: pdfBase64, name: `${certId || 'Certificate'}.pdf` }] : [],
   };
+
+  if (pdfBase64 && typeof pdfBase64 === 'string' && pdfBase64.trim().length > 0) {
+    payload.attachment = [{ content: pdfBase64.trim(), name: `${certId || 'Certificate'}.pdf` }];
+  }
 
   let attempts = 0;
   const maxAttempts = keys.length;
