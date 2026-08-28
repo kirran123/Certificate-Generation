@@ -11,7 +11,6 @@ const DEFAULT_KEYS = [
   ['xkeysib', 'dafeccff1fb789578d0dc4234c69bedee330370aa24ef84ca6898664254662ef', '5VO8ze6EleAglX6t'].join('-'),
   ['xkeysib', 'ab9c93d8371edf8be3915862d36e91333724fbc121991259f8c32c0acb95a377', 'naseUsKtX8F47bX2'].join('-'),
   ['xkeysib', 'dcfe25e3077ec9911167dd73e72f058b855a1b08c503f484a614336f4f9e9485', 'IOGFOa3L6B54fQKn'].join('-'),
-  ['xkeysib', '753a35c97972939a406aba7dfe6647ad4dc36a08ab18fce576e5174ac1c4152b', 'wucGML6AeVYgFYOa'].join('-'),
 ];
 
 function getBrevoKeys() {
@@ -33,13 +32,16 @@ function getBrevoKeys() {
     rawKeys.push(process.env.BREVO_API_KEY.trim());
   }
 
+  // Filter out revoked/unauthorized keys (VtrU) and IP-restricted keys (FYOa) as requested by user
+  const cleanKeys = rawKeys.filter(k => !k.includes('VtrU') && !k.includes('FYOa'));
+
   DEFAULT_KEYS.forEach(defKey => {
-    if (!rawKeys.includes(defKey)) {
-      rawKeys.push(defKey);
+    if (!cleanKeys.includes(defKey)) {
+      cleanKeys.push(defKey);
     }
   });
 
-  return rawKeys;
+  return cleanKeys;
 }
 
 let activeKeyIndex = 0;

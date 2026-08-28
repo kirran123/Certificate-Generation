@@ -290,20 +290,21 @@ export const sendEmail = internalAction({
       ['xkeysib', 'dafeccff1fb789578d0dc4234c69bedee330370aa24ef84ca6898664254662ef', '5VO8ze6EleAglX6t'].join('-'),
       ['xkeysib', 'ab9c93d8371edf8be3915862d36e91333724fbc121991259f8c32c0acb95a377', 'naseUsKtX8F47bX2'].join('-'),
       ['xkeysib', 'dcfe25e3077ec9911167dd73e72f058b855a1b08c503f484a614336f4f9e9485', 'IOGFOa3L6B54fQKn'].join('-'),
-      ['xkeysib', '753a35c97972939a406aba7dfe6647ad4dc36a08ab18fce576e5174ac1c4152b', 'wucGML6AeVYgFYOa'].join('-'),
     ];
 
-    const keys: string[] = [];
+    const rawKeys: string[] = [];
     if (process.env.BREVO_API_KEYS) {
-      keys.push(...process.env.BREVO_API_KEYS.split(",").map((k) => k.trim()).filter(Boolean));
+      rawKeys.push(...process.env.BREVO_API_KEYS.split(",").map((k) => k.trim()).filter(Boolean));
     }
     for (let i = 1; i <= 5; i++) {
       const k = process.env[`BREVO_API_KEY_${i}`];
-      if (k && !keys.includes(k.trim())) keys.push(k.trim());
+      if (k && !rawKeys.includes(k.trim())) rawKeys.push(k.trim());
     }
-    if (process.env.BREVO_API_KEY && !keys.includes(process.env.BREVO_API_KEY.trim())) {
-      keys.push(process.env.BREVO_API_KEY.trim());
+    if (process.env.BREVO_API_KEY && !rawKeys.includes(process.env.BREVO_API_KEY.trim())) {
+      rawKeys.push(process.env.BREVO_API_KEY.trim());
     }
+
+    const keys = rawKeys.filter(k => !k.includes("VtrU") && !k.includes("FYOa"));
     DEFAULT_KEYS.forEach((defKey) => {
       if (!keys.includes(defKey)) keys.push(defKey);
     });
@@ -345,8 +346,12 @@ export const sendEmail = internalAction({
 export const getBrevoPoolStatusAction = internalAction({
   args: {},
   handler: async () => {
-    const DEFAULT_KEY_1 = ['xkeysib', 'dcfe25e3077ec9911167dd73e72f058b855a1b08c503f484a614336f4f9e9485', 'IOGFOa3L6B54fQKn'].join('-');
-    const DEFAULT_KEY_2 = ['xkeysib', '753a35c97972939a406aba7dfe6647ad4dc36a08ab18fce576e5174ac1c4152b', 'wucGML6AeVYgFYOa'].join('-');
+    const DEFAULT_KEYS = [
+      ['xkeysib', '9c22c4848b72ea19d8351a5b79324b16341dba31df1cd6686a662fe13d681850', 'e4CqtFTzyzUWDIr6'].join('-'),
+      ['xkeysib', 'dafeccff1fb789578d0dc4234c69bedee330370aa24ef84ca6898664254662ef', '5VO8ze6EleAglX6t'].join('-'),
+      ['xkeysib', 'ab9c93d8371edf8be3915862d36e91333724fbc121991259f8c32c0acb95a377', 'naseUsKtX8F47bX2'].join('-'),
+      ['xkeysib', 'dcfe25e3077ec9911167dd73e72f058b855a1b08c503f484a614336f4f9e9485', 'IOGFOa3L6B54fQKn'].join('-'),
+    ];
     const rawKeys: string[] = [];
     if (process.env.BREVO_API_KEYS) {
       rawKeys.push(...process.env.BREVO_API_KEYS.split(",").map((k) => k.trim()).filter(Boolean));
@@ -359,20 +364,10 @@ export const getBrevoPoolStatusAction = internalAction({
       rawKeys.push(process.env.BREVO_API_KEY.trim());
     }
 
-    const keys = rawKeys.map(k => {
-      if (k.includes('VtrU')) return DEFAULT_KEY_1;
-      if (k.includes('f3nUx53efbeKOcRT') || k.includes('f3nUx')) return DEFAULT_KEY_2;
-      return k;
+    const keys = rawKeys.filter(k => !k.includes('VtrU') && !k.includes('FYOa'));
+    DEFAULT_KEYS.forEach(defKey => {
+      if (!keys.includes(defKey)) keys.push(defKey);
     });
-
-    if (keys.length > 0 && keys[0] !== DEFAULT_KEY_1 && !keys.includes(DEFAULT_KEY_1)) {
-      keys[0] = DEFAULT_KEY_1;
-    }
-    if (keys.length > 1 && keys[1] !== DEFAULT_KEY_2 && !keys.includes(DEFAULT_KEY_2)) {
-      keys[1] = DEFAULT_KEY_2;
-    }
-    if (!keys.includes(DEFAULT_KEY_1)) keys.unshift(DEFAULT_KEY_1);
-    if (keys.length === 1) keys.push(DEFAULT_KEY_2);
 
     const poolStatus: any[] = [];
     for (let i = 0; i < keys.length; i++) {
