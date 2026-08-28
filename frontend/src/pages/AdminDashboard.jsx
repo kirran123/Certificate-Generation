@@ -743,7 +743,7 @@ export default function AdminDashboard() {
                     const failed = certs.filter(c => c.status === 'Failed').length;
                     const pending = certs.length - sent - failed;
                     const isOpen = expandedBatch === batchId;
-                    const creator = certs[0]?.createdBy?.name || 'Unknown';
+                    const creator = certs[0]?.createdBy?.name || (typeof certs[0]?.createdBy === 'string' ? certs[0]?.createdBy : 'Unknown');
 
                     return (
                       <div key={batchId} className={`glass rounded-2xl border overflow-hidden transition-all ${isOpen ? 'border-indigo-500/40' : 'border-[var(--border-subtle)]'}`}>
@@ -759,7 +759,7 @@ export default function AdminDashboard() {
                                   </span>
                                 )}
                               </p>
-                              <p className="text-xs text-[var(--text-secondary)]">By {certs[0]?.createdBy?.name || 'Super Admin'} · {certs[0]?._creationTime || certs[0]?.createdAt ? new Date(certs[0]?.createdAt || certs[0]?._creationTime).toLocaleDateString() : 'Never'} · {certs.length} certificate{certs.length !== 1 ? 's' : ''}</p>
+                              <p className="text-xs text-[var(--text-secondary)]">By {certs[0]?.createdBy?.name || (typeof certs[0]?.createdBy === 'string' ? certs[0]?.createdBy : 'Admin')} · {certs[0]?._creationTime || certs[0]?.createdAt ? new Date(certs[0]?.createdAt || certs[0]?._creationTime).toLocaleDateString() : 'Never'} · {certs.length} certificate{certs.length !== 1 ? 's' : ''}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-3">

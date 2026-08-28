@@ -97,7 +97,7 @@ router.get('/certificates', async (req, res) => {
   try {
     const certsData = await getOrFetch('admin_certificates', 15000, async () => {
       const certs = await Certificate.find({ isArchived: { $ne: true } });
-      return await Certificate.populate(certs, 'templateId');
+      return await Certificate.populate(certs, 'templateId createdBy');
     });
     res.json(certsData);
   } catch (error) {

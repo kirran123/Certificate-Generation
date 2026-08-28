@@ -25,7 +25,7 @@ router.get('/my-certificates', protect, async (req, res) => {
     }
 
     // Populate template name
-    const populated = await Certificate.populate(merged, 'templateId');
+    const populated = await Certificate.populate(merged, 'templateId createdBy');
     // Sort by createdAt desc
     populated.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 

@@ -198,7 +198,7 @@ router.post('/send-bulk', protect, async (req, res) => {
   const { certificateIds, subject, message, senderName, senderEmail } = req.body;
   try {
     const certs = await Certificate.find({ certificateId: { $in: certificateIds } });
-    const populated = await Certificate.populate(certs, 'templateId');
+    const populated = await Certificate.populate(certs, 'templateId createdBy');
     let sentCount = 0;
 
     for (const cert of populated) {
@@ -324,7 +324,7 @@ router.post('/resend-batch/:batchId', protect, async (req, res) => {
   const { batchId } = req.params;
   try {
     const certs = await Certificate.find({ batchId });
-    const populated = await Certificate.populate(certs, 'templateId');
+    const populated = await Certificate.populate(certs, 'templateId createdBy');
     let sentCount = 0;
     for (const cert of populated) {
       if (!cert.email) continue;
@@ -382,7 +382,7 @@ router.post('/resend-single/:certId', protect, async (req, res) => {
 router.get('/my-generations', protect, async (req, res) => {
   try {
     const certs = await Certificate.find({ createdBy: String(req.user._id), isArchived: false });
-    const populated = await Certificate.populate(certs, 'templateId');
+    const populated = await Certificate.populate(certs, 'templateId createdBy');
     populated.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     res.json(populated);
   } catch (error) {

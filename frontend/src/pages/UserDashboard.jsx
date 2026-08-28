@@ -397,7 +397,7 @@ export default function UserDashboard() {
                                 </span>
                               )}
                             </p>
-                            <p className="text-xs text-[var(--text-secondary)] truncate">By {certs[0]?.createdBy?.name || 'Super Admin'} · {fmt(certs[0]?.createdAt || certs[0]?._creationTime)} · {certs.length} cert{certs.length !== 1 ? 's' : ''}</p>
+                            <p className="text-xs text-[var(--text-secondary)] truncate">By {certs[0]?.createdBy?.name || user?.name || 'User'} · {fmt(certs[0]?.createdAt || certs[0]?._creationTime)} · {certs.length} cert{certs.length !== 1 ? 's' : ''}</p>
                           </div>
                         </div>
                         <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-[var(--border-subtle)]">

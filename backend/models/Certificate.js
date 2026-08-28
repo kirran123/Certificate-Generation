@@ -134,30 +134,94 @@ const Certificate = {
     }
   },
 
-  populate: async (certs, field = 'templateId') => {
+  populate: async (certs, fields = 'templateId createdBy') => {
     if (!certs || certs.length === 0) return [];
     const Template = require('./Template');
-    if (field === 'templateId') {
-      try {
+    const User = require('./User');
+
+    let tmplMap = new Map();
+    let userMap = new Map();
+    const fieldsStr = String(fields);
+
+    try {
+      if (fieldsStr.includes('templateId')) {
         const allTemplates = await Template.find({});
-        const tmplMap = new Map(allTemplates.map(t => [String(t._id), t]));
-        return certs.map((cert) => {
-          if (cert.templateId) {
-            const rawTid = typeof cert.templateId === 'object' ? (cert.templateId._id || cert.templateId.id) : cert.templateId;
-            const tid = String(rawTid || '').trim();
-            if (tid && tid !== '[object Object]') {
-              const tmpl = tmplMap.get(tid);
-              return { ...cert, templateId: tmpl || cert.templateId };
-            }
-          }
-          return cert;
-        });
-      } catch (err) {
-        console.warn('[Certificate.populate] Error:', err.message);
-        return certs;
+        tmplMap = new Map(allTemplates.map(t => [String(t._id), t]));
       }
+      if (fieldsStr.includes('createdBy')) {
+        const allUsers = await User.find({});
+        userMap = new Map(allUsers.map(u => [String(u._id), u]));
+      }
+    } catch (err) {
+      console.warn('[Certificate.populate] Error loading references:', err.message);
     }
-    return certs;
+
+    return certs.map((cert) => {
+      let updatedCert = { ...cert };
+
+      if (fieldsStr.includes('templateId') && updatedCert.templateId) {
+        const rawTid = typeof updatedCert.templateId === 'object' ? (updatedCert.templateId._id || updatedCert.templateId.id) : updatedCert.templateId;
+        const tid = String(rawTid || '').trim();
+        if (tid && tid !== '[object Object]') {
+          const tmpl = tmplMap.get(tid);
+          if (tmpl) updatedCert.templateId = tmpl;
+        }
+      }
+
+      if (fieldsStr.includes('createdBy') && updatedCert.createdBy) {
+        const rawUid = typeof updatedCert.createdBy === 'object' ? (updatedCert.createdBy._id || updatedCert.createdBy.id) : updatedCert.createdBy;
+        const uid = String(rawUid || '').trim();
+        if (uid && uid !== '[object Object]') {
+          const usr = userMap.get(uid);
+          if (usr) {
+            const { passwordHash, ...safeUser } = usr;
+            updatedCert.createdBy = safeUser;
+          }
+        }
+      }
+
+      return updatedCert;
+    });
+  },
+
+  save: async (cert) => {
+    if (!cert) return cert;
+    const certId = cert.certificateId;
+    const id = cert._id;
+    const now = new Date().toISOString();
+
+    const templateId = typeof cert.templateId === 'object' ? String(cert.templateId._id || cert.templateId.id || '') : String(cert.templateId || '');
+    const createdBy = typeof cert.createdBy === 'object' ? String(cert.createdBy._id || cert.createdBy.id || '') : String(cert.createdBy || '');
+
+    const dataToSave = {
+      ...cert,
+      templateId,
+      createdBy,
+      updatedAt: now,
+    };
+
+    try {
+      if (id) {
+        await col().doc(String(id)).set(dataToSave, { merge: true });
+      } else if (certId) {
+        const snap = await col().where('certificateId', '==', certId).limit(1).get();
+        if (!snap.empty) {
+          await snap.docs[0].ref.set(dataToSave, { merge: true });
+        }
+      }
+    } catch (err) {
+      console.warn('[Certificate.save] Firestore error:', err.message);
+    }
+
+    const local = loadLocalCertificates();
+    const idx = local.findIndex(c => (id && c._id === String(id)) || (certId && c.certificateId === certId));
+    if (idx !== -1) {
+      local[idx] = { ...local[idx], ...dataToSave };
+    } else {
+      local.push(dataToSave);
+    }
+    saveLocalCertificates(local);
+    return cert;
   },
 
   updateOne: async (filter, update) => {
