@@ -203,6 +203,10 @@ router.post('/send-bulk', protect, async (req, res) => {
 
     for (const cert of populated) {
       if (!cert.email) continue;
+      if (cert.status === 'Sent') {
+        console.log(`[send-bulk] Certificate ${cert.certificateId} already sent to ${cert.email}. Skipping.`);
+        continue;
+      }
       try {
         const template = cert.templateId;
         if (!template || !template.imageUrl) throw new Error('Template not found');

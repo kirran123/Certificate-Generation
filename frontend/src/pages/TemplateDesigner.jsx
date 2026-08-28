@@ -1082,17 +1082,24 @@ export default function TemplateDesigner() {
                   <p className="text-[var(--text-secondary)] text-sm font-black uppercase tracking-[0.2em] opacity-50">Please wait...</p>
                 </div>
               </div>
-            ) : saving === "auto_success" ? (
-              <div className="p-32 flex flex-col items-center justify-center text-center space-y-8 animate-fade-in-up">
+            ) : (saving === "generating" || saving === "sending") ? (
+              <div className="p-24 flex flex-col items-center justify-center text-center space-y-8 animate-fade-in-up">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-2xl pulse" />
-                  <div className="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center relative z-10 shadow-xl shadow-emerald-500/20">
-                    <Zap className="w-8 h-8 text-white animate-bounce" />
+                  <div className="absolute inset-0 bg-indigo-500/30 rounded-full blur-3xl animate-pulse" />
+                  <div className="w-20 h-20 bg-indigo-600/20 border border-indigo-500/40 rounded-3xl flex items-center justify-center relative z-10 shadow-2xl shadow-indigo-500/20">
+                    <Loader2 className="w-10 h-10 text-indigo-400 animate-spin" />
                   </div>
                 </div>
-                <div>
-                  <h1 className="text-4xl font-black text-emerald-400 tracking-tighter mb-2">Auto-Cert Live!</h1>
-                  <p className="text-[var(--text-secondary)] text-sm font-black uppercase tracking-[0.2em] opacity-50">Launching Operational Dashboard...</p>
+                <div className="space-y-3">
+                  <h1 className="text-3xl font-black text-[var(--text-primary)] tracking-tighter">
+                    {saving === "sending" ? "Generating & Sending Emails..." : "Generating Certificates..."}
+                  </h1>
+                  <p className="text-indigo-400 text-xs font-black uppercase tracking-[0.25em] animate-pulse">
+                    {saving === "sending" ? "Dispatching bulk emails via Brevo engine" : "Building PDF layout & QR credentials"}
+                  </p>
+                  <p className="text-[var(--text-secondary)] text-[11px] font-medium opacity-60 max-w-sm mx-auto pt-2">
+                    Please do not close or refresh this tab. Processing your batch securely...
+                  </p>
                 </div>
               </div>
             ) : saving === "done_all" ? (
