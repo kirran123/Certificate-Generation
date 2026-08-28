@@ -17,10 +17,20 @@ function loadLocalTemplates() {
 }
 
 function saveLocalTemplates(tmpls) {
+  if (!tmpls || !Array.isArray(tmpls) || tmpls.length === 0) return;
   try {
     const dir = path.dirname(backupFilePath);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(backupFilePath, JSON.stringify(tmpls, null, 2));
+    let existing = loadLocalTemplates();
+    if (!Array.isArray(existing)) existing = [];
+    const map = new Map(existing.map(t => [t._id || t.id, t]));
+    for (const t of tmpls) {
+      if (t && (t._id || t.id)) {
+        const key = t._id || t.id;
+        map.set(key, { ...map.get(key), ...t });
+      }
+    }
+    fs.writeFileSync(backupFilePath, JSON.stringify(Array.from(map.values()), null, 2));
   } catch (e) {}
 }
 

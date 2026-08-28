@@ -39,19 +39,16 @@ export default function UserDashboard() {
     const token = sessionStorage.getItem('token');
     const headers = { Authorization: `Bearer ${token}` };
     try {
-      await fetchStats(headers);
-      if (tab === 'received') {
-        const res = await axios.get(`${API_BASE}/api/user/my-certificates`, { headers });
-        setReceivedCerts(res.data || []);
-      } else if (tab === 'managed') {
-        await axios.delete(`${API_BASE}/api/certificate/form-automations/cleanup`, { headers }).catch(() => { });
-        const [genRes, autoRes] = await Promise.all([
-          axios.get(`${API_BASE}/api/certificate/my-generations`, { headers }),
-          axios.get(`${API_BASE}/api/certificate/form-automations`, { headers })
-        ]);
-        setGeneratedCerts(genRes.data || []);
-        setAutomations(autoRes.data || []);
-      }
+      fetchStats(headers);
+      await axios.delete(`${API_BASE}/api/certificate/form-automations/cleanup`, { headers }).catch(() => { });
+      const [recRes, genRes, autoRes] = await Promise.all([
+        axios.get(`${API_BASE}/api/user/my-certificates`, { headers }).catch(() => ({ data: [] })),
+        axios.get(`${API_BASE}/api/certificate/my-generations`, { headers }).catch(() => ({ data: [] })),
+        axios.get(`${API_BASE}/api/certificate/form-automations`, { headers }).catch(() => ({ data: [] }))
+      ]);
+      setReceivedCerts(recRes.data || []);
+      setGeneratedCerts(genRes.data || []);
+      setAutomations(autoRes.data || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -283,13 +280,7 @@ export default function UserDashboard() {
       </div>
 
       {/* ── Content ────────────────────────────────────────────────────────── */}
-      {activeTab === 'managed' && !loading && (
-        <div className="mb-2 flex items-center justify-center gap-3 p-4 bg-red-500/5 border border-red-500/10 rounded-2xl">
-          <span className="text-red-500 text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-3 text-center">
-            <span className="animate-heartbeat inline-block">🚀</span> Load to show Generated certificates and all Certificate Batches <span className="animate-heartbeat inline-block">📜 💓</span>
-          </span>
-        </div>
-      )}
+
 
       {loading ? (
         <div className="space-y-3">

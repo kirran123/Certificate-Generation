@@ -17,10 +17,22 @@ function loadLocalCertificates() {
 }
 
 function saveLocalCertificates(certs) {
+  if (!certs || !Array.isArray(certs) || certs.length === 0) return;
   try {
     const dir = path.dirname(backupFilePath);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(backupFilePath, JSON.stringify(certs, null, 2));
+    let existing = loadLocalCertificates();
+    if (!Array.isArray(existing)) existing = [];
+
+    const map = new Map(existing.map(c => [c._id || c.certificateId, c]));
+    for (const c of certs) {
+      if (c && (c._id || c.certificateId)) {
+        const key = c._id || c.certificateId;
+        map.set(key, { ...map.get(key), ...c });
+      }
+    }
+    const merged = Array.from(map.values());
+    fs.writeFileSync(backupFilePath, JSON.stringify(merged, null, 2));
   } catch (e) {}
 }
 
