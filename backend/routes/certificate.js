@@ -194,39 +194,66 @@ router.post('/generate', protect, async (req, res) => {
 });
 
 // ── Send Bulk Emails ─────────────────────────────────────────────────────────
+// In-memory lock: prevents duplicate concurrent send-bulk calls for the same cert set
+const sendBulkLocks = new Set();
+
 router.post('/send-bulk', protect, async (req, res) => {
   const { certificateIds, subject, message, senderName, senderEmail } = req.body;
-  try {
-    const certs = await Certificate.find({ certificateId: { $in: certificateIds } });
-    const populated = await Certificate.populate(certs, 'templateId createdBy');
-    let sentCount = 0;
-
-    for (const cert of populated) {
-      if (!cert.email) continue;
-      if (cert.status === 'Sent') {
-        console.log(`[send-bulk] Certificate ${cert.certificateId} already sent to ${cert.email}. Skipping.`);
-        continue;
-      }
-      try {
-        const template = cert.templateId;
-        if (!template || !template.imageUrl) throw new Error('Template not found');
-        const itemData = { name: cert.name, email: cert.email, course: cert.course, certificateId: cert.certificateId, ...(cert.metadata || {}) };
-        const pdfBytes = await createCertificatePDF(template, itemData, cert.certificateId);
-        const base64Pdf = Buffer.from(pdfBytes).toString('base64');
-        const htmlContent = `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;border:1px solid #eee;border-radius:10px;"><h2 style="color:#4f46e5;">Your Certificate is Ready!</h2><p>Hi ${cert.name},</p><p>${message || 'Congratulations! Your certificate is attached.'}</p><div style="margin:20px 0;padding:15px;background:#f9fafb;border-radius:8px;"><p style="margin:0;font-size:12px;color:#6b7280;">Certificate ID:</p><p style="margin:0;font-weight:bold;font-family:monospace;">${cert.certificateId}</p></div><p style="font-size:14px;color:#374151;">Best Regards,<br/><strong>${senderName || 'DigiCertify'} Team</strong></p></div>`;
-        await sendEmailWithFailover({ to: cert.email, name: cert.name, subject: subject || 'Your Certificate of Achievement', htmlContent, pdfBase64: base64Pdf, certId: cert.certificateId, senderName: senderName || 'DigiCertify', senderEmail: senderEmail || 'digicertify00@gmail.com' });
-        await Certificate.save({ ...cert, status: 'Sent' });
-        await EmailLog.create({ certificateId: cert.certificateId, recipient: cert.email, status: 'Sent' });
-        sentCount++;
-      } catch (err) {
-        await Certificate.save({ ...cert, status: 'Failed' });
-        await EmailLog.create({ certificateId: cert.certificateId, recipient: cert.email, status: 'Failed', error: err.message });
-      }
-    }
-    res.json({ message: `Successfully sent ${sentCount} emails.` });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  if (!Array.isArray(certificateIds) || certificateIds.length === 0) {
+    return res.status(400).json({ message: 'No certificate IDs provided.' });
   }
+
+  // Create a stable lock key from sorted cert IDs
+  const lockKey = String(req.user._id) + '_' + [...certificateIds].sort().join(',');
+  if (sendBulkLocks.has(lockKey)) {
+    console.warn(`[send-bulk] Duplicate request blocked for user ${req.user._id}`);
+    return res.status(409).json({ message: 'Email dispatch already in progress for this batch. Please wait.' });
+  }
+
+  sendBulkLocks.add(lockKey);
+
+  // Respond immediately so the frontend is not left loading indefinitely.
+  // Processing continues in the background.
+  res.json({ message: 'Email dispatch started. Certificates will be sent shortly.', queued: certificateIds.length });
+
+  // Background processing (fire-and-forget)
+  (async () => {
+    try {
+      const certs = await Certificate.find({ certificateId: { $in: certificateIds } });
+      const populated = await Certificate.populate(certs, 'templateId createdBy');
+      let sentCount = 0;
+
+      for (const cert of populated) {
+        if (!cert.email) continue;
+        if (cert.status === 'Sent') {
+          console.log(`[send-bulk] Certificate ${cert.certificateId} already sent to ${cert.email}. Skipping.`);
+          continue;
+        }
+        try {
+          const template = cert.templateId;
+          if (!template || !template.imageUrl) throw new Error('Template not found');
+          const itemData = { name: cert.name, email: cert.email, course: cert.course, certificateId: cert.certificateId, ...(cert.metadata || {}) };
+          const pdfBytes = await createCertificatePDF(template, itemData, cert.certificateId);
+          const base64Pdf = Buffer.from(pdfBytes).toString('base64');
+          const htmlContent = `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;border:1px solid #eee;border-radius:10px;"><h2 style="color:#4f46e5;">Your Certificate is Ready!</h2><p>Hi ${cert.name},</p><p>${message || 'Congratulations! Your certificate is attached.'}</p><div style="margin:20px 0;padding:15px;background:#f9fafb;border-radius:8px;"><p style="margin:0;font-size:12px;color:#6b7280;">Certificate ID:</p><p style="margin:0;font-weight:bold;font-family:monospace;">${cert.certificateId}</p></div><p style="font-size:14px;color:#374151;">Best Regards,<br/><strong>${senderName || 'DigiCertify'} Team</strong></p></div>`;
+          await sendEmailWithFailover({ to: cert.email, name: cert.name, subject: subject || 'Your Certificate of Achievement', htmlContent, pdfBase64: base64Pdf, certId: cert.certificateId, senderName: senderName || 'DigiCertify', senderEmail: senderEmail || 'digicertify00@gmail.com' });
+          await Certificate.save({ ...cert, status: 'Sent' });
+          await EmailLog.create({ certificateId: cert.certificateId, recipient: cert.email, status: 'Sent' });
+          sentCount++;
+          console.log(`[send-bulk] ✅ Sent to ${cert.email} (${sentCount}/${certificateIds.length})`);
+        } catch (err) {
+          await Certificate.save({ ...cert, status: 'Failed' });
+          await EmailLog.create({ certificateId: cert.certificateId, recipient: cert.email, status: 'Failed', error: err.message });
+          console.error(`[send-bulk] ❌ Failed for ${cert.email}:`, err.message);
+        }
+      }
+      console.log(`[send-bulk] Batch complete: ${sentCount}/${certificateIds.length} emails sent.`);
+    } catch (error) {
+      console.error('[send-bulk] Background error:', error.message);
+    } finally {
+      sendBulkLocks.delete(lockKey);
+    }
+  })();
 });
 
 // ── Download single certificate (on-demand PDF) ──────────────────────────────
@@ -427,8 +454,23 @@ router.post('/form-automation', protect, async (req, res) => {
   const gid = gidMatch ? gidMatch[1] : '0';
   const finalBatchId = batchId || `Form Auto – ${new Date().toLocaleDateString('en-GB')}`;
   try {
+    // ── Duplicate guard: prevent multiple active automations for same sheet+template+user ──
+    const existingAutomations = await FormAutomation.findAndPopulate({
+      userId: String(req.user._id),
+      sheetId,
+      templateId: String(templateId),
+      active: true,
+    });
+    if (existingAutomations && existingAutomations.length > 0) {
+      const existing = existingAutomations[0];
+      console.warn(`[form-automation] Duplicate creation blocked — existing automation ${existing._id} already active for sheet ${sheetId} + template ${templateId}`);
+      return res.status(409).json({
+        message: 'An active automation already exists for this sheet and template. Please pause or delete the existing one first.',
+        existingId: existing._id,
+      });
+    }
     const automation = await FormAutomation.create({ userId: String(req.user._id), templateId: String(templateId), sheetUrl, sheetId, gid, nameColumn, emailColumn, batchId: finalBatchId, emailSubject: emailSubject || 'Your Certificate of Achievement', emailMessage: emailMessage || 'Congratulations! Your certificate is attached.' });
-    res.status(201).json({ message: 'Automation created. Poller will check every 10 seconds.', automation });
+    res.status(201).json({ message: 'Automation created. Poller will check every 60 seconds.', automation });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

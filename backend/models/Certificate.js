@@ -158,6 +158,15 @@ const Certificate = {
     if (filter.createdBy) certs = certs.filter(c => String(c.createdBy?._id || c.createdBy || '') === String(filter.createdBy));
     if (filter.batchId) certs = certs.filter(c => c.batchId === filter.batchId);
     if (filter.status) certs = certs.filter(c => c.status === filter.status);
+    if (filter.templateId) {
+      const tmplId = String(filter.templateId._id || filter.templateId);
+      certs = certs.filter(c => String(c.templateId?._id || c.templateId || '') === tmplId);
+    }
+    // Support $in operator for certificateId array lookups (used by send-bulk)
+    if (filter.certificateId && filter.certificateId.$in) {
+      const idSet = new Set(filter.certificateId.$in);
+      certs = certs.filter(c => idSet.has(c.certificateId));
+    }
 
     if (filter.isArchived !== undefined) {
       if (filter.isArchived && filter.isArchived.$ne !== undefined) {

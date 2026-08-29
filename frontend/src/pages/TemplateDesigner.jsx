@@ -347,7 +347,14 @@ export default function TemplateDesigner() {
       setAutoSuccess(true);
       setSaving("auto_success");
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to activate automation.');
+      // Handle 409 Conflict (duplicate automation) gracefully
+      if (err.response?.status === 409) {
+        alert('⚠️ Auto-Cert already active!\n\nAn automation already exists for this sheet and template.\nGo to your dashboard to manage existing automations.\n\nThe existing automation will continue sending certificates for new entries automatically.');
+        setAutoSuccess(true); // Treat as success since an automation is already running
+        setSaving("auto_success");
+      } else {
+        alert(err.response?.data?.message || 'Failed to activate automation.');
+      }
     } finally { setAutoActivating(false); }
   };
 
@@ -468,7 +475,8 @@ export default function TemplateDesigner() {
 
       if (sendEmail && generatedIds.length > 0) {
         setSaving("sending");
-        // send-bulk uses 5-key Brevo pool with silent zero-error failover
+        // send-bulk responds immediately (202/200) and processes emails in the background.
+        // We do NOT await the completion — just fire and move to success state.
         await axios.post(
           `${IO_API_BASE}/api/certificate/send-bulk`,
           {
@@ -478,15 +486,24 @@ export default function TemplateDesigner() {
             senderName: emailConfig.senderName,
             senderEmail: emailConfig.senderEmail,
           },
-          { headers: { Authorization: `Bearer ${token}` } },
+          { headers: { Authorization: `Bearer ${token}` }, timeout: 30000 },
         );
+      } else if (sendEmail && generatedIds.length === 0 && skippedCount > 0) {
+        // All were duplicates — already sent previously, no new certs to email
+        console.log('[Generate] All certificates were already generated (duplicates skipped). No emails sent.');
       }
 
       setSaving("done_all");
     } catch (e) {
       console.error(e);
-      alert("Operation failed: " + (e.response?.data?.message || "Server Error"));
-      setSaving("done");
+      // If the error is a 409 (duplicate batch lock), show a friendly message
+      if (e.response?.status === 409) {
+        alert('Email dispatch is already in progress for this batch. Please wait for it to complete before re-sending.');
+        setSaving("done_all");
+      } else {
+        alert("Operation failed: " + (e.response?.data?.message || "Server Error"));
+        setSaving("done");
+      }
     } finally {
       isSendingRef.current = false;
     }
@@ -1116,7 +1133,7 @@ export default function TemplateDesigner() {
               <div className="animate-fade-in-up">
                 <div className="p-10 border-b border-white/5 flex justify-between items-center bg-white/5">
                   <div>
-                    <h1 className="text-3xl font-black text-[var(--text-primary)] tracking-tighter mb-1">Process Finalized</h1>
+                    <h1 className="text-3xl font-black text-[var(--text-primary)] tracking-tighter mb-1">Certificates Generated!</h1>
                     <p className="text-xs text-[var(--text-secondary)] opacity-50 font-black uppercase tracking-[0.2em]">Deployment Success • <span className="text-emerald-400">Authenticated</span></p>
                   </div>
                   <div className="p-4 bg-emerald-500/10 rounded-2xl text-emerald-500 border border-emerald-500/20">

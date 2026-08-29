@@ -81,6 +81,8 @@ const pollOnce = async () => {
   if (isPollerExecuting) return;
   isPollerExecuting = true;
 
+  // processedInRun persists across automations in the same poll cycle
+  // to prevent double-processing when two automations share the same sheet
   const processedInRun = new Set();
 
   let automations;
@@ -93,6 +95,7 @@ const pollOnce = async () => {
     return;
   }
 
+  try {
   for (const auto of automations) {
     try {
       const urlsToTry = [
@@ -124,7 +127,8 @@ const pollOnce = async () => {
       const currentPollBatchId = `${auto.batchId} [Run ${runTime}]`;
 
       const templateIdStr = String(template._id || template.id || '');
-      const existingDbCerts = await Certificate.find({});
+      // Fetch a fresh snapshot of certs for THIS automation to catch certs created during this run
+      const existingDbCerts = await Certificate.find({ templateId: templateIdStr });
 
       for (const row of rows) {
         const name = String(row[auto.nameColumn] || '').trim();
@@ -238,7 +242,11 @@ const pollOnce = async () => {
     }
   }
 
-  isPollerExecuting = false;
+  } catch (outerErr) {
+    console.error('[Poll] Unexpected outer error:', outerErr.message);
+  } finally {
+    isPollerExecuting = false;
+  }
 };
 
 // ── Exported starter ─────────────────────────────────────────────────────────

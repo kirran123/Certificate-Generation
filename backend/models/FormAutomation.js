@@ -79,6 +79,8 @@ const FormAutomation = {
     let result = autos;
     if (filter.active !== undefined) result = result.filter(a => a.active === filter.active);
     if (filter.userId) result = result.filter(a => String(a.userId) === String(filter.userId));
+    if (filter.sheetId) result = result.filter(a => String(a.sheetId || '') === String(filter.sheetId));
+    if (filter.templateId) result = result.filter(a => String(a.templateId?._id || a.templateId || '') === String(filter.templateId));
     return result;
   },
 
