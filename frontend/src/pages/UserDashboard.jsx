@@ -40,7 +40,6 @@ export default function UserDashboard() {
     const headers = { Authorization: `Bearer ${token}` };
     try {
       fetchStats(headers);
-      await axios.delete(`${API_BASE}/api/certificate/form-automations/cleanup`, { headers }).catch(() => { });
       const [recRes, genRes, autoRes] = await Promise.all([
         axios.get(`${API_BASE}/api/user/my-certificates`, { headers }).catch(() => ({ data: [] })),
         axios.get(`${API_BASE}/api/certificate/my-generations`, { headers }).catch(() => ({ data: [] })),
@@ -139,12 +138,12 @@ export default function UserDashboard() {
 
   useEffect(() => {
     loadTab(activeTab, true);
-    // Smart polling: poll every 30s only when tab is visible (pauses in background to prevent Convex limit hits)
+    // Smart polling: poll every 60s only when tab is visible
     const interval = setInterval(() => {
       if (document.visibilityState === 'visible') {
         loadTab(activeTab, false);
       }
-    }, 30000);
+    }, 60000);
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {

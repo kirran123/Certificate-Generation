@@ -36,31 +36,20 @@ function saveLocalCertificates(certs) {
   } catch (e) {}
 }
 
+const { markEmailSent } = require('../utils/sentLock');
+
 let certsMemoryCache = null;
-let certsCacheTimestamp = 0;
-const CERTS_CACHE_TTL = 30000; // 30 seconds
 
 function invalidateCertificateCache() {
   certsMemoryCache = null;
-  certsCacheTimestamp = 0;
 }
 
 async function getAllCertificatesCached() {
-  const now = Date.now();
-  if (certsMemoryCache && (now - certsCacheTimestamp < CERTS_CACHE_TTL)) {
+  if (certsMemoryCache && certsMemoryCache.length > 0) {
     return certsMemoryCache;
   }
-  try {
-    const snap = await col().get();
-    certsMemoryCache = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
-    certsCacheTimestamp = Date.now();
-    saveLocalCertificates(certsMemoryCache);
-    return certsMemoryCache;
-  } catch (err) {
-    certsMemoryCache = loadLocalCertificates();
-    certsCacheTimestamp = Date.now();
-    return certsMemoryCache;
-  }
+  certsMemoryCache = loadLocalCertificates();
+  return certsMemoryCache;
 }
 
 const col = () => getDb().collection('certificates');
@@ -81,22 +70,71 @@ const Certificate = {
     try {
       await col().doc(id).set(doc);
     } catch (err) {
-      console.warn('[Certificate.create] Firestore error:', err.message);
+      console.warn('[Certificate.create] Firestore write notice:', err.message);
     }
 
-    const local = loadLocalCertificates();
     const newCert = { _id: id, ...doc };
+    const local = loadLocalCertificates();
     local.push(newCert);
-    saveLocalCertificates(local);
-    invalidateCertificateCache();
+    saveLocalCertificates([newCert]);
+
+    if (!certsMemoryCache) certsMemoryCache = local;
+    else certsMemoryCache.push(newCert);
+
+    // Sync to anti-duplicate sentLock
+    if (newCert.certificateId) markEmailSent(newCert.certificateId);
+    if (newCert.uniqueHash) markEmailSent(newCert.uniqueHash);
+    if (newCert.email && newCert.templateId) {
+      const emailNorm = String(newCert.email).trim().toLowerCase();
+      const tmplId = String(newCert.templateId._id || newCert.templateId).trim().toLowerCase();
+      const baseBatch = String(newCert.batchId || '').replace(/\s*\[Run \d{2}:\d{2}\]/, '').trim().toLowerCase();
+      markEmailSent([`${tmplId}_${emailNorm}_${baseBatch}`, `${tmplId}_${emailNorm}`]);
+    }
+
     return newCert;
   },
 
   findOne: async (filter) => {
     const all = await getAllCertificatesCached();
-    if (filter.certificateId) return all.find(c => c.certificateId === filter.certificateId) || null;
-    if (filter.uniqueHash) return all.find(c => c.uniqueHash === filter.uniqueHash) || null;
-    if (filter.templateId) return all.find(c => String(c.templateId) === String(filter.templateId)) || null;
+    if (filter.certificateId) {
+      const match = all.find(c => c.certificateId === filter.certificateId);
+      if (match) return match;
+      try {
+        const snap = await col().where('certificateId', '==', filter.certificateId).limit(1).get();
+        if (!snap.empty) {
+          const doc = { _id: snap.docs[0].id, ...snap.docs[0].data() };
+          if (certsMemoryCache) certsMemoryCache.push(doc);
+          saveLocalCertificates([doc]);
+          return doc;
+        }
+      } catch (e) {}
+      return null;
+    }
+    if (filter.uniqueHash) {
+      const match = all.find(c => c.uniqueHash === filter.uniqueHash);
+      if (match) return match;
+      try {
+        const snap = await col().where('uniqueHash', '==', filter.uniqueHash).limit(1).get();
+        if (!snap.empty) {
+          const doc = { _id: snap.docs[0].id, ...snap.docs[0].data() };
+          if (certsMemoryCache) certsMemoryCache.push(doc);
+          saveLocalCertificates([doc]);
+          return doc;
+        }
+      } catch (e) {}
+      return null;
+    }
+    if (filter.templateId && filter.email) {
+      const normEmail = String(filter.email).trim().toLowerCase();
+      const tmplId = String(filter.templateId._id || filter.templateId);
+      const match = all.find(c => String(c.templateId._id || c.templateId) === tmplId && String(c.email || '').trim().toLowerCase() === normEmail);
+      if (match) return match;
+      return null;
+    }
+    if (filter.templateId) {
+      const tmplId = String(filter.templateId._id || filter.templateId);
+      return all.find(c => String(c.templateId._id || c.templateId) === tmplId) || null;
+    }
     return null;
   },
 
@@ -219,7 +257,18 @@ const Certificate = {
       local.push(dataToSave);
     }
     saveLocalCertificates(local);
-    invalidateCertificateCache();
+
+    if (certsMemoryCache && Array.isArray(certsMemoryCache)) {
+      const cacheIdx = certsMemoryCache.findIndex(c => (id && c._id === String(id)) || (certId && c.certificateId === certId));
+      if (cacheIdx !== -1) {
+        certsMemoryCache[cacheIdx] = { ...certsMemoryCache[cacheIdx], ...dataToSave };
+      } else {
+        certsMemoryCache.push(dataToSave);
+      }
+    } else {
+      certsMemoryCache = local;
+      certsCacheTimestamp = Date.now();
+    }
     return cert;
   },
 

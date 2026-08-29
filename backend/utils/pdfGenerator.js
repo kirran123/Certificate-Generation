@@ -20,7 +20,11 @@ const getRelativePath = (url) => {
  * Generates a unique Hash for deduping certificates
  */
 const calculateUniqueHash = (templateId, name, email, batchId) => {
-  const hashStr = `${templateId}_${name}_${email}_${batchId}`;
+  const normTemplate = String(templateId || '').trim();
+  const normName = String(name || '').trim().replace(/\s+/g, ' ').toLowerCase();
+  const normEmail = String(email || '').replace(/\s+/g, '').replace(/^[<"'\s]+|[>'"\s]+$/g, '').toLowerCase();
+  const normBatch = String(batchId || '').trim().toLowerCase();
+  const hashStr = `${normTemplate}_${normName}_${normEmail}_${normBatch}`;
   return crypto.createHash('md5').update(hashStr).digest('hex');
 };
 

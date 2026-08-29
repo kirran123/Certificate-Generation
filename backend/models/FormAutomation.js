@@ -26,6 +26,9 @@ function saveLocalAutomations(autos) {
 
 const col = () => getDb().collection('formAutomations');
 
+let autosMemoryCache = null;
+let autosCacheTimestamp = 0;
+
 const FormAutomation = {
   create: async (data) => {
     const now = new Date().toISOString();
@@ -49,24 +52,34 @@ const FormAutomation = {
     const newAuto = { _id: id, ...doc };
     local.push(newAuto);
     saveLocalAutomations(local);
+    autosMemoryCache = local;
+    autosCacheTimestamp = Date.now();
     return newAuto;
   },
 
   find: async (filter = {}) => {
-    try {
-      let query = col();
-      if (filter.active !== undefined) query = query.where('active', '==', filter.active);
-      if (filter.userId) query = query.where('userId', '==', String(filter.userId));
-      const snap = await query.get();
-      const autos = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
-      saveLocalAutomations(autos);
-      return autos;
-    } catch (err) {
-      let local = loadLocalAutomations();
-      if (filter.active !== undefined) local = local.filter(a => a.active === filter.active);
-      if (filter.userId) local = local.filter(a => String(a.userId) === String(filter.userId));
-      return local;
+    const now = Date.now();
+    let autos = [];
+    if (autosMemoryCache && (now - autosCacheTimestamp < 60000)) {
+      autos = autosMemoryCache;
+    } else {
+      try {
+        const snap = await col().get();
+        autos = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+        saveLocalAutomations(autos);
+        autosMemoryCache = autos;
+        autosCacheTimestamp = Date.now();
+      } catch (err) {
+        autos = loadLocalAutomations();
+        autosMemoryCache = autos;
+        autosCacheTimestamp = Date.now();
+      }
     }
+
+    let result = autos;
+    if (filter.active !== undefined) result = result.filter(a => a.active === filter.active);
+    if (filter.userId) result = result.filter(a => String(a.userId) === String(filter.userId));
+    return result;
   },
 
   findAndPopulate: async (filter = {}) => {

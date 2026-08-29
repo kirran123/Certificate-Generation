@@ -1325,34 +1325,6 @@
     "updatedAt": "2026-05-10T08:40:51.102Z"
   },
   {
-    "_id": "6t4OpVIGj2RqjlM0zgyT",
-    "certificateId": "CERT949866",
-    "name": "Nishiak R S",
-    "email": "\"953624205034@ritrjpm.ac.in\"",
-    "course": "Achievement",
-    "templateId": "KUuhNPRczXQueuGZUKV3",
-    "status": "Failed",
-    "createdBy": "3XwGET5FGO4yzn6HucHg",
-    "batchId": "3rd YEar test",
-    "isAutomation": false,
-    "isArchived": false,
-    "uniqueHash": "1f8104a0d95166c9769385fe901ae64c",
-    "metadata": {
-      "Timestamp": "9/5/26",
-      "Name of the Student": "Nishiak R S",
-      "  Department / Year  ": "IT /2nd",
-      "Email Address:": "\"953624205034@ritrjpm.ac.in\"",
-      "  Batch No:  ": "16",
-      "  How would you rate the presentation overall?  ": "5",
-      "  How was the event organization and coordination?  ": "Excellent",
-      "  How do you rate the timely communication in all aspects of the event?  ": "5",
-      "How do you rate the overall arrangement and conduct of the event?  ": "5",
-      " How do you rate the usefulness of the event in improving the skills?  ": "5"
-    },
-    "createdAt": "2026-08-23T05:14:56.826Z",
-    "updatedAt": "2026-08-23T05:16:14.907Z"
-  },
-  {
     "_id": "6tlMcWZzY8bwdZFLn3kk",
     "certificateId": "CERT513073",
     "name": "ARUMUGAPERUMAL G ",
@@ -3322,34 +3294,6 @@
     "updatedAt": "2026-04-14T09:59:06.311Z"
   },
   {
-    "_id": "HO1wUFQDxDMduob7BwfO",
-    "certificateId": "CERT689372",
-    "name": "Karthick S ",
-    "email": "953624205018@ritrjpm.ac.in",
-    "course": "Achievement",
-    "templateId": "CAvVrXU28yg2TurVbTtk",
-    "status": "Sent",
-    "createdBy": "3XwGET5FGO4yzn6HucHg",
-    "batchId": "3rd test",
-    "isAutomation": false,
-    "isArchived": false,
-    "uniqueHash": "a7560b4fa3e2d6b6bb67a6e25b3eb1fd",
-    "metadata": {
-      "Timestamp": "9/5/26",
-      "Name of the Student": "Karthick S ",
-      "  Department / Year  ": "B_tech Information technology/4 year",
-      "Email Address:": "953624205018@ritrjpm.ac.in",
-      "  Batch No:  ": "2",
-      "  How would you rate the presentation overall?  ": "5",
-      "  How was the event organization and coordination?  ": "Excellent",
-      "  How do you rate the timely communication in all aspects of the event?  ": "5",
-      "How do you rate the overall arrangement and conduct of the event?  ": "5",
-      " How do you rate the usefulness of the event in improving the skills?  ": "5"
-    },
-    "createdAt": "2026-08-23T05:25:42.858Z",
-    "updatedAt": "2026-08-23T05:27:06.059Z"
-  },
-  {
     "_id": "HX8gG42Om2VEVKhF73qw",
     "certificateId": "CERT294412",
     "name": "Arudayar Arun D ",
@@ -4200,34 +4144,6 @@
     "updatedAt": "2026-04-18T08:47:10.081Z"
   },
   {
-    "_id": "MWHOr3qqKcRKOgjq6frs",
-    "certificateId": "CERT648452",
-    "name": "Adshayaa V",
-    "email": "953624205002@ritrjpm.ac.in",
-    "course": "Achievement",
-    "templateId": "kDjkJQA3EhEOFv1eDvIh",
-    "status": "Sent",
-    "createdBy": "o0VJ1KRqzShlkiSqV6pr",
-    "batchId": "3rd YEar test",
-    "isAutomation": false,
-    "isArchived": false,
-    "uniqueHash": "579af13fff32ff1d9b210ebb53d1f590",
-    "metadata": {
-      "Timestamp": "9/5/26",
-      "Name of the Student": "Adshayaa V",
-      "  Department / Year  ": "Information Technology/2nd year",
-      "Email Address:": "953624205002@ritrjpm.ac.in",
-      "  Batch No:  ": "13",
-      "  How would you rate the presentation overall?  ": "5",
-      "  How was the event organization and coordination?  ": "Excellent",
-      "  How do you rate the timely communication in all aspects of the event?  ": "5",
-      "How do you rate the overall arrangement and conduct of the event?  ": "5",
-      " How do you rate the usefulness of the event in improving the skills?  ": "5"
-    },
-    "createdAt": "2026-08-23T05:14:28.326Z",
-    "updatedAt": "2026-08-23T05:15:50.784Z"
-  },
-  {
     "_id": "Mp7dAOn4fcmNB3xXDOo6",
     "certificateId": "CERT771349",
     "name": "Adshayaa V",
@@ -4905,34 +4821,6 @@
     "updatedAt": "2026-08-23T05:15:52.423Z"
   },
   {
-    "_id": "QFLoT1bChnZXAV4jaCzy",
-    "certificateId": "CERT511466",
-    "name": "Sudhakar R",
-    "email": "953624205051@ritrjpm. ac. in",
-    "course": "Certificate of Participation",
-    "templateId": "Xci4ZTMso0dyaTeXqor2",
-    "status": "Failed",
-    "createdBy": "hb3CQj0FK6vlMDtJ3Ix0",
-    "batchId": "mini project · 10 May 2026 13:28:33 [Run 13:04]",
-    "isAutomation": true,
-    "isArchived": false,
-    "uniqueHash": "7f7ec6ab4f0da3000ed035a66c468ec7",
-    "metadata": {
-      "Timestamp": "46152.64165509259",
-      "Name(eg: Anto Fieo R)": "Sudhakar R ",
-      "Reg no:": "953624205051",
-      "Project Title:": "AI-BASED EPIDEMIC PREDICTION SYSTEM ",
-      "   How would you rate the overall event?  ": "Excellent",
-      "  Event Organization & Coordination  ": "Excellent",
-      "Was the event useful for improving your technical knowledge and presentation skills  ": "Yes",
-      "Suggestions for improvement  ": "Nothing ",
-      "  Would you like to participate in similar technical events in the future  ": "Yes",
-      "Email:": "953624205051@ritrjpm. ac. in"
-    },
-    "createdAt": "2026-05-10T13:05:05.251Z",
-    "updatedAt": "2026-05-10T13:05:06.769Z"
-  },
-  {
     "_id": "QGPW5WHDJH3kn3vR2sBR",
     "certificateId": "CERT178456",
     "name": "Raagul G ",
@@ -4987,34 +4875,6 @@
     },
     "createdAt": "2026-08-23T05:25:41.961Z",
     "updatedAt": "2026-08-23T05:26:38.381Z"
-  },
-  {
-    "_id": "QL27lQl38Nix1qTofsoH",
-    "certificateId": "CERT516005",
-    "name": "Karthick S",
-    "email": "953624205018@ritrjpm.ac.in",
-    "course": "Achievement",
-    "templateId": "KUuhNPRczXQueuGZUKV3",
-    "status": "Sent",
-    "createdBy": "3XwGET5FGO4yzn6HucHg",
-    "batchId": "3rd YEar test",
-    "isAutomation": false,
-    "isArchived": false,
-    "uniqueHash": "1ed204fcc6e345ca1d567ef731748118",
-    "metadata": {
-      "Timestamp": "9/5/26",
-      "Name of the Student": "Karthick S",
-      "  Department / Year  ": "B_tech Information technology/4 year",
-      "Email Address:": "953624205018@ritrjpm.ac.in",
-      "  Batch No:  ": "2",
-      "  How would you rate the presentation overall?  ": "5",
-      "  How was the event organization and coordination?  ": "Excellent",
-      "  How do you rate the timely communication in all aspects of the event?  ": "5",
-      "How do you rate the overall arrangement and conduct of the event?  ": "5",
-      " How do you rate the usefulness of the event in improving the skills?  ": "5"
-    },
-    "createdAt": "2026-08-23T05:14:29.227Z",
-    "updatedAt": "2026-08-23T05:15:41.235Z"
   },
   {
     "_id": "QVzdUkUH9wk2QjlqU4qU",
@@ -5251,34 +5111,6 @@
     },
     "createdAt": "2026-05-10T12:26:37.111Z",
     "updatedAt": "2026-05-10T12:26:37.809Z"
-  },
-  {
-    "_id": "U1JHBCBUGUYgWuPUPuf8",
-    "certificateId": "CERT821239",
-    "name": "Nishiak R S",
-    "email": "\"953624205034@ritrjpm.ac.in\"",
-    "course": "Achievement",
-    "templateId": "CAvVrXU28yg2TurVbTtk",
-    "status": "Sent",
-    "createdBy": "3XwGET5FGO4yzn6HucHg",
-    "batchId": "3rd test",
-    "isAutomation": false,
-    "isArchived": false,
-    "uniqueHash": "1ac1742c5d8fb2ceec0c3df45f201556",
-    "metadata": {
-      "Timestamp": "9/5/26",
-      "Name of the Student": "Nishiak R S",
-      "  Department / Year  ": "IT /2nd",
-      "Email Address:": "\"953624205034@ritrjpm.ac.in\"",
-      "  Batch No:  ": "16",
-      "  How would you rate the presentation overall?  ": "5",
-      "  How was the event organization and coordination?  ": "Excellent",
-      "  How do you rate the timely communication in all aspects of the event?  ": "5",
-      "How do you rate the overall arrangement and conduct of the event?  ": "5",
-      " How do you rate the usefulness of the event in improving the skills?  ": "5"
-    },
-    "createdAt": "2026-08-23T05:26:06.458Z",
-    "updatedAt": "2026-08-23T05:27:12.114Z"
   },
   {
     "_id": "U6EMSarX8enAiVltDULQ",
@@ -5790,34 +5622,6 @@
     },
     "createdAt": "2026-08-23T05:14:39.636Z",
     "updatedAt": "2026-08-23T05:16:09.604Z"
-  },
-  {
-    "_id": "YmtwWHWop4JeTLrFKxjg",
-    "certificateId": "CERT982498",
-    "name": "Shri vethisha S",
-    "email": "953624205048@ritrjpm.ac.in",
-    "course": "Achievement",
-    "templateId": "ybJd2TI5MY9YbrRqSadt",
-    "status": "Sent",
-    "createdBy": "o0VJ1KRqzShlkiSqV6pr",
-    "batchId": "3rd test",
-    "isAutomation": false,
-    "isArchived": false,
-    "uniqueHash": "3b6297b03796d3bbe75984baac03099d",
-    "metadata": {
-      "Timestamp": "9/5/26",
-      "Name of the Student": "Shri vethisha S",
-      "  Department / Year  ": "B tech IT",
-      "Email Address:": "953624205048@ritrjpm.ac.in",
-      "  Batch No:  ": "13",
-      "  How would you rate the presentation overall?  ": "5",
-      "  How was the event organization and coordination?  ": "Excellent",
-      "  How do you rate the timely communication in all aspects of the event?  ": "5",
-      "How do you rate the overall arrangement and conduct of the event?  ": "5",
-      " How do you rate the usefulness of the event in improving the skills?  ": "5"
-    },
-    "createdAt": "2026-08-23T05:25:19.157Z",
-    "updatedAt": "2026-08-23T05:27:20.438Z"
   },
   {
     "_id": "YqGQSfztyWEfsO4y0z3Q",
@@ -9060,5 +8864,34 @@
     "metadata": {},
     "createdAt": "2026-04-14T10:47:09.422Z",
     "updatedAt": "2026-04-14T10:47:10.022Z"
+  },
+  {
+    "_id": "cert_1787928952747_emjk7",
+    "certificateId": "TEST_CERT_1787928952747",
+    "name": "Test User",
+    "email": "test@example.com",
+    "course": "Fullstack Web Dev",
+    "templateId": "6a8b1c8e5d4e67b05f392dd1",
+    "createdBy": "test_user_id",
+    "isArchived": false,
+    "createdAt": "2026-08-28T14:55:52.747Z",
+    "status": "Sent",
+    "updatedAt": "2026-08-28T14:55:54.026Z"
+  },
+  {
+    "_id": "cert_1787965721737_2qrcn",
+    "certificateId": "CERT_TEST_999",
+    "name": "Test Dedupe User",
+    "email": "dedupe_test_user@gmail.com",
+    "course": "Testing",
+    "templateId": "tmpl_test_dedupe",
+    "status": "Sent",
+    "createdBy": "user1",
+    "batchId": "Test Batch",
+    "isAutomation": true,
+    "uniqueHash": "7ccf8ceb764e195b83fb5752ee26b9a7",
+    "isArchived": false,
+    "createdAt": "2026-08-29T01:08:41.737Z",
+    "updatedAt": "2026-08-29T01:08:41.737Z"
   }
 ]

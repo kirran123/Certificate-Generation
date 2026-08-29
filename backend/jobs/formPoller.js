@@ -14,8 +14,9 @@ const Certificate = require('../models/Certificate');
 const EmailLog = require('../models/EmailLog');
 const { createCertificatePDF, calculateUniqueHash } = require('../utils/pdfGenerator');
 const { sendEmailWithFailover } = require('../utils/brevoPool');
+const { isEmailSent, markEmailSent } = require('../utils/sentLock');
 
-const POLL_INTERVAL_MS = 10_000; // 10 seconds
+const POLL_INTERVAL_MS = 60_000; // 60 seconds (reduced read load)
 let isPollerExecuting = false;
 
 // ── Generate unique cert ID ──────────────────────────────────────────────────
@@ -60,10 +61,27 @@ const sendCertEmail = async (cert, template, auto = {}) => {
   });
 };
 
+function normalizeEmail(rawEmail) {
+  if (!rawEmail) return '';
+  let email = String(rawEmail).replace(/\s+/g, '');
+  email = email.replace(/^[<"'\s]+|[>'"\s]+$/g, '');
+  email = email.replace(/[\s.,;:)]+$/g, '');
+  email = email.replace(/^[\s.,;:(]+/g, '');
+  if (email.includes('@')) {
+    const parts = email.split('@');
+    const local = parts[0];
+    const domain = parts.slice(1).join('@').replace(/\.{2,}/g, '.').replace(/^\.+|\.+$/g, '');
+    email = `${local}@${domain}`;
+  }
+  return email.toLowerCase();
+}
+
 // ── Main polling function ────────────────────────────────────────────────────
 const pollOnce = async () => {
   if (isPollerExecuting) return;
   isPollerExecuting = true;
+
+  const processedInRun = new Set();
 
   let automations;
   try {
@@ -105,16 +123,69 @@ const pollOnce = async () => {
       const runTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
       const currentPollBatchId = `${auto.batchId} [Run ${runTime}]`;
 
+      const templateIdStr = String(template._id || template.id || '');
+      const existingDbCerts = await Certificate.find({});
+
       for (const row of rows) {
         const name = String(row[auto.nameColumn] || '').trim();
-        const email = String(row[auto.emailColumn] || '').trim().toLowerCase();
+        const rawEmail = String(row[auto.emailColumn] || '').trim();
+        const email = normalizeEmail(rawEmail);
         if (!name || !email) continue;
 
-        const uniqueHash = calculateUniqueHash(String(template._id), name, email, auto.batchId);
-        const existing = await Certificate.findOne({ uniqueHash });
-        if (existing) continue;
+        const uniqueHash = calculateUniqueHash(templateIdStr, name, email, auto.batchId);
+        const runKey = `${templateIdStr}_${email}_${auto.batchId}`;
+        const baseBatch = String(auto.batchId || '').replace(/\s*\[Run \d{2}:\d{2}\]/, '').trim().toLowerCase();
+        const comboKey = `${templateIdStr}_${email}_${baseBatch}`;
+        const comboKeyTmpl = `${templateIdStr}_${email}`;
+
+        // Tier 0: Persistent disk lock check (0 DB reads, failsafe against quota/network errors)
+        if (isEmailSent(uniqueHash) || isEmailSent(runKey) || isEmailSent(comboKey) || isEmailSent(comboKeyTmpl)) {
+          processedInRun.add(uniqueHash);
+          processedInRun.add(runKey);
+          processedInRun.add(comboKey);
+          continue;
+        }
+
+        // Tier 1: Check in-flight run Set
+        if (processedInRun.has(uniqueHash) || processedInRun.has(runKey) || processedInRun.has(comboKey)) {
+          continue;
+        }
+
+        // Tier 2: Check by uniqueHash in DB
+        const existingByHash = await Certificate.findOne({ uniqueHash });
+        if (existingByHash) {
+          markEmailSent([uniqueHash, runKey, comboKey, comboKeyTmpl]);
+          processedInRun.add(uniqueHash);
+          processedInRun.add(runKey);
+          processedInRun.add(comboKey);
+          continue;
+        }
+
+        // Tier 3: Check by email + templateId + batchId in DB
+        const existingByEmail = existingDbCerts.find(c => {
+          if (!c || !c.email) return false;
+          const cEmail = normalizeEmail(c.email);
+          const cTmplId = String(c.templateId?._id || c.templateId || '');
+          const cBatch = String(c.batchId || '');
+          return cEmail === email && cTmplId === templateIdStr && (cBatch === auto.batchId || cBatch.startsWith(auto.batchId) || c.isAutomation);
+        });
+
+        if (existingByEmail) {
+          markEmailSent([uniqueHash, runKey, comboKey, comboKeyTmpl]);
+          processedInRun.add(uniqueHash);
+          processedInRun.add(runKey);
+          processedInRun.add(comboKey);
+          continue;
+        }
+
+        // Lock in-flight & persistent lock immediately
+        processedInRun.add(uniqueHash);
+        processedInRun.add(runKey);
+        processedInRun.add(comboKey);
+        markEmailSent([uniqueHash, runKey, comboKey, comboKeyTmpl]);
 
         const certId = await generateUniqueId();
+        markEmailSent(certId);
         const itemData = { ...row, name, email, certificateId: certId };
 
         let pdfBytes;
@@ -130,7 +201,7 @@ const pollOnce = async () => {
           name,
           email,
           course: row.course || row.Course || auto.emailSubject || 'Achievement',
-          templateId: String(template._id),
+          templateId: templateIdStr,
           status: 'Pending',
           createdBy: String(auto.userId),
           batchId: currentPollBatchId,

@@ -15,19 +15,45 @@ async function deduplicateCertificates() {
 
   const seenIds = new Set();
   const seenHashes = new Set();
+  const seenEmailTmplBatch = new Set();
   const docsToDelete = [];
   let uniqueCount = 0;
+
+  function normalizeEmail(rawEmail) {
+    if (!rawEmail) return '';
+    let email = String(rawEmail).replace(/\s+/g, '');
+    email = email.replace(/^[<"'\s]+|[>'"\s]+$/g, '');
+    email = email.replace(/[\s.,;:)]+$/g, '');
+    email = email.replace(/^[\s.,;:(]+/g, '');
+    if (email.includes('@')) {
+      const parts = email.split('@');
+      const local = parts[0];
+      const domain = parts.slice(1).join('@').replace(/\.{2,}/g, '.').replace(/^\.+|\.+$/g, '');
+      email = `${local}@${domain}`;
+    }
+    return email.toLowerCase();
+  }
 
   for (const doc of snapshot.docs) {
     const data = doc.data();
     const certId = data.certificateId;
-    const hashKey = data.uniqueHash || `${certId}_${data.email}_${data.batchId}`;
+    const hashKey = data.uniqueHash || (certId ? `${certId}_${data.email}_${data.batchId}` : null);
+    const emailNorm = normalizeEmail(data.email);
+    const tmplId = String(data.templateId?._id || data.templateId || '');
+    const baseBatch = String(data.batchId || '').replace(/\s*\[Run \d{2}:\d{2}\]/, '').trim();
+    const comboKey = emailNorm && tmplId ? `${emailNorm}_${tmplId}_${baseBatch}` : null;
 
-    if ((certId && seenIds.has(certId)) || (hashKey && seenHashes.has(hashKey))) {
+    const isDuplicate =
+      (certId && seenIds.has(certId)) ||
+      (hashKey && seenHashes.has(hashKey)) ||
+      (comboKey && seenEmailTmplBatch.has(comboKey));
+
+    if (isDuplicate) {
       docsToDelete.push(doc.ref);
     } else {
       if (certId) seenIds.add(certId);
       if (hashKey) seenHashes.add(hashKey);
+      if (comboKey) seenEmailTmplBatch.add(comboKey);
       uniqueCount++;
     }
   }
@@ -64,6 +90,21 @@ async function deduplicateCertificates() {
     console.log(`==================================================`);
   } else {
     console.log('\n✅ No duplicates found!');
+  }
+
+  // Synchronize certificates_backup.json
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const backupFilePath = path.join(__dirname, 'data', 'certificates_backup.json');
+    if (fs.existsSync(backupFilePath)) {
+      const cleanSnap = await db.collection('certificates').get();
+      const cleanList = cleanSnap.docs.map(d => ({ _id: d.id, ...d.data() }));
+      fs.writeFileSync(backupFilePath, JSON.stringify(cleanList, null, 2));
+      console.log(`Synchronized certificates_backup.json with ${cleanList.length} clean unique certificates.`);
+    }
+  } catch (e) {
+    console.warn('Backup sync error:', e.message);
   }
 
   process.exit(0);
