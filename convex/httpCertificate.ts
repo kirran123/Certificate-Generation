@@ -462,6 +462,50 @@ const resendBatch = httpAction(async (ctx, req) => {
   } catch (e: any) {
     return errorResponse(e.message);
   }
+// ── Resend single ──────────────────────────────────────────────────────────
+const resendSingle = httpAction(async (ctx, req) => {
+  try {
+    await requireAuth(ctx, req);
+    const url = new URL(req.url);
+    const certId = decodeURIComponent(url.pathname.split("/resend-single/")[1]);
+    const cert = await ctx.runQuery(internal.certificates.findByCertId, { certificateId: certId });
+    if (!cert) return errorResponse("Certificate not found", 404);
+    if (!cert.email) return errorResponse("No recipient email configured for this certificate", 400);
+
+    const template = await ctx.runQuery(internal.templates.findById, { id: cert.templateId });
+    if (!template) return errorResponse("Template not found for this certificate.", 404);
+
+    const templateBase64 = await getTemplateBytesBase64(ctx, template);
+    const itemData = { name: cert.name, email: cert.email, course: cert.course, certificateId: cert.certificateId, ...(cert.metadata || {}) };
+    const pdfBase64 = await ctx.runAction(internal.nodeActions.generatePdf, {
+      templateBase64,
+      layoutConfig: template.layoutConfig,
+      qrCode: template.qrCode,
+      showId: template.showId,
+      showQr: template.showQr,
+      data: itemData,
+      certId: cert.certificateId,
+      frontendUrl: FRONTEND_URL,
+    });
+
+    const html = buildCertEmailHtml(cert.name, cert.certificateId, "Congratulations on your achievement! Please find your official certificate attached to this email.", "DigiCertify");
+
+    await ctx.runAction(internal.nodeActions.sendEmail, {
+      to: cert.email,
+      name: cert.name,
+      subject: "Your Certificate of Achievement",
+      htmlContent: html,
+      pdfBase64,
+      certId: cert.certificateId,
+    });
+
+    await ctx.runMutation(internal.certificates.updateStatus, { id: cert._id, status: "Sent" });
+    await ctx.runMutation(internal.emailLogs.create, { certificateId: cert.certificateId, recipient: cert.email, status: "Sent" });
+
+    return jsonResponse({ message: `Successfully resent email to ${cert.email}` });
+  } catch (e: any) {
+    return errorResponse(e.message);
+  }
 });
 
 // ── Form Automations ──────────────────────────────────────────────────────
@@ -563,6 +607,7 @@ export {
   deleteCert,
   deleteBatchSecure,
   resendBatch,
+  resendSingle,
   createAutomation,
   listAutomations,
   toggleAutomation,

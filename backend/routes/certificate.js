@@ -410,7 +410,7 @@ router.post('/send-bulk', protect, async (req, res) => {
           name: cert.name,
           subject: subject || 'Your Certificate of Achievement',
           htmlContent,
-          pdfBase64,
+          pdfBase64: base64Pdf,
           certId: cert.certificateId,
           senderName: senderNameFinal,
           senderEmail: senderEmailFinal
@@ -725,7 +725,7 @@ router.post('/resend-single/:certId', protect, async (req, res) => {
       name: cert.name,
       subject: 'Your Certificate of Achievement',
       htmlContent,
-      pdfBase64,
+      pdfBase64: base64Pdf,
       certId: cert.certificateId
     });
 
@@ -752,37 +752,59 @@ router.post('/resend-batch/:batchId', protect, async (req, res) => {
 
   try {
     const filter = req.user.role === 'admin' ? { batchId } : { batchId, createdBy: req.user._id };
-    const certs = await Certificate.find(filter);
+    const certs = await Certificate.find(filter).populate('templateId');
 
     let sentCount = 0;
     for (const cert of certs) {
       if (!cert.email) continue;
 
-      const pdfPath = path.join(__dirname, '..', cert.pdfUrl);
-      if (!fs.existsSync(pdfPath)) continue;
-
-      const pdfBuffer = fs.readFileSync(pdfPath);
-      const base64Pdf = pdfBuffer.toString('base64');
-
-      const htmlContent = `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-          <h2 style="color: #4f46e5;">Your Certificate is Ready!</h2>
-          <p>Hi ${cert.name},</p>
-          <p>Congratulations! Your certificate is attached.</p>
-          <div style="margin: 20px 0; padding: 15px; background: #f9fafb; border-radius: 8px;">
-            <p style="margin: 0; font-size: 12px; color: #6b7280;">Certificate ID:</p>
-            <p style="margin: 0; font-weight: bold; font-family: monospace;">${cert.certificateId}</p>
-          </div>
-        </div>
-      `;
-
       try {
+        let base64Pdf = '';
+        const pdfPath = cert.pdfUrl ? path.join(__dirname, '..', cert.pdfUrl) : null;
+        if (pdfPath && fs.existsSync(pdfPath)) {
+          base64Pdf = fs.readFileSync(pdfPath).toString('base64');
+        } else if (cert.templateId && cert.templateId.imageUrl) {
+          const itemData = {
+            name: cert.name,
+            email: cert.email,
+            course: cert.course,
+            certificateId: cert.certificateId,
+            ...(cert.metadata ? Object.fromEntries(cert.metadata) : {})
+          };
+          const pdfBytes = await createCertificatePDF(
+            {
+              imageUrl: cert.templateId.imageUrl,
+              layoutConfig: cert.templateId.layoutConfig,
+              qrCode: cert.templateId.qrCode,
+              showId: cert.templateId.showId,
+              showQr: cert.templateId.showQr
+            },
+            itemData,
+            cert.certificateId
+          );
+          base64Pdf = Buffer.from(pdfBytes).toString('base64');
+        } else {
+          continue;
+        }
+
+        const htmlContent = `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+            <h2 style="color: #4f46e5;">Your Certificate is Ready!</h2>
+            <p>Hi ${cert.name},</p>
+            <p>Congratulations! Your certificate is attached.</p>
+            <div style="margin: 20px 0; padding: 15px; background: #f9fafb; border-radius: 8px;">
+              <p style="margin: 0; font-size: 12px; color: #6b7280;">Certificate ID:</p>
+              <p style="margin: 0; font-weight: bold; font-family: monospace;">${cert.certificateId}</p>
+            </div>
+          </div>
+        `;
+
         await sendEmailWithFailover({
           to: cert.email,
           name: cert.name,
           subject: 'Your Certificate of Achievement',
           htmlContent,
-          pdfBase64,
+          pdfBase64: base64Pdf,
           certId: cert.certificateId
         });
         cert.status = 'Sent';
