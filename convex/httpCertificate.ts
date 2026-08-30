@@ -33,16 +33,26 @@ async function getTemplateBytesBase64(ctx: any, template: any): Promise<string> 
     }
   }
   if (template.imageBase64) return template.imageBase64;
-  if (template.imageUrl?.startsWith("http")) {
-    const resp = await fetch(template.imageUrl);
-    if (resp.ok) {
-      const buffer = await resp.arrayBuffer();
-      let binary = "";
-      const bytes = new Uint8Array(buffer);
-      for (let i = 0; i < bytes.byteLength; i++) {
-        binary += String.fromCharCode(bytes[i]);
+  if (template.imageUrl) {
+    let fetchUrl = template.imageUrl;
+    if (!fetchUrl.startsWith("http")) {
+      const backendHost = process.env.BACKEND_URL || "https://certificate-generation-8gbo.onrender.com";
+      const clean = fetchUrl.startsWith("/") ? fetchUrl : `/${fetchUrl}`;
+      fetchUrl = `${backendHost}${clean}`;
+    }
+    try {
+      const resp = await fetch(fetchUrl);
+      if (resp.ok) {
+        const buffer = await resp.arrayBuffer();
+        let binary = "";
+        const bytes = new Uint8Array(buffer);
+        for (let i = 0; i < bytes.byteLength; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        return btoa(binary);
       }
-      return btoa(binary);
+    } catch (err) {
+      console.warn("Failed to fetch template image from URL:", fetchUrl, err);
     }
   }
   throw new Error("No template image available.");

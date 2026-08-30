@@ -43,7 +43,7 @@ async function createCertificatePDF(template, data, certId) {
       console.log(`[PDF Generator] Fetching Cloudinary/HTTP template image: ${template.imageUrl}`);
       const resp = await axios.get(template.imageUrl, { responseType: 'arraybuffer', timeout: 15000 });
       templateBytes = Buffer.from(resp.data);
-    } else {
+    } else if (template.imageUrl) {
       const cleanUrl = getRelativePath(template.imageUrl);
       const templatePath = path.join(__dirname, '..', cleanUrl);
       
@@ -53,20 +53,22 @@ async function createCertificatePDF(template, data, certId) {
         console.log(`[PDF Generator] Local file missing. Using Base64 backup for ${certId}.`);
         templateBytes = Buffer.from(template.imageBase64, 'base64');
       } else {
-        throw new Error(`Template file not found locally and no Base64 backup exists.`);
+        // Try fetching relative path from deployed server (e.g. Render)
+        const host = process.env.BACKEND_URL || 'https://certificate-generation-8gbo.onrender.com';
+        const remoteUrl = `${host}/${cleanUrl}`;
+        console.log(`[PDF Generator] Local file missing. Trying remote server URL: ${remoteUrl}`);
+        const resp = await axios.get(remoteUrl, { responseType: 'arraybuffer', timeout: 15000 });
+        templateBytes = Buffer.from(resp.data);
       }
+    } else if (template.imageBase64) {
+      templateBytes = Buffer.from(template.imageBase64, 'base64');
+    } else {
+      throw new Error(`No template image URL or Base64 data provided.`);
     }
   } catch (err) {
     if (template.imageBase64) {
-      console.log(`[PDF Generator] Remote/local fetch failed (${err.message}). Using Base64 backup for ${certId}.`);
+      console.log(`[PDF Generator] Image load error (${err.message}). Using Base64 backup for ${certId}.`);
       templateBytes = Buffer.from(template.imageBase64, 'base64');
-    } else if (template.imageUrl && template.imageUrl.startsWith('http')) {
-      try {
-        const resp = await axios.get(template.imageUrl, { responseType: 'arraybuffer', timeout: 15000 });
-        templateBytes = Buffer.from(resp.data);
-      } catch (retryErr) {
-        throw new Error(`Failed to download Cloudinary template image (${template.imageUrl}): ${retryErr.message}`);
-      }
     } else {
       throw new Error(`Failed to load template image: ${err.message}`);
     }

@@ -697,6 +697,7 @@ router.post('/resend-single/:certId', protect, async (req, res) => {
     const pdfBytes = await createCertificatePDF(
       {
         imageUrl: template.imageUrl,
+        imageBase64: template.imageBase64,
         layoutConfig: template.layoutConfig,
         qrCode: template.qrCode,
         showId: template.showId,
