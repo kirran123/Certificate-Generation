@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
-import { API_BASE, IO_API_BASE } from "../apiConfig";
+import { API_BASE } from "../apiConfig";
 import { Rnd } from "react-rnd";
 import {
   Save,
@@ -161,7 +161,7 @@ export default function TemplateDesigner() {
   useEffect(() => {
     if (autoSuccess) {
       const timer = setTimeout(() => {
-        navigate('/');
+        navigate('/dashboard');
       }, 2000);
       return () => clearTimeout(timer);
     }
@@ -297,7 +297,6 @@ export default function TemplateDesigner() {
       );
       localStorage.setItem("lastSavedTemplateId", res.data._id);
       setSavedTemplateId(res.data._id);
-      if (res.data.imageUrl) setImageUrl(res.data.imageUrl);
       setSaving("done");
 
       setSaving("done");
@@ -347,14 +346,7 @@ export default function TemplateDesigner() {
       setAutoSuccess(true);
       setSaving("auto_success");
     } catch (err) {
-      // Handle 409 Conflict (duplicate automation) gracefully
-      if (err.response?.status === 409) {
-        alert('⚠️ Auto-Cert already active!\n\nAn automation already exists for this sheet and template.\nGo to your dashboard to manage existing automations.\n\nThe existing automation will continue sending certificates for new entries automatically.');
-        setAutoSuccess(true); // Treat as success since an automation is already running
-        setSaving("auto_success");
-      } else {
-        alert(err.response?.data?.message || 'Failed to activate automation.');
-      }
+      alert(err.response?.data?.message || 'Failed to activate automation.');
     } finally { setAutoActivating(false); }
   };
 
@@ -379,11 +371,11 @@ export default function TemplateDesigner() {
 
       // Upgrade to 'blob' response type for maximum stability
       const res = await axios.post(
-        `${IO_API_BASE}/api/certificate/preview`,
+        `${API_BASE}/api/certificate/preview`,
         {
           templateId: localStorage.getItem("lastSavedTemplateId"),
           layoutConfig: { fields, qrCode },
-          imageUrl: imageUrl.replace(API_BASE, "").replace(IO_API_BASE, ""),
+          imageUrl: imageUrl.replace(API_BASE, ""),
           sampleData,
           showId,
           showQr,
@@ -424,30 +416,22 @@ export default function TemplateDesigner() {
     }
   };
 
-  const isSendingRef = useRef(false);
-
   const handleGenerateAndEmail = async (sendEmail = false) => {
-    if (isSendingRef.current) return;
-    isSendingRef.current = true;
-
     const mappedName = selection["name"];
     const mappedEmail = selection["email"];
 
     if (!mappedName) {
       alert('REQUIRED: Please map the "Recipient Name" field in the generation panel.');
-      isSendingRef.current = false;
       return;
     }
 
     if (sendEmail && !mappedEmail) {
       alert('REQUIRED FOR EMAIL: Please map the "Recipient Email" field.');
-      isSendingRef.current = false;
       return;
     }
 
     if (!batchName.trim()) {
       alert('NAME YOUR BATCH: Please enter a name for this batch before proceeding.');
-      isSendingRef.current = false;
       return;
     }
 
@@ -456,7 +440,7 @@ export default function TemplateDesigner() {
 
     try {
       const genRes = await axios.post(
-        `${IO_API_BASE}/api/certificate/generate`,
+        `${API_BASE}/api/certificate/generate`,
         {
           templateId: localStorage.getItem("lastSavedTemplateId"),
           mappings: selection,
@@ -475,10 +459,8 @@ export default function TemplateDesigner() {
 
       if (sendEmail && generatedIds.length > 0) {
         setSaving("sending");
-        // send-bulk responds immediately (202/200) and processes emails in the background.
-        // We do NOT await the completion — just fire and move to success state.
         await axios.post(
-          `${IO_API_BASE}/api/certificate/send-bulk`,
+          `${API_BASE}/api/certificate/send-bulk`,
           {
             certificateIds: generatedIds,
             subject: emailConfig.subject,
@@ -486,37 +468,26 @@ export default function TemplateDesigner() {
             senderName: emailConfig.senderName,
             senderEmail: emailConfig.senderEmail,
           },
-          { headers: { Authorization: `Bearer ${token}` }, timeout: 30000 },
+          { headers: { Authorization: `Bearer ${token}` } },
         );
-      } else if (sendEmail && generatedIds.length === 0 && skippedCount > 0) {
-        // All were duplicates — already sent previously, no new certs to email
-        console.log('[Generate] All certificates were already generated (duplicates skipped). No emails sent.');
       }
 
       setSaving("done_all");
     } catch (e) {
       console.error(e);
-      // If the error is a 409 (duplicate batch lock), show a friendly message
-      if (e.response?.status === 409) {
-        alert('Email dispatch is already in progress for this batch. Please wait for it to complete before re-sending.');
-        setSaving("done_all");
-      } else {
-        alert("Operation failed: " + (e.response?.data?.message || "Server Error"));
-        setSaving("done");
-      }
-    } finally {
-      isSendingRef.current = false;
+      alert("Operation failed: " + (e.response?.data?.message || "Server Error"));
+      setSaving("done");
     }
   };
 
   const toggleReview = () => setIsPreview(!isPreview);
 
   return (
-    <div className="flex flex-col lg:flex-row h-auto lg:h-[calc(100vh-140px)] overflow-x-hidden lg:overflow-hidden animate-fade-in-up relative">
+    <div className="flex h-[calc(100vh-140px)] overflow-hidden animate-fade-in-up relative">
       {/* Sidebar Controls */}
       {!isPreview && (
-        <div className="w-full lg:w-[380px] shrink-0 bg-[var(--bg-sidebar)] border-b lg:border-b-0 lg:border-r border-[var(--border-subtle)] flex flex-col max-h-[360px] lg:max-h-none h-full overflow-y-auto no-scrollbar transition-all duration-500">
-          <div className="p-4 sm:p-8 space-y-6 sm:space-y-10">
+        <div className="w-[380px] bg-[var(--bg-sidebar)] border-r border-[var(--border-subtle)] flex flex-col h-full overflow-y-auto no-scrollbar transition-all duration-500">
+          <div className="p-8 space-y-10">
             <div>
               <div className="flex items-center space-x-2 text-indigo-400 text-[10px] font-black uppercase tracking-[0.3em] mb-4">
                 <div className="w-8 h-px bg-indigo-500/50" />
@@ -914,13 +885,12 @@ export default function TemplateDesigner() {
       {/* Canvas Area */}
       <div
         ref={canvasContainerRef}
-        className="flex-1 bg-[var(--bg-main)] opacity-95 p-2 sm:p-12 overflow-auto relative custom-scrollbar flex items-start sm:items-center justify-center transition-colors duration-500"
-        style={{ WebkitOverflowScrolling: 'touch' }}
+        className="flex-1 bg-[var(--bg-main)] opacity-95 p-12 overflow-auto relative custom-scrollbar flex items-center justify-center transition-colors duration-500"
       >
         {!imageUrl && (
-          <div className="w-full max-w-2xl flex flex-col items-center justify-center text-center p-5 sm:p-10 space-y-6 sm:space-y-10 animate-fade-in-up">
+          <div className="w-full max-w-2xl flex flex-col items-center justify-center text-center p-10 space-y-10 animate-fade-in-up">
             {excelData.length > 0 && (
-              <div className="w-full p-4 sm:p-6 bg-emerald-500/5 border border-emerald-500/20 rounded-3xl flex items-center space-x-4 text-left">
+              <div className="w-full p-6 bg-emerald-500/5 border border-emerald-500/20 rounded-3xl flex items-center space-x-4 text-left">
                 <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center shrink-0">
                   <Check className="w-5 h-5 text-emerald-400" />
                 </div>
@@ -931,12 +901,12 @@ export default function TemplateDesigner() {
               </div>
             )}
 
-            <div className="w-full p-6 sm:p-8 border-2 border-dashed border-white/5 bg-white/[0.01] rounded-[2rem] sm:rounded-[3rem] group">
-              <div className="w-16 h-16 sm:w-24 sm:h-24 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 border border-white/5 group-hover:scale-110 transition-transform duration-700">
-                <ImageIcon className="w-8 h-8 sm:w-10 sm:h-10 text-[var(--text-secondary)] opacity-30" />
+            <div className="w-full p-8 border-2 border-dashed border-white/5 bg-white/[0.01] rounded-[3rem] group">
+              <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/5 group-hover:scale-110 transition-transform duration-700">
+                <ImageIcon className="w-10 h-10 text-[var(--text-secondary)] opacity-30" />
               </div>
-              <h3 className="text-xl sm:text-2xl font-black text-[var(--text-primary)] tracking-tighter mb-3">Upload Certificate Design</h3>
-              <p className="text-[var(--text-secondary)] text-xs sm:text-sm font-medium max-w-sm mx-auto mb-6 sm:mb-8">Use the <span className="text-indigo-400 font-black">"Upload Design"</span> button on the panel above to set your certificate background image (PNG or JPG).</p>
+              <h3 className="text-2xl font-black text-[var(--text-primary)] tracking-tighter mb-3">Upload Certificate Design</h3>
+              <p className="text-[var(--text-secondary)] text-sm font-medium max-w-sm mx-auto mb-8">Use the <span className="text-indigo-400 font-black">"Upload Design"</span> button on the left panel to set your certificate background image (PNG or JPG).</p>
               <div className="flex items-center justify-center space-x-3 text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] opacity-40">
                 <span className="w-8 h-px bg-current" />
                 <span>Step 1 of 3</span>
@@ -948,11 +918,11 @@ export default function TemplateDesigner() {
 
         {imageUrl && (
           <div
-            className="relative group/canvas transition-transform duration-300 ease-out origin-top sm:origin-center"
+            className="relative group/canvas transition-transform duration-300 ease-out origin-center"
             style={{ transform: `scale(${zoom})`, minWidth: imageSize.width, minHeight: imageSize.height }}
           >
             {/* Preview Status Overlay */}
-            <div className="absolute -top-10 sm:-top-12 left-0 right-0 flex justify-between items-center px-2 sm:px-4">
+            <div className="absolute -top-12 left-0 right-0 flex justify-between items-center px-4">
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 rounded-full bg-indigo-500 pulse" />
@@ -963,10 +933,10 @@ export default function TemplateDesigner() {
                 {isPreview && (
                   <button
                     onClick={toggleReview}
-                    className="fixed bottom-4 sm:bottom-12 right-4 sm:right-12 z-[100] bg-black/95 hover:bg-black text-white px-6 sm:px-12 py-3 sm:py-6 rounded-[2rem] font-black text-xs sm:text-sm uppercase tracking-[0.3em] shadow-[0_20px_50px_rgba(0,0,0,0.8)] flex items-center space-x-3 sm:space-x-4 animate-bounce-in border flex-row border-white/10 transition-all hover:scale-105 active:scale-95 group"
+                    className="fixed bottom-12 right-12 z-[100] bg-black/95 hover:bg-black text-white px-12 py-6 rounded-[2rem] font-black text-sm uppercase tracking-[0.3em] shadow-[0_20px_50px_rgba(0,0,0,0.8)] flex items-center space-x-4 animate-bounce-in border flex-row border-white/10 transition-all hover:scale-105 active:scale-95 group"
                   >
-                    <EyeOff className="w-5 h-5 group-hover:rotate-12 transition-transform text-indigo-400" />
-                    <span>Exit Preview</span>
+                    <EyeOff className="w-6 h-6 group-hover:rotate-12 transition-transform text-indigo-400" />
+                    <span>Exit Preview Mode</span>
                   </button>
                 )}
               </div>
@@ -1109,31 +1079,24 @@ export default function TemplateDesigner() {
                   <p className="text-[var(--text-secondary)] text-sm font-black uppercase tracking-[0.2em] opacity-50">Please wait...</p>
                 </div>
               </div>
-            ) : (saving === "generating" || saving === "sending") ? (
-              <div className="p-24 flex flex-col items-center justify-center text-center space-y-8 animate-fade-in-up">
+            ) : saving === "auto_success" ? (
+              <div className="p-32 flex flex-col items-center justify-center text-center space-y-8 animate-fade-in-up">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-indigo-500/30 rounded-full blur-3xl animate-pulse" />
-                  <div className="w-20 h-20 bg-indigo-600/20 border border-indigo-500/40 rounded-3xl flex items-center justify-center relative z-10 shadow-2xl shadow-indigo-500/20">
-                    <Loader2 className="w-10 h-10 text-indigo-400 animate-spin" />
+                  <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-2xl pulse" />
+                  <div className="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center relative z-10 shadow-xl shadow-emerald-500/20">
+                    <Zap className="w-8 h-8 text-white animate-bounce" />
                   </div>
                 </div>
-                <div className="space-y-3">
-                  <h1 className="text-3xl font-black text-[var(--text-primary)] tracking-tighter">
-                    {saving === "sending" ? "Generating & Sending Emails..." : "Generating Certificates..."}
-                  </h1>
-                  <p className="text-indigo-400 text-xs font-black uppercase tracking-[0.25em] animate-pulse">
-                    {saving === "sending" ? "Dispatching bulk emails via Brevo engine" : "Building PDF layout & QR credentials"}
-                  </p>
-                  <p className="text-[var(--text-secondary)] text-[11px] font-medium opacity-60 max-w-sm mx-auto pt-2">
-                    Please do not close or refresh this tab. Processing your batch securely...
-                  </p>
+                <div>
+                  <h1 className="text-4xl font-black text-emerald-400 tracking-tighter mb-2">Auto-Cert Live!</h1>
+                  <p className="text-[var(--text-secondary)] text-sm font-black uppercase tracking-[0.2em] opacity-50">Launching Operational Dashboard...</p>
                 </div>
               </div>
             ) : saving === "done_all" ? (
               <div className="animate-fade-in-up">
                 <div className="p-10 border-b border-white/5 flex justify-between items-center bg-white/5">
                   <div>
-                    <h1 className="text-3xl font-black text-[var(--text-primary)] tracking-tighter mb-1">Certificates Generated!</h1>
+                    <h1 className="text-3xl font-black text-[var(--text-primary)] tracking-tighter mb-1">Process Finalized</h1>
                     <p className="text-xs text-[var(--text-secondary)] opacity-50 font-black uppercase tracking-[0.2em]">Deployment Success • <span className="text-emerald-400">Authenticated</span></p>
                   </div>
                   <div className="p-4 bg-emerald-500/10 rounded-2xl text-emerald-500 border border-emerald-500/20">

@@ -14,5 +14,5 @@ export const create = internalMutation({
 export const listAll = internalQuery({
   args: {},
   handler: async (ctx) =>
-    ctx.db.query("emailLogs").order("desc").take(500),
+    ctx.db.query("emailLogs").order("desc").collect(),
 });

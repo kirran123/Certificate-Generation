@@ -33,9 +33,6 @@ async function getTemplateBytesBase64(ctx: any, template: any): Promise<string> 
     }
   }
   if (template.imageBase64) return template.imageBase64;
-  const dbImage = await ctx.runQuery(internal.templates.getTemplateImage, { templateId: template._id });
-  if (dbImage) return dbImage;
-
   if (template.imageUrl?.startsWith("http")) {
     const resp = await fetch(template.imageUrl);
     if (resp.ok) {
@@ -76,7 +73,7 @@ const uploadData = httpAction(async (ctx, req) => {
 const uploadSheet = httpAction(async (ctx, req) => {
   try {
     await requireAuth(ctx, req);
-    const { sheetUrl } = (await req.json()) as any;
+    const { sheetUrl } = await req.json();
     if (!sheetUrl) return errorResponse("No Google Sheet URL provided.", 400);
     const result = await ctx.runAction(internal.nodeActions.parseGoogleSheet, { sheetUrl });
     return jsonResponse(result);
@@ -89,13 +86,13 @@ const uploadSheet = httpAction(async (ctx, req) => {
 const preview = httpAction(async (ctx, req) => {
   try {
     await requireAuth(ctx, req);
-    const { templateId, sampleData, layoutConfig, imageUrl, showId, showQr } = (await req.json()) as any;
+    const { templateId, sampleData, layoutConfig, imageUrl, showId, showQr } = await req.json();
 
     let template: any;
     if (imageUrl && layoutConfig) {
       template = { imageUrl, layoutConfig: layoutConfig.fields || [], qrCode: layoutConfig.qrCode, showId, showQr };
     } else if (templateId) {
-      template = await ctx.runQuery(internal.templates.findMetadataById, { id: templateId });
+      template = await ctx.runQuery(internal.templates.findById, { id: templateId });
       if (!template) return errorResponse("Template not found", 404);
       if (layoutConfig) template = { ...template, layoutConfig };
     }
@@ -136,12 +133,12 @@ const preview = httpAction(async (ctx, req) => {
 const generate = httpAction(async (ctx, req) => {
   try {
     const user = await requireAuth(ctx, req);
-    const body = (await req.json()) as any;
+    const body = await req.json();
     const { templateId, mappings, rawData, showId, showQr, layoutConfig, batchId: bodyBatchId } = body;
 
     if (!rawData?.length) return errorResponse("No data provided for generation", 400);
 
-    const template = await ctx.runQuery(internal.templates.findMetadataById, { id: templateId });
+    const template = await ctx.runQuery(internal.templates.findById, { id: templateId });
     if (!template) return errorResponse("Template not found", 404);
 
     const templateBase64 = await getTemplateBytesBase64(ctx, template);
@@ -151,7 +148,6 @@ const generate = httpAction(async (ctx, req) => {
     let generatedCount = 0, skippedCount = 0;
     const generatedIds: string[] = [];
 
-    const rowsToProcess: { itemData: Record<string, any>; row: any; uniqueHash: string }[] = [];
     for (const row of rawData) {
       const itemData: Record<string, any> = { ...row };
       Object.keys(mappings || {}).forEach((key) => {
@@ -162,67 +158,44 @@ const generate = httpAction(async (ctx, req) => {
       if (!itemData.name) itemData.name = "Unknown Recipient";
 
       const uniqueHash = await calculateUniqueHash(template._id, itemData.name, itemData.email || "", batchId);
-      rowsToProcess.push({ itemData, row, uniqueHash });
-    }
+      const existing = await ctx.runQuery(internal.certificates.findByHash, { uniqueHash });
+      if (existing) { skippedCount++; continue; }
 
-    if (rowsToProcess.length > 0) {
-      const allHashes = rowsToProcess.map(r => r.uniqueHash);
-      const existingHashesList = await ctx.runQuery(internal.certificates.checkHashesExist, { hashes: allHashes });
-      const existingHashesSet = new Set(existingHashesList);
-
-      const candidateCerts: { itemData: Record<string, any>; row: any; uniqueHash: string; certId: string }[] = [];
-      for (const { itemData, row, uniqueHash } of rowsToProcess) {
-        if (existingHashesSet.has(uniqueHash)) { skippedCount++; continue; }
-        candidateCerts.push({ itemData, row, uniqueHash, certId: generateCertId() });
+      let certId = generateCertId();
+      while (await ctx.runQuery(internal.certificates.findByCertId, { certificateId: certId })) {
+        certId = generateCertId();
       }
+      itemData.certificateId = certId;
 
-      if (candidateCerts.length > 0) {
-        const certIdsToCheck = candidateCerts.map(c => c.certId);
-        const existingCertIds = await ctx.runQuery(internal.certificates.checkCertIdsExist, { certIds: certIdsToCheck });
-        const existingCertIdsSet = new Set(existingCertIds);
+      try {
+        // Validate generation
+        await ctx.runAction(internal.nodeActions.generatePdf, {
+          templateBase64,
+          layoutConfig: layoutConfig || template.layoutConfig,
+          qrCode: template.qrCode,
+          showId: showId !== undefined ? showId : template.showId,
+          showQr: showQr !== undefined ? showQr : template.showQr,
+          data: itemData,
+          certId,
+          frontendUrl: FRONTEND_URL,
+        });
 
-        for (const certItem of candidateCerts) {
-          while (existingCertIdsSet.has(certItem.certId)) {
-            certItem.certId = generateCertId();
-            const stillExists = await ctx.runQuery(internal.certificates.findByCertId, { certificateId: certItem.certId });
-            if (!stillExists) break;
-          }
-          certItem.itemData.certificateId = certItem.certId;
-        }
-      }
-
-      for (const { itemData, row, uniqueHash, certId } of candidateCerts) {
-
-        try {
-          // Validate generation
-          await ctx.runAction(internal.nodeActions.generatePdf, {
-            templateBase64,
-            layoutConfig: layoutConfig || template.layoutConfig,
-            qrCode: template.qrCode,
-            showId: showId !== undefined ? showId : template.showId,
-            showQr: showQr !== undefined ? showQr : template.showQr,
-            data: itemData,
-            certId,
-            frontendUrl: FRONTEND_URL,
-          });
-
-          await ctx.runMutation(internal.certificates.create, {
-            certificateId: certId,
-            name: String(itemData.name),
-            email: String(itemData.email || ""),
-            course: String(itemData.course || body.subject || "Achievement"),
-            templateId: template._id,
-            status: "Pending",
-            createdBy: user._id,
-            batchId,
-            uniqueHash,
-            metadata: row,
-          });
-          generatedIds.push(certId);
-          generatedCount++;
-        } catch (err: any) {
-          console.error("Failed to generate certificate:", err.message);
-        }
+        await ctx.runMutation(internal.certificates.create, {
+          certificateId: certId,
+          name: String(itemData.name),
+          email: String(itemData.email || ""),
+          course: String(itemData.course || body.subject || "Achievement"),
+          templateId: template._id,
+          status: "Pending",
+          createdBy: user._id,
+          batchId,
+          uniqueHash,
+          metadata: row,
+        });
+        generatedIds.push(certId);
+        generatedCount++;
+      } catch (err: any) {
+        console.error("Failed to generate certificate:", err.message);
       }
     }
 
@@ -236,30 +209,18 @@ const generate = httpAction(async (ctx, req) => {
 const sendBulk = httpAction(async (ctx, req) => {
   try {
     await requireAuth(ctx, req);
-    const { certificateIds, subject, message, senderName, senderEmail } = (await req.json()) as any;
+    const { certificateIds, subject, message, senderName, senderEmail } = await req.json();
 
     const certs = await ctx.runQuery(internal.certificates.listByIds, { certificateIds });
     let sentCount = 0;
 
-    const templateCache = new Map<string, any>();
-    const templateBytesCache = new Map<string, string>();
-
     for (const cert of certs) {
       if (!cert.email) continue;
-      const templateId = cert.templateId.toString();
-      let template = templateCache.get(templateId);
-      if (!template) {
-        template = await ctx.runQuery(internal.templates.findMetadataById, { id: cert.templateId });
-        if (template) templateCache.set(templateId, template);
-      }
+      const template = await ctx.runQuery(internal.templates.findById, { id: cert.templateId });
       if (!template) continue;
 
       try {
-        let templateBase64 = templateBytesCache.get(templateId);
-        if (!templateBase64) {
-          templateBase64 = await getTemplateBytesBase64(ctx, template);
-          templateBytesCache.set(templateId, templateBase64);
-        }
+        const templateBase64 = await getTemplateBytesBase64(ctx, template);
         const itemData = { name: cert.name, email: cert.email, course: cert.course, certificateId: cert.certificateId, ...(cert.metadata || {}) };
         const pdfBase64 = await ctx.runAction(internal.nodeActions.generatePdf, {
           templateBase64,
@@ -308,7 +269,7 @@ const downloadCert = httpAction(async (ctx, req) => {
     const cert = await ctx.runQuery(internal.certificates.findByCertId, { certificateId: certId });
     if (!cert) return errorResponse("Certificate not found.", 404);
 
-    const template = await ctx.runQuery(internal.templates.findMetadataById, { id: cert.templateId });
+    const template = await ctx.runQuery(internal.templates.findById, { id: cert.templateId });
     if (!template) return errorResponse("Template not found.", 404);
 
     const templateBase64 = await getTemplateBytesBase64(ctx, template);
@@ -347,47 +308,18 @@ const downloadCert = httpAction(async (ctx, req) => {
 const downloadBulk = httpAction(async (ctx, req) => {
   try {
     const user = await requireAuth(ctx, req);
-    const url = new URL(req.url);
-    const batchIdParam = url.searchParams.get("batchId");
-
-    let certs;
-    if (batchIdParam) {
-      certs = await ctx.runQuery(internal.certificates.listByBatchId, { batchId: batchIdParam });
-      if (user.role !== "admin") {
-        certs = certs.filter((c: any) => c.createdBy === user._id);
-      }
-    } else {
-      certs = user.role === "admin"
-        ? await ctx.runQuery(internal.certificates.listAll, {})
-        : await ctx.runQuery(internal.certificates.listForUser, { userId: user._id });
-    }
+    const certs = user.role === "admin"
+      ? await ctx.runQuery(internal.certificates.listAll, {})
+      : await ctx.runQuery(internal.certificates.listForUser, { userId: user._id });
 
     if (!certs.length) return errorResponse("No certificates found", 404);
 
     const certPayloads: any[] = [];
-    const templateCache = new Map<string, any>();
-    const templateBytesCache = new Map<string, string>();
-
     for (const cert of certs) {
       try {
-        const templateId = (cert.templateId && typeof cert.templateId === "object")
-          ? (cert.templateId as any)._id
-          : cert.templateId;
-        const templateIdStr = templateId.toString();
-
-        let template = templateCache.get(templateIdStr);
-        if (!template) {
-          template = await ctx.runQuery(internal.templates.findMetadataById, { id: templateId });
-          if (template) templateCache.set(templateIdStr, template);
-        }
+        const template = await ctx.runQuery(internal.templates.findById, { id: cert.templateId as any });
         if (!template) continue;
-
-        let templateBase64 = templateBytesCache.get(templateIdStr);
-        if (!templateBase64) {
-          templateBase64 = await getTemplateBytesBase64(ctx, template);
-          templateBytesCache.set(templateIdStr, templateBase64);
-        }
-
+        const templateBase64 = await getTemplateBytesBase64(ctx, template);
         const itemData = { name: cert.name, email: cert.email, course: cert.course, certificateId: cert.certificateId, ...(cert.metadata || {}) };
         const pdfBase64 = await ctx.runAction(internal.nodeActions.generatePdf, {
           templateBase64,
@@ -414,15 +346,11 @@ const downloadBulk = httpAction(async (ctx, req) => {
         .map((c) => c.charCodeAt(0))
     );
 
-    const safeFilename = batchIdParam 
-      ? `${batchIdParam.replace(/[\s\/:*?"<>|]/g, "_")}.zip` 
-      : "certificates.zip";
-
     return new Response(zipBytes, {
       status: 200,
       headers: {
         "Content-Type": "application/zip",
-        "Content-Disposition": `attachment; filename="${safeFilename}"`,
+        "Content-Disposition": "attachment; filename=\"certificates.zip\"",
         "Access-Control-Allow-Origin": process.env.FRONTEND_URL || "*",
       },
     });
@@ -446,7 +374,7 @@ const myGenerations = httpAction(async (ctx, req) => {
 const updateBatchEmails = httpAction(async (ctx, req) => {
   try {
     const user = await requireAuth(ctx, req);
-    const { updates } = (await req.json()) as any;
+    const { updates } = await req.json();
     if (!Array.isArray(updates)) return errorResponse("Invalid updates format", 400);
     let updatedCount = 0;
     for (const u of updates) {
@@ -483,7 +411,7 @@ const deleteCert = httpAction(async (ctx, req) => {
 const deleteBatchSecure = httpAction(async (ctx, req) => {
   try {
     const user = await requireAuth(ctx, req);
-    const { batchId } = (await req.json()) as any;
+    const { batchId } = await req.json();
     if (!batchId) return errorResponse("Batch ID is required", 400);
     const count = await ctx.runMutation(internal.certificates.archiveBatch, { batchId, userId: user._id, isAdmin: user.role === "admin" });
     return jsonResponse({ message: `Successfully archived batch "${batchId}"`, count });
@@ -501,24 +429,12 @@ const resendBatch = httpAction(async (ctx, req) => {
     const certs = await ctx.runQuery(internal.certificates.listByBatchId, { batchId });
     let sentCount = 0;
 
-    const templateCache = new Map<string, any>();
-    const templateBytesCache = new Map<string, string>();
-
     for (const cert of certs) {
       if (!cert.email) continue;
-      const templateId = cert.templateId.toString();
-      let template = templateCache.get(templateId);
-      if (!template) {
-        template = await ctx.runQuery(internal.templates.findMetadataById, { id: cert.templateId });
-        if (template) templateCache.set(templateId, template);
-      }
+      const template = await ctx.runQuery(internal.templates.findById, { id: cert.templateId });
       if (!template) continue;
       try {
-        let templateBase64 = templateBytesCache.get(templateId);
-        if (!templateBase64) {
-          templateBase64 = await getTemplateBytesBase64(ctx, template);
-          templateBytesCache.set(templateId, templateBase64);
-        }
+        const templateBase64 = await getTemplateBytesBase64(ctx, template);
         const itemData = { name: cert.name, email: cert.email, course: cert.course, certificateId: cert.certificateId, ...(cert.metadata || {}) };
         const pdfBase64 = await ctx.runAction(internal.nodeActions.generatePdf, {
           templateBase64,
@@ -548,62 +464,11 @@ const resendBatch = httpAction(async (ctx, req) => {
   }
 });
 
-const resendSingle = httpAction(async (ctx, req) => {
-  try {
-    const user = await requireAuth(ctx, req);
-    const url = new URL(req.url);
-    const certId = decodeURIComponent(url.pathname.split("/resend-single/")[1]);
-
-    const cert = await ctx.runQuery(internal.certificates.findByCertId, { certificateId: certId });
-    if (!cert) return errorResponse("Certificate not found.", 404);
-    if (user.role !== "admin" && cert.createdBy !== user._id) {
-      return errorResponse("Forbidden", 403);
-    }
-    if (!cert.email) return errorResponse("Certificate has no recipient email.", 400);
-
-    // Clean & normalize email
-    let cleanEmail = String(cert.email).replace(/\s+/g, "").replace(/^[<"'\s]+|[>'"\s]+$/g, "").replace(/[\s.,;:)]+$/g, "").replace(/^[\s.,;:(]+/g, "").toLowerCase();
-
-    const template = await ctx.runQuery(internal.templates.findMetadataById, { id: cert.templateId });
-    if (!template) return errorResponse("Template not found.", 404);
-
-    const templateBase64 = await getTemplateBytesBase64(ctx, template);
-    const itemData = { name: cert.name, email: cleanEmail, course: cert.course, certificateId: cert.certificateId, ...(cert.metadata || {}) };
-
-    const pdfBase64 = await ctx.runAction(internal.nodeActions.generatePdf, {
-      templateBase64,
-      layoutConfig: template.layoutConfig,
-      qrCode: template.qrCode,
-      showId: template.showId,
-      showQr: template.showQr,
-      data: itemData,
-      certId: cert.certificateId,
-      frontendUrl: FRONTEND_URL,
-    });
-
-    await ctx.runAction(internal.nodeActions.sendEmail, {
-      to: cleanEmail,
-      name: cert.name,
-      subject: "Your Certificate of Achievement",
-      htmlContent: buildCertEmailHtml(cert.name, cert.certificateId, "Your certificate has been re-sent successfully.", "DigiCertify"),
-      pdfBase64,
-      certId: cert.certificateId,
-    });
-
-    await ctx.runMutation(internal.certificates.updateStatus, { id: cert._id, status: "Sent" });
-    await ctx.runMutation(internal.emailLogs.create, { certificateId: cert.certificateId, recipient: cleanEmail, status: "Sent" });
-
-    return jsonResponse({ message: `Successfully resent email to ${cleanEmail}` });
-  } catch (e: any) {
-    return errorResponse(e.message);
-  }
-});
-
 // ── Form Automations ──────────────────────────────────────────────────────
 const createAutomation = httpAction(async (ctx, req) => {
   try {
     const user = await requireAuth(ctx, req);
-    const { sheetUrl, templateId, nameColumn, emailColumn, batchId, emailSubject, emailMessage } = (await req.json()) as any;
+    const { sheetUrl, templateId, nameColumn, emailColumn, batchId, emailSubject, emailMessage } = await req.json();
     if (!sheetUrl || !templateId || !nameColumn || !emailColumn) {
       return errorResponse("sheetUrl, templateId, nameColumn and emailColumn are required.", 400);
     }
@@ -646,7 +511,7 @@ const toggleAutomation = httpAction(async (ctx, req) => {
     const user = await requireAuth(ctx, req);
     const url = new URL(req.url);
     const id = url.pathname.split("/").pop() as any;
-    const { active } = (await req.json()) as any;
+    const { active } = await req.json();
     const auto = await ctx.runQuery(internal.formAutomations.findById, { id });
     if (!auto) return errorResponse("Automation not found.", 404);
     if (user.role !== "admin" && auto.userId !== user._id) return errorResponse("Forbidden", 403);
@@ -685,32 +550,6 @@ const myCertificatesHandler = httpAction(async (ctx, req) => {
   }
 });
 
-const cleanupAutomations = httpAction(async (ctx, req) => {
-  try {
-    const user = await requireAuth(ctx, req);
-    const deletedCount = await ctx.runMutation(internal.formAutomations.removeStale, {
-      userId: user._id,
-      isAdmin: user.role === "admin",
-    });
-    return jsonResponse({ message: `Cleaned up ${deletedCount} stale automation records.` });
-  } catch (e: any) {
-    return errorResponse(e.message, e.status || 500);
-  }
-});
-
-const userStatsHandler = httpAction(async (ctx, req) => {
-  try {
-    const user = await requireAuth(ctx, req);
-    const stats = await ctx.runQuery(internal.certificates.countUserStats, {
-      userId: user._id,
-      email: user.email,
-    });
-    return jsonResponse(stats);
-  } catch (e: any) {
-    return errorResponse(e.message, e.status || 500);
-  }
-});
-
 export {
   uploadData,
   uploadSheet,
@@ -724,12 +563,9 @@ export {
   deleteCert,
   deleteBatchSecure,
   resendBatch,
-  resendSingle,
   createAutomation,
   listAutomations,
   toggleAutomation,
   deleteAutomation,
   myCertificatesHandler,
-  cleanupAutomations,
-  userStatsHandler,
 };

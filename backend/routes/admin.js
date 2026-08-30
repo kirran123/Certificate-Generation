@@ -2,76 +2,20 @@ const express = require('express');
 const User = require('../models/User');
 const Certificate = require('../models/Certificate');
 const EmailLog = require('../models/EmailLog');
-const Feedback = require('../models/Feedback');
 const { protect, admin } = require('../middleware/auth');
-const { getBrevoPoolStatus } = require('../utils/brevoPool');
-const { getOrFetch, clearCache } = require('../utils/cache');
 
 const router = express.Router();
 
-// Get Brevo API Keys pool status (public diagnostic monitoring)
-router.get('/brevo-status', async (req, res) => {
-  try {
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-    const status = await getBrevoPoolStatus();
-    res.json(status);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// All other routes here are protected and admin-only
+// All routes here are protected and admin-only
 router.use(protect, admin);
 
-// Get overview stats (Cached for 15 seconds)
-router.get('/stats', async (req, res) => {
-  try {
-    const statsData = await getOrFetch('admin_stats', 15000, async () => {
-      const usersCount = await User.countDocuments();
-      const allCerts = await Certificate.find({ isArchived: { $ne: true } });
-      const certificatesCount = allCerts.length;
-      const sentCount = allCerts.filter(c => c.status === 'Sent').length;
-      const failedCount = allCerts.filter(c => c.status === 'Failed').length;
-      const recentLogs = await EmailLog.find({ limit: 20 });
-      const recentFeedbacks = await Feedback.find({ limit: 10 });
-
-      return {
-        usersCount,
-        certificatesCount,
-        sentCount,
-        failedCount,
-        recentLogs,
-        recentFeedbacks,
-      };
-    });
-
-    res.json(statsData);
-  } catch (error) {
-    console.error('Error in /api/admin/stats:', error.message);
-    res.status(200).json({
-      usersCount: 0,
-      certificatesCount: 0,
-      sentCount: 0,
-      failedCount: 0,
-      recentLogs: [],
-      recentFeedbacks: [],
-      error: error.message
-    });
-  }
-});
-
-// Get all users (Cached for 15 seconds)
+// Get all users
 router.get('/users', async (req, res) => {
   try {
-    const users = await getOrFetch('admin_users', 15000, async () => {
-      return await User.find({});
-    });
+    const users = await User.find({}).select('-password');
     res.json(users);
   } catch (error) {
-    console.error('Error in /api/admin/users:', error.message);
-    res.json([]);
+    res.status(500).json({ message: error.message });
   }
 });
 
@@ -83,9 +27,7 @@ router.delete('/users/:id', async (req, res) => {
       if (user.role === 'admin') {
         return res.status(400).json({ message: 'Cannot delete the admin account' });
       }
-      await User.deleteOne(req.params.id);
-      clearCache('admin_users');
-      clearCache('admin_stats');
+      await user.deleteOne();
       res.json({ message: 'User removed' });
     } else {
       res.status(404).json({ message: 'User not found' });
@@ -95,28 +37,22 @@ router.delete('/users/:id', async (req, res) => {
   }
 });
 
-// Get all certificates (Cached for 15 seconds)
+// Get all certificates
 router.get('/certificates', async (req, res) => {
   try {
-    const certsData = await getOrFetch('admin_certificates', 15000, async () => {
-      const certs = await Certificate.find({ isArchived: { $ne: true } });
-      return await Certificate.populate(certs, 'templateId createdBy');
-    });
-    res.json(certsData);
+    const certs = await Certificate.find({ isArchived: { $ne: true } }).populate('templateId', 'name').populate('createdBy', 'name email');
+    res.json(certs);
   } catch (error) {
-    console.error('Error in /api/admin/certificates:', error.message);
-    res.json([]);
+    res.status(500).json({ message: error.message });
   }
 });
 
 // Delete certificate
 router.delete('/certificates/:id', async (req, res) => {
   try {
-    const cert = await Certificate.findByDocId(req.params.id);
+    const cert = await Certificate.findById(req.params.id);
     if (cert) {
-      await Certificate.deleteOne({ certificateId: cert.certificateId });
-      clearCache('admin_certificates');
-      clearCache('admin_stats');
+      await cert.deleteOne();
       res.json({ message: 'Certificate removed' });
     } else {
       res.status(404).json({ message: 'Certificate not found' });
@@ -126,16 +62,13 @@ router.delete('/certificates/:id', async (req, res) => {
   }
 });
 
-// Get email logs (Cached for 15 seconds)
+// Get email logs
 router.get('/emaillogs', async (req, res) => {
   try {
-    const logs = await getOrFetch('admin_emaillogs', 15000, async () => {
-      return await EmailLog.find({ limit: 100 });
-    });
+    const logs = await EmailLog.find({}).sort({ sentAt: -1 });
     res.json(logs);
   } catch (error) {
-    console.error('Error in /api/admin/emaillogs:', error.message);
-    res.json([]);
+    res.status(500).json({ message: error.message });
   }
 });
 

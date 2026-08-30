@@ -40,8 +40,7 @@ export default defineSchema({
     .index("by_batchId", ["batchId"])
     .index("by_createdBy", ["createdBy"])
     .index("by_uniqueHash", ["uniqueHash"])
-    .index("by_isArchived", ["isArchived"])
-    .index("by_email", ["email"]),
+    .index("by_isArchived", ["isArchived"]),
 
   emailLogs: defineTable({
     certificateId: v.string(),
@@ -73,9 +72,4 @@ export default defineSchema({
     message: v.string(),
     certificateId: v.optional(v.string()),
   }),
-
-  templateImages: defineTable({
-    templateId: v.id("templates"),
-    imageBase64: v.string(),
-  }).index("by_templateId", ["templateId"]),
 });

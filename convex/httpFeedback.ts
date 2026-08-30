@@ -9,7 +9,7 @@ export const feedbackTestHandler = httpAction(async () =>
 
 export const submitFeedbackHandler = httpAction(async (ctx, req) => {
   try {
-    const { name, email, message, certificateId, type } = (await req.json()) as any;
+    const { name, email, message, certificateId, type } = await req.json();
     if (!name || !message) return errorResponse("Name and message are required", 400);
     await ctx.runMutation(internal.feedback.create, {
       name, email, type: type || "Suggestion", message, certificateId,

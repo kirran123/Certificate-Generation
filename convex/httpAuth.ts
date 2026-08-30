@@ -6,29 +6,19 @@ import { jsonResponse, errorResponse } from "./_utils/httpHelpers";
 // ── Auth middleware (V8 compatible) ──────────────────────────────────────
 export async function requireAuth(ctx: any, req: Request) {
   const authHeader = req.headers.get("authorization") || "";
-  let token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
-  if (!token) {
-    const url = new URL(req.url);
-    token = url.searchParams.get("token");
-  }
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
   if (!token) throw { status: 401, message: "No token provided" };
   const decoded = await verifyToken(token);
   if (!decoded) throw { status: 401, message: "Invalid or expired token" };
   const user = await ctx.runQuery(internal.users.findById, { id: decoded.id });
   if (!user) throw { status: 401, message: "User not found" };
-
-  const isSpecialAdmin = user.email === "kirranvijay@gmail.com" || user.name === "Super Admin" || user.name === "Super";
-  if (isSpecialAdmin && user.role !== "admin") {
-    await ctx.runMutation(internal.users.setRole, { id: user._id, role: "admin" });
-    user.role = "admin";
-  }
   return user;
 }
 
 // ── Handlers ──────────────────────────────────────────────────────────────
 export const signupHandler = httpAction(async (ctx, req) => {
   try {
-    const { name, email, password } = (await req.json()) as any;
+    const { name, email, password } = await req.json();
     if (!name || !email || !password) return errorResponse("All fields required", 400);
     const existing = await ctx.runQuery(internal.users.findByEmail, { email });
     if (existing) return errorResponse("User already exists", 400);
@@ -47,21 +37,13 @@ export const signupHandler = httpAction(async (ctx, req) => {
 
 export const loginHandler = httpAction(async (ctx, req) => {
   try {
-    const { email, password } = (await req.json()) as any;
+    const { email, password } = await req.json();
     const user = await ctx.runQuery(internal.users.findByEmail, { email });
     if (!user) return errorResponse("Invalid email or password", 401);
     const ok = await comparePassword(password, user.passwordHash);
     if (!ok) return errorResponse("Invalid email or password", 401);
-
-    const isSpecialAdmin = user.email === "kirranvijay@gmail.com" || user.name === "Super Admin" || user.name === "Super";
-    let role = user.role;
-    if (isSpecialAdmin && user.role !== "admin") {
-      await ctx.runMutation(internal.users.setRole, { id: user._id, role: "admin" });
-      role = "admin";
-    }
-
     const token = await signToken(user._id);
-    return jsonResponse({ _id: user._id, name: user.name, email: user.email, role, token });
+    return jsonResponse({ _id: user._id, name: user.name, email: user.email, role: user.role, token });
   } catch (e: any) {
     return errorResponse(e.message || "Login failed");
   }

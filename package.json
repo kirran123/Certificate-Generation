@@ -4,8 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "convex dev",
-    "deploy": "convex deploy",
-    "build": "npm install --prefix frontend && npm run build --prefix frontend"
+    "deploy": "convex deploy"
   },
   "dependencies": {
     "convex": "^1.16.0",

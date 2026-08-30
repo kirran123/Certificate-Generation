@@ -20,23 +20,23 @@ export const uploadImageHandler = httpAction(async (ctx, req) => {
 export const saveLayoutHandler = httpAction(async (ctx, req) => {
   try {
     const user = await requireAuth(ctx, req);
-    const body = (await req.json()) as any;
+    const body = await req.json();
     const { name, imageUrl, imageStorageId, layoutConfig, showId, showQr, templateId } = body;
 
     let base64Data: string | undefined;
     if (!imageStorageId && imageUrl?.startsWith("http")) {
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
-        const resp = await fetch(imageUrl, { signal: controller.signal });
-        clearTimeout(timeoutId);
+        const resp = await fetch(imageUrl);
         if (resp.ok) {
           const arrayBuffer = await resp.arrayBuffer();
-          base64Data = Buffer.from(arrayBuffer).toString("base64");
+          let binary = "";
+          const bytes = new Uint8Array(arrayBuffer);
+          for (let i = 0; i < bytes.byteLength; i++) {
+            binary += String.fromCharCode(bytes[i]);
+          }
+          base64Data = btoa(binary);
         }
-      } catch (err: any) {
-        console.warn("Failed to fetch legacy template image:", err.message);
-      }
+      } catch { /* ignore */ }
     }
 
     const templateData = {

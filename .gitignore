@@ -21,4 +21,4 @@ Thumbs.db
 
 # Uploads (generated at runtime, not source code)
 backend/uploads/certificates/*.pdf
-.env.local
+backend/config/serviceAccountKey.json

@@ -7,7 +7,7 @@ export const verifyCertHandler = httpAction(async (ctx, req) => {
     const certId = new URL(req.url).pathname.split("/").pop()!;
     const cert = await ctx.runQuery(internal.certificates.findByCertId, { certificateId: certId });
     if (!cert) return jsonResponse({ valid: false, message: "Certificate not found or invalid" }, 404);
-    const template = cert.templateId ? await ctx.runQuery(internal.templates.findMetadataById, { id: cert.templateId }) : null;
+    const template = cert.templateId ? await ctx.runQuery(internal.templates.findById, { id: cert.templateId }) : null;
     return jsonResponse({
       valid: true,
       certificate: {

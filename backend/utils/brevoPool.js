@@ -117,6 +117,11 @@ async function sendEmailWithFailover(emailOptions) {
   const maxAttempts = keys.length;
   let lastErrorData = '';
 
+  // Always attempt from primary Key #1 first if activeKeyIndex > 0, so that daily morning quota resets automatically restore Key #1
+  if (activeKeyIndex !== 0 && attempts === 0) {
+    activeKeyIndex = 0;
+  }
+
   while (attempts < maxAttempts) {
     // Ensure activeKeyIndex stays within bounds
     activeKeyIndex = activeKeyIndex % keys.length;

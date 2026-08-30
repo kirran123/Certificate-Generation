@@ -28,86 +28,31 @@ export const parseExcel = internalAction({
 export const parseGoogleSheet = internalAction({
   args: { sheetUrl: v.string() },
   handler: async (_ctx, { sheetUrl }) => {
-    if (!sheetUrl) throw new Error("No Google Sheet URL provided.");
-    const trimmedUrl = sheetUrl.trim();
-
-    if (trimmedUrl.includes("docs.google.com/forms") || trimmedUrl.includes("forms.gle")) {
-      throw new Error("This is a Google Form link. Please open the Form responses in Google Sheets (click the green Sheets icon in the form), then copy and paste that Sheets link here.");
-    }
-
-    let docId = "";
-    let isWebPublished = false;
-
-    const webPubMatch = trimmedUrl.match(/\/d\/e\/([a-zA-Z0-9-_]+)/);
-    const standardMatch = trimmedUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
-
-    if (webPubMatch) {
-      docId = webPubMatch[1];
-      isWebPublished = true;
-    } else if (standardMatch) {
-      docId = standardMatch[1];
-    } else if (/^[a-zA-Z0-9-_]{20,}$/.test(trimmedUrl)) {
-      docId = trimmedUrl;
-    } else {
-      throw new Error("Invalid Google Sheets URL format. Copy the URL from your browser address bar while the sheet is open.");
-    }
-
-    const gidMatch = trimmedUrl.match(/[#&?]gid=([0-9]+)/);
+    const idMatch = sheetUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
+    if (!idMatch) throw new Error("Invalid Google Sheets URL.");
+    const docId = idMatch[1];
+    const gidMatch = sheetUrl.match(/[#&?]gid=([0-9]+)/);
     const preferredGid = gidMatch ? gidMatch[1] : null;
+    const gidsToTry = [...new Set(preferredGid ? [preferredGid, "0", "1", "2"] : ["0", "1", "2"])];
 
-    const candidateUrls: string[] = [];
-    if (isWebPublished) {
-      candidateUrls.push(`https://docs.google.com/spreadsheets/d/e/${docId}/pub?output=csv`);
-      if (preferredGid) candidateUrls.push(`https://docs.google.com/spreadsheets/d/e/${docId}/pub?gid=${preferredGid}&single=true&output=csv`);
-    } else {
-      if (preferredGid) candidateUrls.push(`https://docs.google.com/spreadsheets/d/${docId}/export?format=csv&gid=${preferredGid}`);
-      candidateUrls.push(`https://docs.google.com/spreadsheets/d/${docId}/export?format=csv`);
-      candidateUrls.push(`https://docs.google.com/spreadsheets/d/${docId}/gviz/tq?tqx=out:csv`);
-      if (preferredGid) candidateUrls.push(`https://docs.google.com/spreadsheets/d/${docId}/gviz/tq?tqx=out:csv&gid=${preferredGid}`);
-      for (const g of ["0", "1", "2", "3"]) {
-        if (g !== preferredGid) candidateUrls.push(`https://docs.google.com/spreadsheets/d/${docId}/export?format=csv&gid=${g}`);
-      }
-    }
-
-    const uniqueUrls = [...new Set(candidateUrls)];
-    let privateDetected = false;
-    let notFoundDetected = false;
-    let lastErrorMsg = "";
-
-    for (const url of uniqueUrls) {
+    for (const gid of gidsToTry) {
       try {
-        const response = await axios.get(url, {
-          responseType: "arraybuffer",
-          timeout: 15000,
-          headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" },
-        });
-
-        const text = Buffer.from(response.data).toString("utf8", 0, 300);
-        if (text.includes("<html") && (text.includes("accounts.google.com") || text.includes("ServiceLogin") || text.includes("Sign in"))) {
-          privateDetected = true;
-          continue;
+        const exportUrl = `https://docs.google.com/spreadsheets/d/${docId}/export?format=csv&gid=${gid}`;
+        const response = await axios.get(exportUrl, { responseType: "arraybuffer", timeout: 15000, headers: { "User-Agent": "Mozilla/5.0" } });
+        const text = Buffer.from(response.data).toString("utf8", 0, 200);
+        if (text.includes("<html") && (text.includes("accounts.google.com") || text.includes("ServiceLogin"))) {
+          throw new Error("PRIVATE");
         }
-
         const wb = xlsx.read(response.data, { type: "buffer" });
         const ws = wb.Sheets[wb.SheetNames[0]];
         const data = xlsx.utils.sheet_to_json(ws, { raw: false, defval: "" });
-        const headers = ((xlsx.utils.sheet_to_json(ws, { header: 1, raw: false }) as any[][])[0] || []).map(String).filter(Boolean);
-
-        if (headers.length > 0 || data.length > 0) {
-          return { data, headers };
-        }
+        const headers = (xlsx.utils.sheet_to_json(ws, { header: 1, raw: false }) as any[][])[0] || [];
+        return { data, headers: headers.map(String).filter(Boolean) };
       } catch (e: any) {
-        if (e.response?.status === 401 || e.response?.status === 403) privateDetected = true;
-        else if (e.response?.status === 404) notFoundDetected = true;
-        lastErrorMsg = e.message;
+        if (e.message === "PRIVATE") throw new Error("Sheet is private. Set sharing to 'Anyone with the link can view'.");
       }
     }
-
-    if (privateDetected || notFoundDetected) {
-      throw new Error("Access denied or sheet not found. Ensure sheet sharing is set to 'Anyone with the link can view' (Share -> General Access -> Anyone with the link).");
-    }
-
-    throw new Error(`Failed to access Google Sheet: ${lastErrorMsg || "Check sheet link & sharing permissions."}`);
+    throw new Error("Failed to access the Google Sheet.");
   },
 });
 
@@ -248,23 +193,7 @@ export const createBulkZip = internalAction({
   },
 });
 
-function normalizeEmail(rawEmail: any): string {
-  if (!rawEmail) return "";
-  let email = String(rawEmail);
-  email = email.replace(/\s+/g, "");
-  email = email.replace(/^[<"'\s]+|[>'"\s]+$/g, "");
-  email = email.replace(/[\s.,;:)]+$/g, "");
-  email = email.replace(/^[\s.,;:(]+/g, "");
-  if (email.includes("@")) {
-    const parts = email.split("@");
-    const local = parts[0];
-    const domain = parts.slice(1).join("@").replace(/\.{2,}/g, ".").replace(/^\.+|\.+$/g, "");
-    email = `${local}@${domain}`;
-  }
-  return email.toLowerCase();
-}
-
-// ── Send email via Brevo ──────────────────────────────────────────────────
+// ── Send email via Brevo with Pool Failover ──────────────────────────────────
 export const sendEmail = internalAction({
   args: {
     to: v.string(),
@@ -277,183 +206,38 @@ export const sendEmail = internalAction({
     senderEmail: v.optional(v.string()),
   },
   handler: async (_ctx, args): Promise<void> => {
-    // 1. Sanitize, normalize & clean recipient email (autofixes spaces, trailing dots, quotes)
-    const cleanTo = normalizeEmail(args.to);
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!cleanTo || !emailRegex.test(cleanTo)) {
-      throw new Error(`Invalid recipient email address: "${args.to}"`);
-    }
+    const keys = [
+      process.env.BREVO_API_KEY_1,
+      process.env.BREVO_API_KEY_2,
+      process.env.BREVO_API_KEY_3,
+      process.env.BREVO_API_KEY_4,
+      process.env.BREVO_API_KEY,
+    ].filter((k): k is string => Boolean(k && k.trim()));
 
-    // 2. Build Brevo API key pool
-    const DEFAULT_KEYS = [
-      ['xkeysib', '9c22c4848b72ea19d8351a5b79324b16341dba31df1cd6686a662fe13d681850', 'e4CqtFTzyzUWDIr6'].join('-'),
-      ['xkeysib', 'dafeccff1fb789578d0dc4234c69bedee330370aa24ef84ca6898664254662ef', '5VO8ze6EleAglX6t'].join('-'),
-      ['xkeysib', 'ab9c93d8371edf8be3915862d36e91333724fbc121991259f8c32c0acb95a377', 'naseUsKtX8F47bX2'].join('-'),
-      ['xkeysib', 'dcfe25e3077ec9911167dd73e72f058b855a1b08c503f484a614336f4f9e9485', 'IOGFOa3L6B54fQKn'].join('-'),
-    ];
-
-    const rawKeys: string[] = [];
-    if (process.env.BREVO_API_KEYS) {
-      rawKeys.push(...process.env.BREVO_API_KEYS.split(",").map((k) => k.trim()).filter(Boolean));
-    }
-    for (let i = 1; i <= 5; i++) {
-      const k = process.env[`BREVO_API_KEY_${i}`];
-      if (k && !rawKeys.includes(k.trim())) rawKeys.push(k.trim());
-    }
-    if (process.env.BREVO_API_KEY && !rawKeys.includes(process.env.BREVO_API_KEY.trim())) {
-      rawKeys.push(process.env.BREVO_API_KEY.trim());
-    }
-
-    const keys = rawKeys.filter(k => !k.includes("VtrU") && !k.includes("FYOa"));
-    DEFAULT_KEYS.forEach((defKey) => {
-      if (!keys.includes(defKey)) keys.push(defKey);
-    });
-
-    const payload: any = {
-      sender: { name: args.senderName || "DigiCertify", email: args.senderEmail || "digicertify00@gmail.com" },
-      to: [{ email: cleanTo, name: args.name }],
-      subject: args.subject,
-      htmlContent: args.htmlContent,
-    };
-    if (args.pdfBase64 && args.pdfBase64.trim().length > 0) {
-      payload.attachment = [{ content: args.pdfBase64.trim(), name: `${args.certId || 'Certificate'}.pdf` }];
-    }
-
-    let lastError = "";
-    for (const key of keys) {
-      try {
-        const resp = await axios.post("https://api.brevo.com/v3/smtp/email", payload, {
-          headers: { "api-key": key, "Content-Type": "application/json" },
-          timeout: 20000,
-        });
-        if (resp.status >= 200 && resp.status < 300) return;
-      } catch (e: any) {
-        const status = e.response?.status;
-        const errDetail = e.response?.data?.message || e.response?.data?.code || e.message;
-        const errStr = String(errDetail);
-        lastError = errStr;
-
-        if (status === 400 && !errStr.toLowerCase().includes("ip") && !errStr.toLowerCase().includes("recognised")) {
-          throw new Error(`Invalid recipient email or payload: ${errDetail}`);
-        }
-      }
-    }
-
-    throw new Error(`All ${keys.length} Brevo API key(s) failed or exceeded limits. Last error: ${lastError}`);
-  },
-});
-
-export const getBrevoPoolStatusAction = internalAction({
-  args: {},
-  handler: async () => {
-    const DEFAULT_KEYS = [
-      ['xkeysib', '9c22c4848b72ea19d8351a5b79324b16341dba31df1cd6686a662fe13d681850', 'e4CqtFTzyzUWDIr6'].join('-'),
-      ['xkeysib', 'dafeccff1fb789578d0dc4234c69bedee330370aa24ef84ca6898664254662ef', '5VO8ze6EleAglX6t'].join('-'),
-      ['xkeysib', 'ab9c93d8371edf8be3915862d36e91333724fbc121991259f8c32c0acb95a377', 'naseUsKtX8F47bX2'].join('-'),
-      ['xkeysib', 'dcfe25e3077ec9911167dd73e72f058b855a1b08c503f484a614336f4f9e9485', 'IOGFOa3L6B54fQKn'].join('-'),
-    ];
-    const rawKeys: string[] = [];
-    if (process.env.BREVO_API_KEYS) {
-      rawKeys.push(...process.env.BREVO_API_KEYS.split(",").map((k) => k.trim()).filter(Boolean));
-    }
-    for (let i = 1; i <= 5; i++) {
-      const k = process.env[`BREVO_API_KEY_${i}`];
-      if (k && !rawKeys.includes(k.trim())) rawKeys.push(k.trim());
-    }
-    if (process.env.BREVO_API_KEY && !rawKeys.includes(process.env.BREVO_API_KEY.trim())) {
-      rawKeys.push(process.env.BREVO_API_KEY.trim());
-    }
-
-    const keys = rawKeys.filter(k => !k.includes('VtrU') && !k.includes('FYOa'));
-    DEFAULT_KEYS.forEach(defKey => {
-      if (!keys.includes(defKey)) keys.push(defKey);
-    });
-
-    const poolStatus: any[] = [];
+    let lastErr = "";
     for (let i = 0; i < keys.length; i++) {
       const apiKey = keys[i];
-      const masked = apiKey.length > 12 ? `${apiKey.substring(0, 8)}...${apiKey.slice(-4)}` : `Key #${i + 1}`;
-      let keyInfo: any = {
-        index: i + 1,
-        keyMasked: masked,
-        email: masked,
-        creditsRemaining: 300,
-        dailyQuota: 300,
-        creditsType: 'daily',
-        status: 'standby',
-        error: null
+      const payload = {
+        sender: { name: args.senderName || "DigiCertify", email: args.senderEmail || "digicertify00@gmail.com" },
+        to: [{ email: args.to }],
+        subject: args.subject,
+        htmlContent: args.htmlContent,
+        attachment: [{ content: args.pdfBase64, name: `${args.certId}.pdf` }],
       };
 
       try {
-        const resp = await axios.get('https://api.brevo.com/v3/account', {
-          headers: { 'api-key': apiKey, 'accept': 'application/json' },
-          timeout: 5000
+        const resp = await axios.post("https://api.brevo.com/v3/smtp/email", payload, {
+          headers: { "api-key": apiKey, "Content-Type": "application/json" },
+          timeout: 15000,
         });
-
-        if (resp.data) {
-          if (resp.data.email) {
-            keyInfo.email = resp.data.email;
-          }
-          if (Array.isArray(resp.data.plan)) {
-            const sendPlan = resp.data.plan.find((p: any) => p.credits !== undefined) || resp.data.plan[0];
-            if (sendPlan) {
-              keyInfo.creditsRemaining = sendPlan.credits !== undefined ? sendPlan.credits : 300;
-              keyInfo.creditsType = sendPlan.creditsType || 'sendLimit';
-              keyInfo.dailyQuota = 300;
-            }
-          }
-        }
-
-        if (keyInfo.creditsRemaining <= 0) {
-          keyInfo.status = 'exceeded';
-          keyInfo.email = `${keyInfo.email} (Limit Reached)`;
+        if (resp.status >= 200 && resp.status < 300) {
+          return;
         }
       } catch (err: any) {
-        const errMsg = err.response?.data?.message || err.message || '';
-        keyInfo.error = errMsg;
-        keyInfo.creditsRemaining = 0;
-        if (errMsg.toLowerCase().includes('ip') || errMsg.toLowerCase().includes('recognised')) {
-          if (apiKey === DEFAULT_KEY_2 || apiKey.includes('FYOa') || apiKey.includes('wucGML6')) {
-            keyInfo.status = 'standby';
-            keyInfo.email = 'kirranvijay@gmail.com';
-            keyInfo.creditsRemaining = 300;
-            keyInfo.error = null;
-          } else {
-            keyInfo.status = 'invalid';
-            keyInfo.email = `${masked} (IP Security Restricted)`;
-          }
-        } else if (err.response?.status === 401) {
-          keyInfo.status = 'invalid';
-          keyInfo.email = `${masked} (Unauthorized / Revoked)`;
-        } else {
-          keyInfo.status = 'exceeded';
-          keyInfo.email = `${masked} (Quota Exceeded)`;
-        }
-      }
-
-      poolStatus.push(keyInfo);
-    }
-
-    let activeFound = false;
-    for (let k of poolStatus) {
-      if (k.status !== 'exceeded' && k.status !== 'invalid' && k.creditsRemaining > 0) {
-        if (!activeFound) {
-          k.status = 'active';
-          activeFound = true;
-        } else {
-          k.status = 'standby';
-        }
+        lastErr = err.response?.data?.message || err.message;
+        console.warn(`[Convex Brevo Pool] Key #${i + 1} failed: ${lastErr}`);
       }
     }
-
-    const totalRemaining = poolStatus.reduce((acc, k) => acc + (k.creditsRemaining || 0), 0);
-    const totalCapacity = poolStatus.reduce((acc, k) => acc + (k.dailyQuota || 300), 0);
-
-    return {
-      totalKeys: keys.length,
-      totalRemaining,
-      totalCapacity,
-      keys: poolStatus
-    };
+    throw new Error(`All Brevo keys in pool failed: ${lastErr}`);
   },
 });

@@ -2,7 +2,6 @@
 // NO "use node" directive — this file must run in V8.
 import { httpRouter } from "convex/server";
 import { httpAction } from "./_generated/server";
-import { internal } from "./_generated/api";
 
 // Auth
 import { signupHandler, loginHandler, meHandler } from "./httpAuth";
@@ -14,9 +13,6 @@ import {
   getAdminCertificatesHandler,
   deleteAdminCertificateHandler,
   getEmailLogsHandler,
-  cleanupDbHandler,
-  getAdminStatsHandler,
-  getBrevoStatusHandler,
 } from "./httpAdmin";
 
 // Template
@@ -36,14 +32,11 @@ import {
   deleteCert,
   deleteBatchSecure,
   resendBatch,
-  resendSingle,
   createAutomation,
   listAutomations,
   toggleAutomation,
   deleteAutomation,
   myCertificatesHandler,
-  cleanupAutomations,
-  userStatsHandler,
 } from "./httpCertificate";
 
 // Verify
@@ -108,9 +101,6 @@ http.route({ pathPrefix: "/api/admin/users/",        method: "DELETE", handler: 
 http.route({ path: "/api/admin/certificates",        method: "GET",    handler: withCors(getAdminCertificatesHandler) });
 http.route({ pathPrefix: "/api/admin/certificates/", method: "DELETE", handler: withCors(deleteAdminCertificateHandler) });
 http.route({ path: "/api/admin/emaillogs",           method: "GET",    handler: withCors(getEmailLogsHandler) });
-http.route({ path: "/api/admin/cleanup-db",          method: "POST",   handler: withCors(cleanupDbHandler) });
-http.route({ path: "/api/admin/stats",               method: "GET",    handler: withCors(getAdminStatsHandler) });
-http.route({ path: "/api/admin/brevo-status",        method: "GET",    handler: withCors(getBrevoStatusHandler) });
 
 // ── Template ──────────────────────────────────────────────────────────────
 http.route({ path: "/api/template/upload-image", method: "POST", handler: withCors(uploadImageHandler) });
@@ -132,14 +122,11 @@ http.route({ path: "/api/certificate/form-automations",    method: "GET",    han
 http.route({ pathPrefix: "/api/certificate/download/",           method: "GET",    handler: withCors(downloadCert) });
 http.route({ pathPrefix: "/api/certificate/delete-certificate/",  method: "DELETE", handler: withCors(deleteCert) });
 http.route({ pathPrefix: "/api/certificate/resend-batch/",       method: "POST",   handler: withCors(resendBatch) });
-http.route({ pathPrefix: "/api/certificate/resend-single/",      method: "POST",   handler: withCors(resendSingle) });
 http.route({ pathPrefix: "/api/certificate/form-automation/",    method: "PATCH",  handler: withCors(toggleAutomation) });
 http.route({ pathPrefix: "/api/certificate/form-automation/",    method: "DELETE", handler: withCors(deleteAutomation) });
-http.route({ path: "/api/certificate/form-automations/cleanup",  method: "DELETE", handler: withCors(cleanupAutomations) });
 
 // ── User Certificates ─────────────────────────────────────────────────────
 http.route({ path: "/api/user/my-certificates", method: "GET", handler: withCors(myCertificatesHandler) });
-http.route({ path: "/api/user/stats",           method: "GET", handler: withCors(userStatsHandler) });
 
 // ── Verify (public) ───────────────────────────────────────────────────────
 http.route({ pathPrefix: "/api/verify/", method: "GET", handler: withCors(verifyCertHandler) });
@@ -149,39 +136,6 @@ http.route({ path: "/api/user-feedback/test",         method: "GET",    handler:
 http.route({ path: "/api/user-feedback",              method: "POST",   handler: withCors(submitFeedbackHandler) });
 http.route({ path: "/api/user-feedback/admin",        method: "GET",    handler: withCors(getFeedbackHandler) });
 http.route({ pathPrefix: "/api/user-feedback/admin/", method: "DELETE", handler: withCors(deleteFeedbackHandler) });
-
-// ── Temporary public cleanup endpoint ─────────────────────────────────────
-http.route({
-  path: "/api/cleanup-db-public",
-  method: "GET",
-  handler: withCors(httpAction(async (ctx, req) => {
-    try {
-      let cursor = undefined;
-      let isDone = false;
-      let totalUpdated = 0;
-
-      while (!isDone) {
-        const res: any = await ctx.runMutation(internal.migrations.splitBatch, {
-          cursor,
-          limit: 10,
-        });
-        cursor = res.continueCursor;
-        isDone = res.isDone;
-        totalUpdated += res.updated;
-      }
-
-      return new Response(JSON.stringify({ success: true, message: `Successfully cleaned up ${totalUpdated} templates` }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" }
-      });
-    } catch (err: any) {
-      return new Response(JSON.stringify({ success: false, error: err.message }), {
-        status: 500,
-        headers: { "Content-Type": "application/json" }
-      });
-    }
-  }))
-});
 
 // ── CORS preflight ────────────────────────────────────────────────────────
 http.route({
