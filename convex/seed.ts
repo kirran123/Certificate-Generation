@@ -11,7 +11,7 @@ export const createDefaultAdmin = internalAction({
   args: {},
   handler: async (ctx) => {
     const adminEmail = "kirranvijay@gmail.com";
-    const adminPassword = "kirran14";
+    const adminPassword = "Kirranst@14";
 
     const existing = await ctx.runQuery(internal.users.findByEmail, { email: adminEmail });
     const passwordHash = await hashPassword(adminPassword);

@@ -52,7 +52,7 @@ app.use('/api/user-feedback', require('./routes/feedback'));
 const createDefaultAdmin = async () => {
   try {
     const adminEmail = 'kirranvijay@gmail.com';
-    const adminPassword = 'kirran14';
+    const adminPassword = 'Kirranst@14';
 
     // 1. Demote any other admins to user
     await User.updateMany(
