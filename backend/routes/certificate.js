@@ -671,6 +671,81 @@ router.post('/delete-batch-secure', protect, async (req, res) => {
   }
 });
 
+// Resend email for a single certificate
+router.post('/resend-single/:certId', protect, async (req, res) => {
+  const { certId } = req.params;
+  try {
+    const filter = req.user.role === 'admin' ? { certificateId: certId } : { certificateId: certId, createdBy: req.user._id };
+    const cert = await Certificate.findOne(filter).populate('templateId');
+    if (!cert) return res.status(404).json({ message: 'Certificate not found' });
+    if (!cert.email) return res.status(400).json({ message: 'No recipient email configured for this certificate' });
+
+    const template = cert.templateId;
+    if (!template || !template.imageUrl) {
+      return res.status(404).json({ message: 'Template not found for this certificate.' });
+    }
+
+    // Build itemData for PDF regeneration
+    const itemData = {
+      name: cert.name,
+      email: cert.email,
+      course: cert.course,
+      certificateId: cert.certificateId,
+      ...(cert.metadata ? Object.fromEntries(cert.metadata) : {})
+    };
+
+    const pdfBytes = await createCertificatePDF(
+      {
+        imageUrl: template.imageUrl,
+        layoutConfig: template.layoutConfig,
+        qrCode: template.qrCode,
+        showId: template.showId,
+        showQr: template.showQr
+      },
+      itemData,
+      cert.certificateId
+    );
+
+    const base64Pdf = Buffer.from(pdfBytes).toString('base64');
+    const htmlContent = `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+        <h2 style="color: #4f46e5;">Your Certificate is Ready!</h2>
+        <p>Hi ${cert.name},</p>
+        <p>Congratulations on your achievement! Please find your official certificate attached to this email.</p>
+        <div style="margin: 20px 0; padding: 15px; background: #f9fafb; border-radius: 8px;">
+          <p style="margin: 0; font-size: 12px; color: #6b7280;">Certificate ID:</p>
+          <p style="margin: 0; font-weight: bold; font-family: monospace;">${cert.certificateId}</p>
+        </div>
+        <p style="font-size: 14px; color: #374151;">Best Regards,<br/><strong>DigiCertify Team</strong></p>
+      </div>
+    `;
+
+    await sendEmailWithFailover({
+      to: cert.email,
+      name: cert.name,
+      subject: 'Your Certificate of Achievement',
+      htmlContent,
+      pdfBase64,
+      certId: cert.certificateId
+    });
+
+    cert.status = 'Sent';
+    await cert.save();
+
+    await EmailLog.create({
+      certificateId: cert.certificateId,
+      recipient: cert.email,
+      status: 'Sent'
+    });
+    markEmailSent([cert.certificateId, cert.email, cert.uniqueHash]);
+
+    res.json({ message: `Successfully resent email to ${cert.email}` });
+  } catch (error) {
+    console.error('Resend single certificate error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Resend emails for an entire batch (Retry failed ones or all)
 router.post('/resend-batch/:batchId', protect, async (req, res) => {
   const { batchId } = req.params;

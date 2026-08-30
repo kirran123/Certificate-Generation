@@ -21,6 +21,30 @@ router.get('/brevo-status', async (req, res) => {
   }
 });
 
+// Get overview stats
+router.get('/stats', async (req, res) => {
+  try {
+    const Feedback = require('../models/Feedback');
+    const usersCount = await User.countDocuments({});
+    const certificatesCount = await Certificate.countDocuments({ isArchived: { $ne: true } });
+    const sentCount = await EmailLog.countDocuments({ status: 'Sent' });
+    const failedCount = await EmailLog.countDocuments({ status: 'Failed' });
+    const recentLogs = await EmailLog.find({}).sort({ sentAt: -1 }).limit(10);
+    const recentFeedbacks = await Feedback.find({}).sort({ createdAt: -1 }).limit(10);
+
+    res.json({
+      usersCount,
+      certificatesCount,
+      sentCount,
+      failedCount,
+      recentLogs,
+      recentFeedbacks
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Get all users
 router.get('/users', async (req, res) => {
   try {
