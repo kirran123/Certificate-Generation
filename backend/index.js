@@ -39,6 +39,10 @@ app.use('/uploads', express.static('uploads', {
   }
 }));
 
+// Health check endpoints for uptime monitoring (Render, UptimeRobot, etc.)
+app.get('/health', (req, res) => res.status(200).json({ status: 'ok', uptime: process.uptime() }));
+app.get('/api/health', (req, res) => res.status(200).json({ status: 'ok', uptime: process.uptime() }));
+
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/admin', require('./routes/admin'));
