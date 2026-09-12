@@ -31,8 +31,6 @@ app.use(cors({
   credentials: true,
 }));
 
-app.options('*', cors());
-
 app.use(express.json());
 // Serve uploads folder as static with explicit CORS for canvas usage
 app.use('/uploads', express.static('uploads', {
