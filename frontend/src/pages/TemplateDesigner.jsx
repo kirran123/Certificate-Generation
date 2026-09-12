@@ -449,6 +449,8 @@ export default function TemplateDesigner() {
           showId,
           showQr,
           batchId: batchName || undefined,
+          subject: emailConfig.subject,
+          course: emailConfig.subject,
         },
         { headers: { Authorization: `Bearer ${token}` } },
       );

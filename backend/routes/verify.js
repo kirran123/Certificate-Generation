@@ -18,7 +18,7 @@ router.get('/:id', async (req, res) => {
       certificate: {
         certificateId: cert.certificateId,
         name: cert.name,
-        course: cert.course,
+        course: cert.course || cert.templateId?.name || 'Certificate of Participation',
         date: cert.date,
         templateName: cert.templateId?.name,
         status: cert.status,

@@ -333,11 +333,12 @@ router.post('/generate', protect, async (req, res) => {
         fs.writeFileSync(pdfPath, pdfBytes);
 
         // Save to MongoDB with strict field assignment
+        const detectedCourse = itemData.course || req.body.course || req.body.subject || template.name || 'Certificate of Participation';
         await Certificate.create({
           certificateId: certId,
           name: String(itemData.name),
           email: String(itemData.email || ''),
-          course: String(itemData.course || req.body.subject || 'Achievement'),
+          course: String(detectedCourse),
           templateId: template._id,
           pdfUrl: `/uploads/certificates/${pdfFileName}`,
           status: 'Pending',

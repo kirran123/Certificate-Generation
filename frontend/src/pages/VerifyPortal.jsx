@@ -242,7 +242,7 @@ export default function VerifyPortal() {
                 </div>
                 <div className="bg-black/40 rounded-3xl p-6 border border-[var(--border-subtle)] group hover:border-indigo-500/30 transition-colors">
                   <span className="text-[10px] text-[var(--text-secondary)] font-black uppercase tracking-widest block mb-2 opacity-50">Course/Event</span>
-                  <span className="text-[var(--text-primary)] font-black tracking-tight text-lg">{result.course || 'Achievement'}</span>
+                  <span className="text-[var(--text-primary)] font-black tracking-tight text-lg">{result.course || result.templateName || 'Certificate of Participation'}</span>
                 </div>
                 <div className="bg-black/40 rounded-3xl p-6 border border-[var(--border-subtle)] group hover:border-indigo-500/30 transition-colors">
                   <span className="text-[10px] text-[var(--text-secondary)] font-black uppercase tracking-widest block mb-2 opacity-50">Date Issued</span>
