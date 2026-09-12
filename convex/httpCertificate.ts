@@ -318,9 +318,22 @@ const downloadCert = httpAction(async (ctx, req) => {
 const downloadBulk = httpAction(async (ctx, req) => {
   try {
     const user = await requireAuth(ctx, req);
-    const certs = user.role === "admin"
+    const url = new URL(req.url);
+    const batchId = url.searchParams.get("batchId");
+
+    let certs = user.role === "admin"
       ? await ctx.runQuery(internal.certificates.listAll, {})
       : await ctx.runQuery(internal.certificates.listForUser, { userId: user._id });
+
+    if (batchId) {
+      certs = certs.filter((c: any) => {
+        const computedBid = c.batchId || ((c.createdAt || c._creationTime) ? `Generated ${new Date(c.createdAt || c._creationTime).toLocaleDateString()}` : 'Individual');
+        if (batchId === 'Manual Generations' || batchId === 'Individual' || batchId.startsWith('Generated ')) {
+          return computedBid === batchId || !c.batchId;
+        }
+        return c.batchId === batchId || computedBid === batchId;
+      });
+    }
 
     if (!certs.length) return errorResponse("No certificates found", 404);
 
@@ -356,11 +369,12 @@ const downloadBulk = httpAction(async (ctx, req) => {
         .map((c) => c.charCodeAt(0))
     );
 
+    const sanitizedBatchName = batchId ? batchId.replace(/[<>:"/\\|?*]/g, '_').trim() : 'certificates';
     return new Response(zipBytes, {
       status: 200,
       headers: {
         "Content-Type": "application/zip",
-        "Content-Disposition": "attachment; filename=\"certificates.zip\"",
+        "Content-Disposition": `attachment; filename="${sanitizedBatchName}.zip"`,
         "Access-Control-Allow-Origin": process.env.FRONTEND_URL || "*",
       },
     });

@@ -508,14 +508,42 @@ router.get('/download/:certId', async (req, res) => {
 // Download bulk certificates as ZIP (Regenerate on-demand for Render stability)
 router.get('/download-bulk', protect, async (req, res) => {
   try {
-    const filter = req.user.role === 'admin' ? {} : { createdBy: req.user._id };
-    const certs = await Certificate.find(filter).populate('templateId');
+    const { batchId } = req.query;
+    let filter = req.user.role === 'admin' ? {} : { createdBy: req.user._id };
+
+    if (batchId) {
+      if (batchId === 'Manual Generations' || batchId === 'Individual' || batchId.startsWith('Generated ')) {
+        filter.$or = [
+          { batchId: batchId },
+          { batchId: { $exists: false } },
+          { batchId: '' },
+          { batchId: null }
+        ];
+      } else {
+        filter.batchId = batchId;
+      }
+    }
+
+    let certs = await Certificate.find(filter).populate('templateId');
+
+    // Extra safeguard: if a fallback batchId (e.g. "Generated 12/04/2026") was requested,
+    // filter certs whose computed batchId matches the requested batchId
+    if (batchId && (batchId.startsWith('Generated ') || batchId === 'Individual' || batchId === 'Manual Generations')) {
+      certs = certs.filter(cert => {
+        const computedBid = cert.batchId || ((cert.createdAt || cert._creationTime) ? `Generated ${new Date(cert.createdAt || cert._creationTime).toLocaleDateString()}` : 'Individual');
+        return computedBid === batchId || cert.batchId === batchId;
+      });
+    }
 
     if (certs.length === 0) {
       return res.status(404).json({ message: 'No certificates found' });
     }
 
-    res.attachment('certificates.zip');
+    const zipFileName = batchId
+      ? `${batchId.replace(/[<>:"/\\|?*]/g, '_').trim()}.zip`
+      : 'certificates.zip';
+
+    res.attachment(zipFileName);
     const archive = archiver('zip', { zlib: { level: 9 } });
     archive.pipe(res);
 
@@ -526,7 +554,6 @@ router.get('/download-bulk', protect, async (req, res) => {
 
         // Determine folder name (Batch Name)
         let batchFolderName = cert.batchId || 'Manual Generations';
-        // Sanitize folder name for file system safety
         batchFolderName = batchFolderName.replace(/[<>:"/\\|?*]/g, '_').trim();
 
         const isRemote = template.imageUrl && template.imageUrl.startsWith('http');
@@ -563,8 +590,9 @@ router.get('/download-bulk', protect, async (req, res) => {
           cert.certificateId
         );
 
-        // Add to ZIP within the batch folder
-        archive.append(Buffer.from(pdfBytes), { name: `${batchFolderName}/${cert.certificateId}.pdf` });
+        // Add to ZIP (if specific batch is requested, place directly in zip root, otherwise in batch folder)
+        const zipPathName = batchId ? `${cert.certificateId}.pdf` : `${batchFolderName}/${cert.certificateId}.pdf`;
+        archive.append(Buffer.from(pdfBytes), { name: zipPathName });
       } catch (certError) {
         console.error(`Error adding cert ${cert.certificateId} to bulk download:`, certError);
       }
