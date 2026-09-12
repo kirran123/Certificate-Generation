@@ -327,11 +327,10 @@ const downloadBulk = httpAction(async (ctx, req) => {
 
     if (batchId) {
       certs = certs.filter((c: any) => {
-        const computedBid = c.batchId || ((c.createdAt || c._creationTime) ? `Generated ${new Date(c.createdAt || c._creationTime).toLocaleDateString()}` : 'Individual');
         if (batchId === 'Manual Generations' || batchId === 'Individual' || batchId.startsWith('Generated ')) {
-          return computedBid === batchId || !c.batchId;
+          return !c.batchId || c.batchId === batchId;
         }
-        return c.batchId === batchId || computedBid === batchId;
+        return c.batchId === batchId || (c.batchId && c.batchId.toLowerCase() === batchId.toLowerCase());
       });
     }
 

@@ -509,7 +509,7 @@ router.get('/download/:certId', async (req, res) => {
 router.get('/download-bulk', protect, async (req, res) => {
   try {
     const { batchId } = req.query;
-    let filter = req.user.role === 'admin' ? {} : { createdBy: req.user._id };
+    let filter = req.user.role === 'admin' ? { isArchived: { $ne: true } } : { createdBy: req.user._id, isArchived: { $ne: true } };
 
     if (batchId) {
       if (batchId === 'Manual Generations' || batchId === 'Individual' || batchId.startsWith('Generated ')) {
@@ -520,18 +520,19 @@ router.get('/download-bulk', protect, async (req, res) => {
           { batchId: null }
         ];
       } else {
-        filter.batchId = batchId;
+        const escapedBatchId = batchId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        filter.batchId = { $regex: `^${escapedBatchId}$`, $options: 'i' };
       }
     }
 
     let certs = await Certificate.find(filter).populate('templateId');
 
-    // Extra safeguard: if a fallback batchId (e.g. "Generated 12/04/2026") was requested,
-    // filter certs whose computed batchId matches the requested batchId
+    // Safeguard: if a fallback batchId (e.g. "Generated 12/04/2026") was requested,
+    // filter certs that do not have an explicit custom batchId
     if (batchId && (batchId.startsWith('Generated ') || batchId === 'Individual' || batchId === 'Manual Generations')) {
       certs = certs.filter(cert => {
-        const computedBid = cert.batchId || ((cert.createdAt || cert._creationTime) ? `Generated ${new Date(cert.createdAt || cert._creationTime).toLocaleDateString()}` : 'Individual');
-        return computedBid === batchId || cert.batchId === batchId;
+        if (!cert.batchId) return true;
+        return cert.batchId === batchId;
       });
     }
 
@@ -550,22 +551,8 @@ router.get('/download-bulk', protect, async (req, res) => {
     for (const cert of certs) {
       try {
         const template = cert.templateId;
-        if (!template || !template.imageUrl) continue;
-
-        // Determine folder name (Batch Name)
-        let batchFolderName = cert.batchId || 'Manual Generations';
-        batchFolderName = batchFolderName.replace(/[<>:"/\\|?*]/g, '_').trim();
-
-        const isRemote = template.imageUrl && template.imageUrl.startsWith('http');
-        let templatePath = '';
-
-        if (!isRemote) {
-          const cleanUrl = getRelativePath(template.imageUrl);
-          templatePath = path.join(__dirname, '..', cleanUrl);
-        }
-
-        if (!isRemote && !fs.existsSync(templatePath) && !template.imageBase64) {
-          console.warn(`Skipping ${cert.certificateId} - Template not found and no backup available.`);
+        if (!template) {
+          console.warn(`Skipping ${cert.certificateId} - Template not found.`);
           continue;
         }
 
@@ -578,19 +565,17 @@ router.get('/download-bulk', protect, async (req, res) => {
           ...(cert.metadata ? Object.fromEntries(cert.metadata) : {})
         };
 
+        // Pass full template object so template.imageBase64 backup is available if local file is missing
         const pdfBytes = await createCertificatePDF(
-          {
-            imageUrl: template.imageUrl,
-            layoutConfig: template.layoutConfig,
-            qrCode: template.qrCode,
-            showId: template.showId,
-            showQr: template.showQr
-          },
+          template,
           itemData,
           cert.certificateId
         );
 
         // Add to ZIP (if specific batch is requested, place directly in zip root, otherwise in batch folder)
+        let batchFolderName = cert.batchId || 'Manual Generations';
+        batchFolderName = batchFolderName.replace(/[<>:"/\\|?*]/g, '_').trim();
+
         const zipPathName = batchId ? `${cert.certificateId}.pdf` : `${batchFolderName}/${cert.certificateId}.pdf`;
         archive.append(Buffer.from(pdfBytes), { name: zipPathName });
       } catch (certError) {
