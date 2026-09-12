@@ -32,9 +32,11 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    const res = await axios.post(`${API_BASE}/api/auth/login`, { email, password });
+    const cleanEmail = email ? email.trim().toLowerCase() : '';
+    const res = await axios.post(`${API_BASE}/api/auth/login`, { email: cleanEmail, password });
     sessionStorage.setItem('token', res.data.token);
     setUser(res.data);
+    return res.data;
   };
 
   return (

@@ -11,11 +11,23 @@ import VerifyPortal from './pages/VerifyPortal'
 import Feedback from './pages/Feedback'
 
 function ProtectedRoute({ children, requireAdmin }) {
-  const { user } = useContext(AuthContext);
+  const { user, loading } = useContext(AuthContext);
+  const token = sessionStorage.getItem('token');
   
-  if (!user) return <Navigate to="/login" />;
-  if (requireAdmin && user.role !== 'admin') {
-    return <Navigate to="/" />;
+  if (loading) {
+    return (
+      <div className="h-screen bg-[var(--bg-main)] flex items-center justify-center text-[var(--text-primary)]">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="w-12 h-12 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
+          <span className="text-[10px] font-black uppercase tracking-[0.4em] opacity-50">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user && !token) return <Navigate to="/login" replace />;
+  if (requireAdmin && user && user.role !== 'admin') {
+    return <Navigate to="/" replace />;
   }
   
   return <Layout>{children}</Layout>;

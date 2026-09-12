@@ -16,33 +16,50 @@ export default function Login() {
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const isDark = theme === 'dark';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
+    setSubmitting(true);
     try {
+      const cleanEmail = formData.email ? formData.email.trim().toLowerCase() : '';
       if (isLogin) {
-        if (isAdminView && formData.email !== 'kirranvijay@gmail.com') {
+        if (isAdminView && cleanEmail !== 'kirranvijay@gmail.com') {
           setError('Authentication failed. Default Admin access only.');
+          setSubmitting(false);
           return;
         }
-        await login(formData.email, formData.password);
-        navigate('/');
+        const userObj = await login(cleanEmail, formData.password);
+        if (userObj?.role === 'admin') {
+          navigate('/admin/dashboard', { replace: true });
+        } else {
+          navigate('/', { replace: true });
+        }
       } else {
         const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+={}\[\]|\\:;"'<>,.?/-]).{6,}$/;
         if (!passwordRegex.test(formData.password)) {
           setError('Password must contain at least 6 characters, including a capital letter, a number, and a symbol.');
+          setSubmitting(false);
           return;
         }
-        await axios.post(`${API_BASE}/api/auth/signup`, formData);
+        await axios.post(`${API_BASE}/api/auth/signup`, {
+          name: formData.name.trim(),
+          email: cleanEmail,
+          password: formData.password
+        });
         setSuccess('Account created successfully! Please log in.');
         setIsLogin(true);
         setFormData({ ...formData, password: '' });
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Authentication failed');
+      console.error('Login error:', err);
+      setError(err.response?.data?.message || err.message || 'Authentication failed. Please check your credentials.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -198,10 +215,20 @@ export default function Login() {
 
               <button
                 type="submit"
-                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black uppercase tracking-widest text-xs py-4 rounded-2xl transition-all shadow-xl shadow-indigo-500/20 active:scale-[0.98] flex items-center justify-center space-x-2 group-hover:bg-indigo-500 shadow-indigo-900/10"
+                disabled={submitting}
+                className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-black uppercase tracking-widest text-xs py-4 rounded-2xl transition-all shadow-xl shadow-indigo-500/20 active:scale-[0.98] flex items-center justify-center space-x-2 group-hover:bg-indigo-500 shadow-indigo-900/10"
               >
-                <span>{isLogin ? 'Authorize Entry' : 'Create Profile'}</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                {submitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                    <span>Processing...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>{isLogin ? 'Authorize Entry' : 'Create Profile'}</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
               </button>
             </form>
 
