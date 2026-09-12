@@ -13,6 +13,11 @@ dotenv.config();
 
 const app = express();
 
+// Health check endpoints for uptime monitoring (Better Uptime, Render, UptimeRobot, etc.)
+app.all('/health', (req, res) => res.status(200).json({ status: 'ok', uptime: process.uptime() }));
+app.all('/api/health', (req, res) => res.status(200).json({ status: 'ok', uptime: process.uptime() }));
+app.all('/', (req, res) => res.status(200).send('Certificate Generation API is active.'));
+
 // Middleware — allow localhost dev, production frontend, and dynamic origins
 const allowedOrigins = [
   'http://localhost:5173',
@@ -38,10 +43,6 @@ app.use('/uploads', express.static('uploads', {
     res.set('Access-Control-Allow-Origin', '*');
   }
 }));
-
-// Health check endpoints for uptime monitoring (Render, UptimeRobot, etc.)
-app.get('/health', (req, res) => res.status(200).json({ status: 'ok', uptime: process.uptime() }));
-app.get('/api/health', (req, res) => res.status(200).json({ status: 'ok', uptime: process.uptime() }));
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
