@@ -16,4 +16,9 @@ const certificateSchema = new mongoose.Schema({
   metadata: { type: Map, of: String }
 }, { timestamps: true });
 
+certificateSchema.index({ createdBy: 1, isArchived: 1 });
+certificateSchema.index({ batchId: 1 });
+certificateSchema.index({ status: 1 });
+certificateSchema.index({ email: 1 });
+
 module.exports = mongoose.model('Certificate', certificateSchema);

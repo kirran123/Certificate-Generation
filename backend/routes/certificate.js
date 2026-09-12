@@ -849,7 +849,7 @@ router.get('/my-generations', protect, async (req, res) => {
         { createdBy: req.user._id },
         { createdBy: { $exists: false } }
       ]
-    }).populate('templateId', 'name').populate('createdBy', 'name email');
+    }).populate('templateId', 'name').populate('createdBy', 'name email').lean();
 
     console.log(`[Dashboard] Found ${certs.length} certificates for user ${req.user.email}`);
     res.json(certs);

@@ -25,12 +25,14 @@ router.get('/brevo-status', async (req, res) => {
 router.get('/stats', async (req, res) => {
   try {
     const Feedback = require('../models/Feedback');
-    const usersCount = await User.countDocuments({});
-    const certificatesCount = await Certificate.countDocuments({ isArchived: { $ne: true } });
-    const sentCount = await EmailLog.countDocuments({ status: 'Sent' });
-    const failedCount = await EmailLog.countDocuments({ status: 'Failed' });
-    const recentLogs = await EmailLog.find({}).sort({ sentAt: -1 }).limit(10);
-    const recentFeedbacks = await Feedback.find({}).sort({ createdAt: -1 }).limit(10);
+    const [usersCount, certificatesCount, sentCount, failedCount, recentLogs, recentFeedbacks] = await Promise.all([
+      User.countDocuments({}),
+      Certificate.countDocuments({ isArchived: { $ne: true } }),
+      EmailLog.countDocuments({ status: 'Sent' }),
+      EmailLog.countDocuments({ status: 'Failed' }),
+      EmailLog.find({}).sort({ sentAt: -1 }).limit(10).lean(),
+      Feedback.find({}).sort({ createdAt: -1 }).limit(10).lean()
+    ]);
 
     res.json({
       usersCount,
@@ -48,7 +50,7 @@ router.get('/stats', async (req, res) => {
 // Get all users
 router.get('/users', async (req, res) => {
   try {
-    const users = await User.find({}).select('-password');
+    const users = await User.find({}).select('-password').lean();
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -76,7 +78,10 @@ router.delete('/users/:id', async (req, res) => {
 // Get all certificates
 router.get('/certificates', async (req, res) => {
   try {
-    const certs = await Certificate.find({ isArchived: { $ne: true } }).populate('templateId', 'name').populate('createdBy', 'name email');
+    const certs = await Certificate.find({ isArchived: { $ne: true } })
+      .populate('templateId', 'name')
+      .populate('createdBy', 'name email')
+      .lean();
     res.json(certs);
   } catch (error) {
     res.status(500).json({ message: error.message });

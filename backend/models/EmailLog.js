@@ -8,4 +8,8 @@ const emailLogSchema = new mongoose.Schema({
   sentAt: { type: Date, default: Date.now }
 });
 
+emailLogSchema.index({ status: 1 });
+emailLogSchema.index({ sentAt: -1 });
+emailLogSchema.index({ recipient: 1 });
+
 module.exports = mongoose.model('EmailLog', emailLogSchema);

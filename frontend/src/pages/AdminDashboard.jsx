@@ -108,20 +108,22 @@ export default function AdminDashboard() {
     const token = sessionStorage.getItem('token');
     const headers = { Authorization: `Bearer ${token}` };
     try {
-      // Always fetch stats so top Stat Cards (Users, Certificates, Sent, Failed) remain accurate across all tabs
-      await fetchOverviewStats(headers);
-      fetchBrevoStatus(headers);
+      const tasks = [fetchOverviewStats(headers), fetchBrevoStatus(headers)];
 
       if (tab === 'certificates') {
-        await axios.delete(`${API_BASE}/api/certificate/form-automations/cleanup`, { headers }).catch(() => { });
-        await fetchCertificates(headers);
+        tasks.push(
+          axios.delete(`${API_BASE}/api/certificate/form-automations/cleanup`, { headers }).catch(() => {}),
+          fetchCertificates(headers)
+        );
       } else if (tab === 'users') {
-        await fetchUsers(headers);
+        tasks.push(fetchUsers(headers));
       } else if (tab === 'logs') {
-        await fetchEmailLogs(headers);
+        tasks.push(fetchEmailLogs(headers));
       }
+
+      await Promise.all(tasks);
     } catch (e) {
-      console.error(e);
+      console.error('loadTab error:', e);
     } finally {
       if (showLoading) setLoading(false);
     }
