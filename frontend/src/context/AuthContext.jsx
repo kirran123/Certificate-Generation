@@ -19,12 +19,19 @@ export const AuthProvider = ({ children }) => {
       if (token) {
         try {
           const res = await axios.get(`${API_BASE}/api/auth/me`, {
-            headers: { Authorization: `Bearer ${token}` }
+            headers: { Authorization: `Bearer ${token}` },
+            timeout: 6000
           });
           setUser(res.data);
         } catch (error) {
-          sessionStorage.removeItem('token');
+          console.warn('Auth check warning:', error.message);
+          if (error.response?.status === 401) {
+            sessionStorage.removeItem('token');
+            setUser(null);
+          }
         }
+      } else {
+        setUser(null);
       }
       setLoading(false);
     };
@@ -40,8 +47,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
-      {!loading && children}
+    <AuthContext.Provider value={{ user, login, logout, loading, setUser }}>
+      {children}
     </AuthContext.Provider>
   );
 };
