@@ -90,14 +90,15 @@ const createDefaultAdmin = async () => {
 
 const PORT = process.env.PORT || 5000;
 
-// Connect DB → seed admin → start background jobs → listen
+// Start listening IMMEDIATELY so Render / UptimeRobot health check monitors pass instantly
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
+// Connect DB → seed admin → start background jobs asynchronously
 connectDB().then(async () => {
   await createDefaultAdmin();
   startFormPoller();
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
 }).catch((err) => {
-  console.error('Failed to start server:', err.message);
-  process.exit(1);
+  console.error('Failed background initialization:', err.message);
 });
