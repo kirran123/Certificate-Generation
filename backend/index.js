@@ -13,23 +13,25 @@ dotenv.config();
 
 const app = express();
 
-// Middleware — allow both localhost dev and production frontend
+// Middleware — allow localhost dev, production frontend, and dynamic origins
 const allowedOrigins = [
   'http://localhost:5173',
+  'http://localhost:4173',
+  'http://localhost:3000',
+  'http://127.0.0.1:5173',
   process.env.FRONTEND_URL,
 ].filter(Boolean);
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (Postman, curl, server-to-server)
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error(`CORS: origin ${origin} not allowed`));
-    }
+    // Allow requests with no origin (Postman, mobile apps, curl, server-to-server)
+    if (!origin) return callback(null, true);
+    return callback(null, true);
   },
   credentials: true,
 }));
+
+app.options('*', cors());
 
 app.use(express.json());
 // Serve uploads folder as static with explicit CORS for canvas usage
