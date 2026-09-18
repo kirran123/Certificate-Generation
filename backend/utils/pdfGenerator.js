@@ -22,8 +22,10 @@ const getRelativePath = (url) => {
  */
 const calculateUniqueHash = (templateId, name, email, batchId) => {
   const tmplStr = String(templateId?._id || templateId || '').trim();
+  const nameStr = String(name || '').trim().toLowerCase();
   const emailStr = String(email || '').trim().toLowerCase();
-  const hashStr = `${tmplStr}_${emailStr}`;
+  const batchStr = String(batchId || '').trim().toLowerCase();
+  const hashStr = `${tmplStr}_${nameStr}_${emailStr}_${batchStr}`;
   return crypto.createHash('md5').update(hashStr).digest('hex');
 };
 

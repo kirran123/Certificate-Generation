@@ -94,11 +94,12 @@ const pollOnce = async () => {
 
         // 3. Dedup check using shared hasher & DB lookup
         const uniqueHash = calculateUniqueHash(template._id, name, email, auto.batchId);
+        const queryConditions = [{ uniqueHash }];
+        if (email && email.trim()) {
+          queryConditions.push({ templateId: template._id, email: email.trim().toLowerCase() });
+        }
         const existing = await Certificate.findOne({
-          $or: [
-            { uniqueHash },
-            { templateId: template._id, email }
-          ]
+          $or: queryConditions
         });
 
         if (existing) {
