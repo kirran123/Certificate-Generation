@@ -125,6 +125,24 @@ export default function UserDashboard() {
     } finally { setLoading(false); }
   };
 
+  const [resendingCertId, setResendingCertId] = useState(null);
+
+  const handleResendSingleCertificate = async (certId, email) => {
+    setResendingCertId(certId);
+    try {
+      const token = sessionStorage.getItem('token');
+      const res = await axios.post(`${API_BASE}/api/certificate/resend-single/${encodeURIComponent(certId)}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert(res.data?.message || `Successfully resent email to ${email}`);
+      fetchData();
+    } catch (err) {
+      alert(err.response?.data?.message || err.message);
+    } finally {
+      setResendingCertId(null);
+    }
+  };
+
   const handleDeleteCertificate = async (certId) => {
     if (!window.confirm(`Are you sure you want to delete certificate "${certId}"? This cannot be undone.`)) return;
     try {
@@ -410,6 +428,14 @@ export default function UserDashboard() {
                         </div>
                         <div className="flex items-center gap-3">
                           <div className="flex items-center gap-2 mr-2">
+                            <a
+                              href={`${API_BASE}/api/certificate/download-bulk?batchId=${encodeURIComponent(batchId)}&token=${sessionStorage.getItem('token')}`}
+                              download
+                              title="Download Batch (ZIP)"
+                              className="p-2 hover:bg-indigo-500/10 text-indigo-400 rounded-lg transition-all flex items-center justify-center"
+                            >
+                              <Download className="w-3.5 h-3.5" />
+                            </a>
                             <button onClick={() => handleResendBatch(batchId)} title="Resend All Emails" className="p-2 hover:bg-indigo-500/10 text-indigo-400 rounded-lg transition-all"><RefreshCw className="w-3.5 h-3.5" /></button>
                           </div>
                           <button onClick={() => setExpandedBatch(isOpen ? null : batchId)} className="p-2 hover:bg-[var(--border-subtle)] rounded-lg transition-all">
@@ -457,9 +483,27 @@ export default function UserDashboard() {
                                           : <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 text-amber-600 border border-amber-500/20 text-xs font-semibold rounded-full"><div className="w-1.5 h-1.5 rounded-full bg-amber-500" />No Email</span>}
                                     </td>
                                     <td className="px-6 py-4 text-right">
-                                      <button onClick={() => handleDeleteCertificate(cert.certificateId)} className="p-2 text-red-400 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-all opacity-0 group-hover:opacity-100">
-                                        <Trash2 className="w-3.5 h-3.5" />
-                                      </button>
+                                      <div className="flex items-center justify-end gap-2">
+                                        <button
+                                          onClick={() => handleResendSingleCertificate(cert.certificateId, cert.email)}
+                                          disabled={resendingCertId === cert.certificateId}
+                                          className="p-2 text-amber-400 hover:bg-amber-500/10 hover:text-amber-500 rounded-lg transition-all disabled:opacity-50"
+                                          title="Resend email for this certificate"
+                                        >
+                                          <RefreshCw className={`w-3.5 h-3.5 ${resendingCertId === cert.certificateId ? "animate-spin" : ""}`} />
+                                        </button>
+                                        <a
+                                          href={`${API_BASE}/api/certificate/download/${cert.certificateId}`}
+                                          download
+                                          className="p-2 text-indigo-400 hover:bg-indigo-500/10 hover:text-indigo-500 rounded-lg transition-all"
+                                          title="Download PDF"
+                                        >
+                                          <Download className="w-3.5 h-3.5" />
+                                        </a>
+                                        <button onClick={() => handleDeleteCertificate(cert.certificateId)} className="p-2 text-red-400 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-all" title="Delete certificate">
+                                          <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                      </div>
                                     </td>
                                   </tr>
                                 ))}

@@ -102,13 +102,6 @@ export default function UploadData() {
             Import your recipient list via Excel, CSV, or Google Sheets to begin.
           </p>
         </div>
-        <button
-          onClick={downloadSampleExcel}
-          className="inline-flex items-center justify-center gap-2.5 px-5 py-3 bg-indigo-600/10 border border-indigo-500/30 hover:bg-indigo-600 hover:text-white text-indigo-400 font-semibold text-sm rounded-2xl transition-all shadow-sm active:scale-95 cursor-pointer"
-        >
-          <Download className="w-4 h-4" />
-          <span>Download Sample Excel</span>
-        </button>
       </div>
 
       {/* ── Sample Form & Zero-Error Template Banner ───────────────────── */}
