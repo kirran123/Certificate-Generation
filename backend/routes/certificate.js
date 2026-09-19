@@ -342,7 +342,7 @@ router.post('/generate', protect, async (req, res) => {
           createdBy: req.user._id,
           batchId: batchId,
           uniqueHash: uniqueHash,
-          metadata: metadata
+          metadata: itemData
         });
 
         generatedIds.push(certId);
@@ -476,7 +476,7 @@ router.get('/download/:certId', async (req, res) => {
       email: cert.email,
       course: cert.course,
       certificateId: cert.certificateId,
-      ...(cert.metadata ? Object.fromEntries(cert.metadata) : {})
+      ...(cert.metadata instanceof Map ? Object.fromEntries(cert.metadata) : (cert.metadata || {}))
     };
 
     const pdfBytes = await createCertificatePDF(
@@ -560,7 +560,7 @@ router.get('/download-bulk', protect, async (req, res) => {
           email: cert.email,
           course: cert.course,
           certificateId: cert.certificateId,
-          ...(cert.metadata ? Object.fromEntries(cert.metadata) : {})
+          ...(cert.metadata instanceof Map ? Object.fromEntries(cert.metadata) : (cert.metadata || {}))
         };
 
         // Pass full template object so template.imageBase64 backup is available if local file is missing
@@ -702,7 +702,7 @@ router.post('/resend-single/:certId', protect, async (req, res) => {
       email: cert.email,
       course: cert.course,
       certificateId: cert.certificateId,
-      ...(cert.metadata ? Object.fromEntries(cert.metadata) : {})
+      ...(cert.metadata instanceof Map ? Object.fromEntries(cert.metadata) : (cert.metadata || {}))
     };
 
     const pdfBytes = await createCertificatePDF(
@@ -781,7 +781,7 @@ router.post('/resend-batch/:batchId', protect, async (req, res) => {
             email: cert.email,
             course: cert.course,
             certificateId: cert.certificateId,
-            ...(cert.metadata ? Object.fromEntries(cert.metadata) : {})
+            ...(cert.metadata instanceof Map ? Object.fromEntries(cert.metadata) : (cert.metadata || {}))
           };
           const pdfBytes = await createCertificatePDF(
             {

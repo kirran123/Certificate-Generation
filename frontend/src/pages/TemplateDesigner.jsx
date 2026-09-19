@@ -1211,10 +1211,10 @@ export default function TemplateDesigner() {
                     </div>
                     <div className="grid grid-cols-2 gap-6">
                       <div className="space-y-3 text-left">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] ml-1 opacity-50">Recipient Name Column</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] ml-1 opacity-50">Recipient Name Column *</span>
                         <select
                           className="w-full bg-black/40 border border-white/5 rounded-2xl p-4 text-[var(--text-primary)] text-sm focus:border-indigo-500 appearance-none cursor-pointer"
-                          value={selection["name"] || ""}
+                          value={selection["name"] || findBestNameColumn(excelHeaders) || ""}
                           onChange={(e) => setSelection({ ...selection, name: e.target.value })}
                         >
                           <option value="">Select Target...</option>
@@ -1222,16 +1222,30 @@ export default function TemplateDesigner() {
                         </select>
                       </div>
                       <div className="space-y-3 text-left">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] ml-1 opacity-50">Recipient Email Column</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] ml-1 opacity-50">Recipient Email Column *</span>
                         <select
                           className="w-full bg-black/40 border border-white/5 rounded-2xl p-4 text-[var(--text-primary)] text-sm focus:border-indigo-500 appearance-none cursor-pointer"
-                          value={selection["email"] || ""}
+                          value={selection["email"] || findBestEmailColumn(excelHeaders) || ""}
                           onChange={(e) => setSelection({ ...selection, email: e.target.value })}
                         >
                           <option value="">Select Channel...</option>
                           {excelHeaders.map((h) => (<option key={h} value={h}>{h}</option>))}
                         </select>
                       </div>
+
+                      {fields.filter(f => f.key !== 'certificateId' && f.key !== 'name' && f.key !== 'email' && !f.isStatic).map(f => (
+                        <div key={f.key} className="space-y-3 text-left">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] ml-1 opacity-50">{f.key} Column</span>
+                          <select
+                            className="w-full bg-black/40 border border-white/5 rounded-2xl p-4 text-[var(--text-primary)] text-sm focus:border-indigo-500 appearance-none cursor-pointer"
+                            value={selection[f.key] || ""}
+                            onChange={(e) => setSelection({ ...selection, [f.key]: e.target.value })}
+                          >
+                            <option value="">Auto-Detect ({f.key})</option>
+                            {excelHeaders.map((h) => (<option key={h} value={h}>{h}</option>))}
+                          </select>
+                        </div>
+                      ))}
                     </div>
                   </div>
 
@@ -1289,7 +1303,9 @@ export default function TemplateDesigner() {
                   <div className="flex flex-col space-y-4 pt-6">
                     <button
                       onClick={() => {
-                        if (!selection.name || !selection.email) {
+                        const effName = selection.name || autoNameCol || findBestNameColumn(excelHeaders);
+                        const effEmail = selection.email || autoEmailCol || findBestEmailColumn(excelHeaders);
+                        if (!effName || !effEmail) {
                           alert("Please select both a Name and Email column from your spreadsheet.");
                           return;
                         }
@@ -1302,7 +1318,14 @@ export default function TemplateDesigner() {
                       <span>Generate & Send Emails</span>
                     </button>
                     <button
-                      onClick={() => handleGenerateAndEmail(false)}
+                      onClick={() => {
+                        const effName = selection.name || autoNameCol || findBestNameColumn(excelHeaders);
+                        if (!effName) {
+                          alert("Please select a Name column from your spreadsheet.");
+                          return;
+                        }
+                        handleGenerateAndEmail(false);
+                      }}
                       disabled={saving === "generating" || saving === "sending"}
                       className="w-full bg-white/5 hover:bg-white/10 text-[var(--text-secondary)] hover:text-[var(--text-primary)] py-6 rounded-[2rem] text-xs font-black uppercase tracking-[0.3em] transition-all border border-white/5 active:scale-95"
                     >
@@ -1312,7 +1335,9 @@ export default function TemplateDesigner() {
                     {/* Trigger auto cert logic, which uses standard modal states */}
                     <button
                       onClick={() => {
-                        if (!selection.name || !selection.email) {
+                        const effName = selection.name || autoNameCol || findBestNameColumn(excelHeaders);
+                        const effEmail = selection.email || autoEmailCol || findBestEmailColumn(excelHeaders);
+                        if (!effName || !effEmail) {
                           alert("Please map both Name and Email columns before activating Auto-Cert.");
                           return;
                         }
@@ -1320,14 +1345,12 @@ export default function TemplateDesigner() {
                         // Close modal so user can see the sidebar auto-cert panel
                         setSaving("done");
 
-                        setAutoNameCol(selection.name);
-                        setAutoEmailCol(selection.email);
+                        setAutoNameCol(effName);
+                        setAutoEmailCol(effEmail);
 
                         // Immediately call activation so it processes
-
                         setTimeout(() => {
-
-                          handleActivateAutoCert(selection.name, selection.email);
+                          handleActivateAutoCert(effName, effEmail);
                         }, 100);
                       }}
                       disabled={saving === "generating" || saving === "sending" || !passedSheetUrl}
