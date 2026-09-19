@@ -42,7 +42,41 @@ async function getTemplateBytesBase64(ctx: any, template: any): Promise<string> 
       return btoa(binary);
     }
   }
-  throw new Error("No template image available.");
+function cleanHeaderName(header: string): string {
+  if (!header) return "";
+  return String(header)
+    .replace(/\s*\([^)]*\)/g, "")
+    .replace(/[^a-zA-Z0-9]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+function getRowColumnValue(row: any, targetCol: string, fieldType: string): string {
+  if (!row || typeof row !== "object") return "";
+  if (targetCol && row[targetCol] !== undefined && row[targetCol] !== null && String(row[targetCol]).trim() !== "") {
+    return String(row[targetCol]).trim();
+  }
+  const rowKeys = Object.keys(row);
+  if (!rowKeys.length) return "";
+  const targetClean = cleanHeaderName(targetCol);
+  if (targetClean) {
+    const cleanMatch = rowKeys.find(k => cleanHeaderName(k) === targetClean);
+    if (cleanMatch && row[cleanMatch] !== undefined && row[cleanMatch] !== null && String(row[cleanMatch]).trim() !== "") {
+      return String(row[cleanMatch]).trim();
+    }
+  }
+  const fuzzyMatch = rowKeys.find(k => cleanHeaderName(k).includes(fieldType));
+  if (fuzzyMatch && row[fuzzyMatch] !== undefined && row[fuzzyMatch] !== null && String(row[fuzzyMatch]).trim() !== "") {
+    return String(row[fuzzyMatch]).trim();
+  }
+  if (fieldType === "name" && (row.name || row.fullName || row.participantName)) {
+    return String(row.name || row.fullName || row.participantName).trim();
+  }
+  if (fieldType === "email" && row.email) {
+    return String(row.email).trim();
+  }
+  return "";
 }
 
 export const pollAll = internalAction({
@@ -70,8 +104,8 @@ export const pollAll = internalAction({
         const pollBatchId = `${auto.batchId} [Run ${runTime}]`;
 
         for (const row of (rows as any[])) {
-          const name = String(row[auto.nameColumn] || "").trim();
-          const email = String(row[auto.emailColumn] || "").trim().toLowerCase();
+          const name = getRowColumnValue(row, auto.nameColumn, "name");
+          const email = getRowColumnValue(row, auto.emailColumn, "email").toLowerCase();
           if (!name || !email) continue;
 
           const uniqueHash = await calculateUniqueHash(template._id, name, email, auto.batchId);

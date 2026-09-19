@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { API_BASE } from "../apiConfig";
+import { findBestNameColumn, findBestEmailColumn, getRowColumnValue, cleanHeaderName } from "../utils/columnHelper";
 import { Rnd } from "react-rnd";
 import {
   Save,
@@ -112,6 +113,23 @@ export default function TemplateDesigner() {
   const [autoEmailCol, setAutoEmailCol] = useState('');
   const [autoActivating, setAutoActivating] = useState(false);
   const [autoSuccess, setAutoSuccess] = useState(false);
+
+  // ── Auto-detect column mappings from excelHeaders ─────────────────────────
+  useEffect(() => {
+    if (excelHeaders && excelHeaders.length > 0) {
+      const bestName = findBestNameColumn(excelHeaders);
+      const bestEmail = findBestEmailColumn(excelHeaders);
+      if (bestName || bestEmail) {
+        setSelection(prev => ({
+          name: prev.name || bestName,
+          email: prev.email || bestEmail,
+          ...prev
+        }));
+        if (bestName) setAutoNameCol(prev => prev || bestName);
+        if (bestEmail) setAutoEmailCol(prev => prev || bestEmail);
+      }
+    }
+  }, [excelHeaders]);
 
   useEffect(() => {
     const fetchTemplate = async () => {
@@ -360,12 +378,16 @@ export default function TemplateDesigner() {
 
       if (excelHeaders.length > 0) {
         excelHeaders.forEach((h) => {
-          sampleData[h] = firstRow[h] || `[${h} Sample]`;
+          sampleData[h] = getRowColumnValue(firstRow, h) || `[${h} Sample]`;
         });
-      } else {
-        sampleData.name = "Jane Smith";
-        sampleData.course = "Advanced Design Course";
       }
+
+      // Ensure core fallback properties are present for canvas tags
+      const nameCol = selection["name"] || findBestNameColumn(excelHeaders);
+      const emailCol = selection["email"] || findBestEmailColumn(excelHeaders);
+      sampleData.name = getRowColumnValue(firstRow, nameCol, 'name') || "Kirran S T";
+      sampleData.email = getRowColumnValue(firstRow, emailCol, 'email') || "kirranvijay@gmail.com";
+      if (!sampleData.course) sampleData.course = "Advanced Design Course";
 
       const token = sessionStorage.getItem('token');
 

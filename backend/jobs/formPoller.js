@@ -16,6 +16,7 @@ const EmailLog = require('../models/EmailLog');
 const { createCertificatePDF, calculateUniqueHash } = require('../utils/pdfGenerator');
 const { sendEmailWithFailover } = require('../utils/brevoPool');
 const { isEmailSent, markEmailSent } = require('../utils/sentLock');
+const { getRowColumnValue } = require('../utils/columnHelper');
 
 const POLL_INTERVAL_MS = 10_000; // 10 seconds
 let isPollerExecuting = false;
@@ -74,8 +75,8 @@ const pollOnce = async () => {
       const currentPollBatchId = `${auto.batchId} [Run ${runTime}]`;
 
       for (const row of rows) {
-        const name = String(row[auto.nameColumn] || '').trim();
-        const email = String(row[auto.emailColumn] || '').trim().toLowerCase();
+        const name = getRowColumnValue(row, auto.nameColumn, 'name');
+        const email = getRowColumnValue(row, auto.emailColumn, 'email').toLowerCase();
 
         if (!name || !email) continue; // skip incomplete rows
 

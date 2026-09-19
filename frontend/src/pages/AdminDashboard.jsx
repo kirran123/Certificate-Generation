@@ -6,6 +6,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 import { API_BASE } from '../apiConfig';
+import { downloadSampleExcel } from '../utils/sampleExcelGenerator';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
 
@@ -352,6 +353,13 @@ export default function AdminDashboard() {
           <h1 className="text-2xl sm:text-3xl font-black text-[var(--text-primary)] tracking-tight mobile-title">Control Center</h1>
           <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1">Monitor users, certificates, and email delivery.</p>
         </div>
+        <button
+          onClick={downloadSampleExcel}
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600/10 border border-indigo-500/30 hover:bg-indigo-600 hover:text-white text-indigo-400 font-semibold text-xs rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer self-start sm:self-auto"
+        >
+          <Download className="w-3.5 h-3.5" />
+          <span>Download Sample Excel</span>
+        </button>
       </div>
 
       {/* ── Stat Cards ─────────────────────────────────────────────────────── */}

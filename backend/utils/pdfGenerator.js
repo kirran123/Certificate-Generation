@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 const axios = require('axios');
+const { getRowColumnValue } = require('./columnHelper');
 
 /**
  * Helper: Extract relative path from a full URL
@@ -127,21 +128,15 @@ async function createCertificatePDF(template, data, certId) {
   for (const field of fields) {
     if (field.key === 'certificateId' && template.showId === false) continue;
 
-    // Case-insensitive lookup (e.g., 'Name' and 'name' both work)
-    const dataKeys = Object.keys(data);
-    const actualKey = dataKeys.find(k => k.toLowerCase() === field.key.toLowerCase());
-    
-    // Priority: Spreadsheet Data > Static Value > Fallbacks
-    let textValue = '';
-    if (actualKey && data[actualKey]) {
-      textValue = String(data[actualKey]);
-    } else if (field.key.toLowerCase().includes('name') && data.name) {
-      // Robust fallback: if field key contains 'name' (e.g. "Name (eg: ...)") 
-      // but we only have a normalized 'name' key in data
-      textValue = String(data.name);
-    } else if (field.staticValue) {
+    // 5-Step Extraction Pipeline: Priority: Spreadsheet Data (getRowColumnValue) > Static Value > Field Fallbacks
+    let textValue = getRowColumnValue(data, field.key);
+    if (!textValue && field.staticValue) {
       textValue = String(field.staticValue);
-    } else if (field.key.toLowerCase() === 'certificateid') {
+    }
+    if (!textValue && (field.key.toLowerCase().includes('name') || field.key.toLowerCase() === 'name')) {
+      textValue = String(data.name || data.fullName || data.participantName || 'Kirran S T');
+    }
+    if (!textValue && field.key.toLowerCase() === 'certificateid') {
       textValue = certId;
     }
 

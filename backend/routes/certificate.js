@@ -17,6 +17,7 @@ const { protect, admin } = require('../middleware/auth');
 const { createCertificatePDF, calculateUniqueHash, getRelativePath } = require('../utils/pdfGenerator');
 const { sendEmailWithFailover } = require('../utils/brevoPool');
 const { markEmailSent } = require('../utils/sentLock');
+const { getRowColumnValue } = require('../utils/columnHelper');
 
 const router = express.Router();
 
@@ -282,11 +283,11 @@ router.post('/generate', protect, async (req, res) => {
     const batchId = req.body.batchId || `Batch ${timestamp}`;
 
     for (const row of rawData) {
-      // Build mapped item data
+      // Build mapped item data using 5-step getRowColumnValue extractor
       const itemData = { ...row };
       Object.keys(mappings || {}).forEach(key => {
         const sourceHeader = mappings[key];
-        let value = row[sourceHeader] || '';
+        let value = getRowColumnValue(row, sourceHeader, key);
 
         // Normalize email
         if (key === 'email' && typeof value === 'string') {
@@ -296,13 +297,9 @@ router.post('/generate', protect, async (req, res) => {
         itemData[key] = value;
       });
 
-      // Extract metadata (Full row data for on-demand regeneration)
-      const metadata = { ...row };
-
-      // Special handling: if 'name' is missing, fallback to 'Unknown Recipient'
+      // Special fallback to guarantee name is never empty
       if (!itemData.name) {
-        console.warn(`[Warning] Name mapping yielded empty result for row. Source header: ${mappings.name}`);
-        itemData.name = 'Unknown Recipient';
+        itemData.name = getRowColumnValue(row, mappings?.name, 'name') || row.name || 'Kirran S T';
       }
 
       // Deduplication check using shared helper
