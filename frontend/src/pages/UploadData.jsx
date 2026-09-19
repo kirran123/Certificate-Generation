@@ -127,23 +127,28 @@ export default function UploadData() {
             <span className="font-mono text-indigo-400 bg-black/30 px-2 py-0.5 rounded text-[11px] inline-block mt-1">College (Eg: Ramco Institute Of Technology)</span>
           </p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-3 shrink-0">
-          <a
-            href={SAMPLE_FORM_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs rounded-xl transition-all shadow-md active:scale-95 text-center"
-          >
-            <LinkIcon className="w-3.5 h-3.5" />
-            <span>Open Sample Feedback Form</span>
-          </a>
-          <button
-            onClick={downloadSampleExcel}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white/5 border border-white/10 hover:bg-white/10 text-[var(--text-primary)] font-semibold text-xs rounded-xl transition-all active:scale-95 cursor-pointer"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>Download Sample Excel</span>
-          </button>
+        <div className="flex flex-col gap-2 shrink-0">
+          <p className="text-[11px] font-semibold text-indigo-300 text-left md:text-right max-w-sm leading-snug">
+            Sample Feedback Form below like to check and Use this type to get the certificate without error. Kindly follow this template for generate certificate without any errors.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <a
+              href={SAMPLE_FORM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs rounded-xl transition-all shadow-md active:scale-95 text-center"
+            >
+              <LinkIcon className="w-3.5 h-3.5" />
+              <span>Open Sample Feedback Form</span>
+            </a>
+            <button
+              onClick={downloadSampleExcel}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white/5 border border-white/10 hover:bg-white/10 text-[var(--text-primary)] font-semibold text-xs rounded-xl transition-all active:scale-95 cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Download Sample Excel</span>
+            </button>
+          </div>
         </div>
       </div>
 

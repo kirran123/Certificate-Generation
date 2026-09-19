@@ -209,18 +209,24 @@ export default function UserDashboard() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3 pb-3">
-          <a
-            href={SAMPLE_FORM_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs rounded-xl transition-all shadow-md active:scale-95 text-center"
-          >
-            <LinkIcon className="w-3.5 h-3.5" />
-            <span>Sample Feedback Form</span>
-          </a>
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] font-semibold text-indigo-400 opacity-90 hidden lg:inline-block">
+              Sample Feedback Form below like to check and Use this type to get the certificate without error:
+            </span>
+            <a
+              href={SAMPLE_FORM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Sample Feedback Form below like to check and Use this type to get the certificate without error. Kindly follow this template for generate certificate without any errors"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs rounded-xl transition-all shadow-md active:scale-95 text-center"
+            >
+              <LinkIcon className="w-3.5 h-3.5" />
+              <span>Sample Feedback Form</span>
+            </a>
+          </div>
           <button
             onClick={downloadSampleExcel}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600/10 border border-indigo-500/30 hover:bg-indigo-600 hover:text-white text-indigo-400 font-semibold text-xs rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600/10 border border-indigo-500/30 hover:bg-indigo-600 hover:text-white text-indigo-400 font-semibold text-xs rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer self-end"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Sample Excel Template</span>
