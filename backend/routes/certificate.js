@@ -281,20 +281,23 @@ const fetchSheetRowsFromUrl = async (sheetUrl) => {
 // Generate Certificates 
 router.post('/generate', protect, async (req, res) => {
   try {
-    let { templateId, mappings, rawData, sheetUrl, showId: overrideShowId, showQr: overrideShowQr } = req.body;
+    let { templateId, nameColumn, emailColumn, mappings, rawData, sheetUrl, showId: overrideShowId, showQr: overrideShowQr } = req.body;
 
     console.log('--- GENERATION DIAGNOSTICS ---');
     console.log('Template ID:', templateId);
-    console.log('Mappings:', JSON.stringify(mappings));
-    console.log('RawData Count:', rawData ? rawData.length : 'NULL');
+    console.log('Name Column:', nameColumn);
+    console.log('Email Column:', emailColumn);
     console.log('SheetUrl:', sheetUrl || 'NONE');
 
-    let rowsToProcess = (rawData && Array.isArray(rawData) && rawData.length > 0) ? rawData : [];
-
-    // Fallback: If rawData is empty or missing, fetch live sheet data across gids (same as Auto-Cert)
-    if (rowsToProcess.length === 0 && sheetUrl) {
+    // 1. Fetch live rows from sheetUrl if provided (same as Auto-Cert), fallback to rawData
+    let rowsToProcess = [];
+    if (sheetUrl) {
       rowsToProcess = await fetchSheetRowsFromUrl(sheetUrl);
       console.log(`[/generate] Live sheet fetch completed. Loaded ${rowsToProcess.length} rows.`);
+    }
+
+    if ((!rowsToProcess || rowsToProcess.length === 0) && rawData && Array.isArray(rawData)) {
+      rowsToProcess = rawData;
     }
 
     if (!rowsToProcess || !Array.isArray(rowsToProcess) || rowsToProcess.length === 0) {
@@ -315,15 +318,50 @@ router.post('/generate', protect, async (req, res) => {
     let lastGenerationError = null;
     const generatedIds = [];
 
-    // Ensure we have a valid batch ID
-    const timestamp = new Date().toISOString().slice(0, 16).replace('T', ' ');
-    const batchId = req.body.batchId || `Batch ${timestamp}`;
+    const batchId = req.body.batchId || `Batch ${new Date().toISOString().slice(0, 16).replace('T', ' ')}`;
 
     for (const row of rowsToProcess) {
-      // Build mapped item data using 5-step getRowColumnValue extractor
-      const itemData = { ...row };
+      // Extract name & email EXACTLY as Auto-Cert (formPoller.js) does:
+      const nameCol = nameColumn || mappings?.name || findBestNameColumn(Object.keys(row));
+      const emailCol = emailColumn || mappings?.email || findBestEmailColumn(Object.keys(row));
 
-      // Map target keys using provided mappings
+      let name = getRowColumnValue(row, nameCol, 'name');
+      let email = getRowColumnValue(row, emailCol, 'email');
+
+      if (email && typeof email === 'string') {
+        email = email.trim().toLowerCase();
+      }
+
+      // Fallback email scanner if missing
+      if (!email) {
+        const foundEmail = Object.values(row).find(val => typeof val === 'string' && val.includes('@') && val.includes('.'));
+        if (foundEmail) email = String(foundEmail).trim().toLowerCase();
+      }
+
+      // Fallback name scanner if missing
+      if (!name) {
+        const foundName = Object.values(row).find(val => {
+          if (!val || typeof val !== 'string') return false;
+          const s = val.trim();
+          return s.length > 0 && !s.includes('@') && !/^\d+$/.test(s);
+        });
+        if (foundName) name = String(foundName).trim();
+      }
+
+      // Skip row only if both name and email are completely absent
+      if (!name && !email) {
+        console.log('[Generate] Skipping empty row:', JSON.stringify(row));
+        continue;
+      }
+
+      // Build itemData for canvas rendering and DB storage
+      const itemData = {
+        ...row,
+        name,
+        email
+      };
+
+      // Map any custom field mappings
       if (mappings && typeof mappings === 'object') {
         Object.keys(mappings).forEach(targetKey => {
           const sourceHeader = mappings[targetKey];
@@ -334,40 +372,8 @@ router.post('/generate', protect, async (req, res) => {
         });
       }
 
-      // Auto-extract name and email using multi-tier column helper
-      const rowHeaders = Object.keys(row);
-      const nameCol = mappings?.name || findBestNameColumn(rowHeaders);
-      const emailCol = mappings?.email || findBestEmailColumn(rowHeaders);
-
-      const extractedName = getRowColumnValue(row, nameCol, 'name');
-      const extractedEmail = getRowColumnValue(row, emailCol, 'email');
-
-      if (extractedName) itemData.name = extractedName;
-      if (extractedEmail) itemData.email = String(extractedEmail).trim().toLowerCase();
-
-      // Guaranteed extraction fallback for name and email across any spreadsheet format:
-      if (!itemData.email) {
-        const foundEmail = Object.values(row).find(val => typeof val === 'string' && val.includes('@') && val.includes('.'));
-        if (foundEmail) itemData.email = String(foundEmail).trim().toLowerCase();
-      }
-
-      if (!itemData.name) {
-        const foundName = Object.values(row).find(val => {
-          if (!val || typeof val !== 'string') return false;
-          const s = val.trim();
-          return s.length > 0 && !s.includes('@') && !/^\d+$/.test(s);
-        });
-        if (foundName) itemData.name = String(foundName).trim();
-      }
-
-      // Skip row only if both name and email are absent
-      if (!itemData.name && !itemData.email) {
-        console.log('[Generate] Skipping completely empty row:', JSON.stringify(row));
-        continue;
-      }
-
-      // Deduplication check using shared helper
-      const uniqueHash = calculateUniqueHash(templateId, itemData.name, itemData.email, batchId);
+      // Deduplication check
+      const uniqueHash = calculateUniqueHash(templateId, name, email, batchId);
 
       const existing = await Certificate.findOne({ uniqueHash, templateId });
       if (existing) {
@@ -379,7 +385,6 @@ router.post('/generate', protect, async (req, res) => {
       itemData.certificateId = certId;
 
       try {
-        // Merge template settings with potential overrides for this batch
         const liveLayout = req.body.layoutConfig;
         const renderSettings = {
           ...template.toObject(),
@@ -394,12 +399,11 @@ router.post('/generate', protect, async (req, res) => {
         const pdfPath = path.join(certsDir, pdfFileName);
         fs.writeFileSync(pdfPath, pdfBytes);
 
-        // Save to MongoDB with strict field assignment
         const detectedCourse = itemData.course || req.body.course || req.body.subject || template.name || 'Certificate of Participation';
         await Certificate.create({
           certificateId: certId,
-          name: String(itemData.name),
-          email: String(itemData.email || ''),
+          name: String(name),
+          email: String(email || ''),
           course: String(detectedCourse),
           templateId: template._id,
           pdfUrl: `/uploads/certificates/${pdfFileName}`,
