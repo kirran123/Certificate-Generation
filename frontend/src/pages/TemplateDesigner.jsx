@@ -1246,7 +1246,17 @@ export default function TemplateDesigner() {
                         </select>
                       </div>
 
-                      {fields.filter(f => f.key !== 'certificateId' && f.key !== 'name' && f.key !== 'email' && !f.isStatic).map(f => (
+                      {fields.filter(f => {
+                        if (f.key === 'certificateId' || f.isStatic) return false;
+                        const currentNameCol = selection["name"] || findBestNameColumn(excelHeaders);
+                        const currentEmailCol = selection["email"] || findBestEmailColumn(excelHeaders);
+                        const cleanKey = cleanHeaderName(f.key);
+                        // Exclude fields already mapped by primary Recipient Name and Recipient Email selectors
+                        if (cleanKey === 'name' || cleanKey === 'email') return false;
+                        if (currentNameCol && (f.key === currentNameCol || cleanKey === cleanHeaderName(currentNameCol))) return false;
+                        if (currentEmailCol && (f.key === currentEmailCol || cleanKey === cleanHeaderName(currentEmailCol))) return false;
+                        return true;
+                      }).map(f => (
                         <div key={f.key} className="space-y-3 text-left">
                           <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] ml-1 opacity-50">{f.key} Column</span>
                           <select
