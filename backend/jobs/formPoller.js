@@ -167,6 +167,13 @@ const pollOnce = async () => {
         const pdfPath = path.join(certsDir, pdfFileName);
         fs.writeFileSync(pdfPath, pdfBytes);
 
+        const cleanMetadata = {};
+        if (row && typeof row === 'object') {
+          Object.keys(row).forEach(k => {
+            cleanMetadata[String(k)] = String(row[k] ?? '');
+          });
+        }
+
         let cert = existing;
         if (!cert) {
           cert = await Certificate.create({
@@ -182,7 +189,7 @@ const pollOnce = async () => {
             automationId: auto._id,
             isAutomation: true,
             uniqueHash,
-            metadata: row
+            metadata: cleanMetadata
           });
         } else {
           cert.pdfUrl = `/uploads/certificates/${pdfFileName}`;

@@ -14,7 +14,7 @@ const certificateSchema = new mongoose.Schema({
   automationId: { type: mongoose.Schema.Types.ObjectId, ref: 'FormAutomation' },
   isAutomation: { type: Boolean, default: false },
   uniqueHash: { type: String },
-  metadata: { type: Map, of: String }
+  metadata: { type: mongoose.Schema.Types.Mixed }
 }, { timestamps: true });
 
 certificateSchema.index({ createdBy: 1, isArchived: 1 });
