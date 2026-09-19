@@ -11,6 +11,7 @@ const formAutomationSchema = new mongoose.Schema({
   batchId:     { type: String, required: true },   // e.g. "Form Auto - 12/04/2026"
   active:      { type: Boolean, default: true },
   lastChecked: { type: Date, default: null },
+  lastError:   { type: String, default: null },
   certCount:   { type: Number, default: 0 },        // total auto-generated so far
   emailSubject: { type: String, default: 'Your Certificate of Achievement' },
   emailMessage: { type: String, default: 'Congratulations! Your certificate is attached.' }

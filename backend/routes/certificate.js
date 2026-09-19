@@ -867,9 +867,15 @@ router.post('/form-automation', protect, async (req, res) => {
     return res.status(400).json({ message: 'sheetUrl, templateId, nameColumn and emailColumn are required.' });
   }
 
+  if (sheetUrl.includes('/forms/') || sheetUrl.includes('viewform')) {
+    return res.status(400).json({
+      message: 'You pasted a Google Form view link. Please paste the linked Google Sheet URL (from Form -> Responses tab -> View in Sheets) so the poller can read form responses.'
+    });
+  }
+
   // Extract spreadsheet ID and gid from URL
   const idMatch = sheetUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
-  if (!idMatch) return res.status(400).json({ message: 'Invalid Google Sheets URL.' });
+  if (!idMatch) return res.status(400).json({ message: 'Invalid Google Sheets URL. Please ensure it is a valid Google Sheets link.' });
   const sheetId = idMatch[1];
   const gidMatch = sheetUrl.match(/[#&]gid=([0-9]+)/);
   const gid = gidMatch ? gidMatch[1] : '0';

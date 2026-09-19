@@ -945,6 +945,11 @@ export default function AdminDashboard() {
                               <span className="text-zinc-500 opacity-30">|</span>
                               <span className="text-[var(--text-secondary)]">{auto.certCount} Sent</span>
                             </div>
+                            {auto.lastError && (
+                              <p className="mt-2 text-[9px] font-semibold text-red-400 bg-red-500/10 border border-red-500/20 p-1.5 rounded-lg leading-snug">
+                                ⚠️ {auto.lastError}
+                              </p>
+                            )}
                           </div>
                         </div>
                         <div className="flex items-center justify-between text-[8px] font-black uppercase tracking-widest opacity-40 border-t border-[var(--border-subtle)] pt-3">

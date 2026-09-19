@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 const { getRowColumnValue, cleanHeaderName, findBestNameColumn, findBestEmailColumn } = require('../backend/utils/columnHelper');
 const { createCertificatePDF, calculateUniqueHash } = require('../backend/utils/pdfGenerator');
 
@@ -66,8 +68,12 @@ async function testAllFlows() {
 
   // 4. PDF Generation Check
   console.log('\n4. Testing PDF Generator Rendering...');
+  const localTemplatePath = path.join(__dirname, '../backend/uploads/templates/template-1775758587158.png');
+  const base64Data = fs.existsSync(localTemplatePath) ? fs.readFileSync(localTemplatePath).toString('base64') : '';
+
   const mockTemplate = {
-    imageUrl: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800',
+    imageUrl: '/uploads/templates/template-1775758587158.png',
+    imageBase64: base64Data ? `data:image/png;base64,${base64Data}` : undefined,
     layoutConfig: {
       fields: [
         { key: 'Name (Eg: Kirran S T)', x: 100, y: 100, fontSize: 24, color: { r: 0, g: 0, b: 0 } },

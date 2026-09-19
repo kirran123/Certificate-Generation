@@ -61,14 +61,37 @@ const pollOnce = async () => {
       // Build CSV export URL from stored sheetId + gid
       const exportUrl = `https://docs.google.com/spreadsheets/d/${auto.sheetId}/export?format=csv&gid=${auto.gid}`;
       const response = await axios.get(exportUrl, { responseType: 'arraybuffer', timeout: 10000 });
+      
+      const responseText = Buffer.from(response.data).toString('utf-8');
+      if (responseText.includes('<!DOCTYPE html') || responseText.includes('<html') || responseText.includes('google-site-verification')) {
+        console.error(`[Poll] Access Restricted for "${auto.batchId}": Google returned HTML sign-in page.`);
+        await FormAutomation.findByIdAndUpdate(auto._id, {
+          lastChecked: new Date(),
+          lastError: 'Google Sheet Access Restricted: Set sharing to "Anyone with the link can view"'
+        });
+        continue;
+      }
+
       const workbook = xlsx.read(response.data, { type: 'buffer' });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const rows = xlsx.utils.sheet_to_json(sheet);
 
-      if (!rows || rows.length === 0) continue;
+      if (!rows || rows.length === 0) {
+        await FormAutomation.findByIdAndUpdate(auto._id, {
+          lastChecked: new Date(),
+          lastError: null
+        });
+        continue;
+      }
 
       const template = auto.templateId;
-      if (!template || !template.imageUrl) continue;
+      if (!template || !template.imageUrl) {
+        await FormAutomation.findByIdAndUpdate(auto._id, {
+          lastChecked: new Date(),
+          lastError: 'Template missing or deleted'
+        });
+        continue;
+      }
 
       const uploadDir = path.join(__dirname, '../uploads');
       const certsDir = path.join(uploadDir, 'certificates');
@@ -214,6 +237,7 @@ const pollOnce = async () => {
       // Update the original automation's stats
       await FormAutomation.findByIdAndUpdate(auto._id, {
         lastChecked: new Date(),
+        lastError: null,
         ...(newlyGenerated > 0 && { $inc: { certCount: newlyGenerated } })
       });
 
@@ -222,6 +246,10 @@ const pollOnce = async () => {
       }
     } catch (err) {
       console.error(`[Poll] Error for automation ${auto._id}:`, err.message);
+      await FormAutomation.findByIdAndUpdate(auto._id, {
+        lastChecked: new Date(),
+        lastError: `Poll error: ${err.message}`
+      }).catch(() => {});
     }
   }
   isPollerExecuting = false;
