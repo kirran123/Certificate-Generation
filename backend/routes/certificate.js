@@ -426,12 +426,17 @@ router.post('/generate', protect, async (req, res) => {
       return res.status(500).json({ message: `Certificate generation failed: ${lastGenerationError}` });
     }
 
-    console.log(`Success: ${generatedCount} generated, ${skippedCount} skipped.`);
+    // Return all certificate IDs in this batch (both newly created and existing) for bulk sending
+    const allBatchCerts = await Certificate.find({ templateId: template._id, batchId: batchId });
+    const allBatchCertIds = allBatchCerts.map(c => c.certificateId);
+
+    console.log(`Success: ${generatedCount} generated, ${skippedCount} skipped, total batch certs: ${allBatchCertIds.length}.`);
     res.json({
       message: `Success: ${generatedCount} generated.`,
-      generatedCount,
+      generatedCount: generatedCount > 0 ? generatedCount : (allBatchCertIds.length > 0 ? allBatchCertIds.length : 0),
       skippedCount,
-      generatedIds,
+      generatedIds: generatedIds.length > 0 ? generatedIds : allBatchCertIds,
+      allBatchCertIds,
       batchId
     });
   } catch (error) {

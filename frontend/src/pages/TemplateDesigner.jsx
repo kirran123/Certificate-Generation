@@ -468,21 +468,21 @@ export default function TemplateDesigner() {
     const bestName = findBestNameColumn(excelHeaders);
     const bestEmail = findBestEmailColumn(excelHeaders);
 
+    const nameCol = selection["name"] || autoNameCol || bestName;
+    const emailCol = selection["email"] || autoEmailCol || bestEmail;
+
     const activeMappings = {
       ...selection,
-      name: selection["name"] || autoNameCol || bestName,
-      email: selection["email"] || autoEmailCol || bestEmail,
+      name: nameCol,
+      email: emailCol,
     };
 
-    const mappedName = activeMappings["name"];
-    const mappedEmail = activeMappings["email"];
-
-    if (!mappedName) {
+    if (!nameCol) {
       alert('REQUIRED: Please map the "Recipient Name" field in the generation panel.');
       return;
     }
 
-    if (sendEmail && !mappedEmail) {
+    if (sendEmail && !emailCol) {
       alert('REQUIRED FOR EMAIL: Please map the "Recipient Email" field.');
       return;
     }
@@ -500,24 +500,26 @@ export default function TemplateDesigner() {
         `${API_BASE}/api/certificate/generate`,
         {
           templateId: actualTemplateId,
+          nameColumn: nameCol,
+          emailColumn: emailCol,
           mappings: activeMappings,
           rawData: excelData,
           sheetUrl: passedSheetUrl,
+          imageUrl: imageUrl ? imageUrl.replace(API_BASE, "") : undefined,
           layoutConfig: { fields, qrCode }, // Send live design
           showId,
           showQr,
-          batchId: batchName || undefined,
+          batchId: batchName ? batchName.trim() : undefined,
           subject: emailConfig.subject,
           course: emailConfig.subject,
         },
         { headers: { Authorization: `Bearer ${token}` } },
       );
 
-      const { generatedIds, generatedCount, skippedCount, batchId } =
-        genRes.data;
+      const { generatedIds, generatedCount, skippedCount, batchId } = genRes.data;
       setGenData({ count: generatedCount, skipped: skippedCount, batchId });
 
-      if (sendEmail && generatedIds.length > 0) {
+      if (sendEmail && generatedIds && generatedIds.length > 0) {
         setSaving("sending");
         await axios.post(
           `${API_BASE}/api/certificate/send-bulk`,
