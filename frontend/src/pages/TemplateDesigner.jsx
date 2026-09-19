@@ -71,9 +71,13 @@ export default function TemplateDesigner() {
   const navigate = useNavigate();
 
   // Guard against missing state or accidental direct navigation
-  const excelHeaders = state?.excelHeaders || [];
-  const excelData = state?.excelData || [];
-  const passedSheetUrl = state?.sheetUrl || '';
+  const excelHeaders = state?.excelHeaders && state.excelHeaders.length > 0
+    ? state.excelHeaders
+    : JSON.parse(sessionStorage.getItem('currentExcelHeaders') || '[]');
+  const excelData = state?.excelData && state.excelData.length > 0
+    ? state.excelData
+    : JSON.parse(sessionStorage.getItem('currentExcelData') || '[]');
+  const passedSheetUrl = state?.sheetUrl || sessionStorage.getItem('currentSheetUrl') || '';
 
   const [templateName, setTemplateName] = useState(
     "Certificate Batch " + new Date().toLocaleDateString(),
@@ -123,9 +127,9 @@ export default function TemplateDesigner() {
       const bestEmail = findBestEmailColumn(excelHeaders);
       if (bestName || bestEmail) {
         setSelection(prev => ({
+          ...prev,
           name: prev.name || bestName,
           email: prev.email || bestEmail,
-          ...prev
         }));
         if (bestName) setAutoNameCol(prev => prev || bestName);
         if (bestEmail) setAutoEmailCol(prev => prev || bestEmail);
@@ -454,8 +458,17 @@ export default function TemplateDesigner() {
   };
 
   const handleGenerateAndEmail = async (sendEmail = false) => {
-    const mappedName = selection["name"];
-    const mappedEmail = selection["email"];
+    const bestName = findBestNameColumn(excelHeaders);
+    const bestEmail = findBestEmailColumn(excelHeaders);
+
+    const activeMappings = {
+      ...selection,
+      name: selection["name"] || bestName,
+      email: selection["email"] || bestEmail,
+    };
+
+    const mappedName = activeMappings["name"];
+    const mappedEmail = activeMappings["email"];
 
     if (!mappedName) {
       alert('REQUIRED: Please map the "Recipient Name" field in the generation panel.');
@@ -480,8 +493,8 @@ export default function TemplateDesigner() {
         `${API_BASE}/api/certificate/generate`,
         {
           templateId: localStorage.getItem("lastSavedTemplateId"),
-          mappings: selection,
-          rawData: state?.excelData || [],
+          mappings: activeMappings,
+          rawData: excelData,
           layoutConfig: { fields, qrCode }, // Send live design
           showId,
           showQr,

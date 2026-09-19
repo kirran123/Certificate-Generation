@@ -43,6 +43,9 @@ export default function UploadData() {
       const cols = res.data.headers || [];
       setHeaders(cols);
       setData(res.data.data || []);
+      if (res.data.data) sessionStorage.setItem('currentExcelData', JSON.stringify(res.data.data));
+      if (cols) sessionStorage.setItem('currentExcelHeaders', JSON.stringify(cols));
+      if (sheetUrl) sessionStorage.setItem('currentSheetUrl', sheetUrl);
 
       if (res.data.warning) {
         setSheetWarning(res.data.warning);
@@ -72,6 +75,8 @@ export default function UploadData() {
       const res = await axios.post(`${API_BASE}/api/certificate/upload-data`, formData, {
         headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` }
       });
+      if (res.data.data) sessionStorage.setItem('currentExcelData', JSON.stringify(res.data.data));
+      if (res.data.headers) sessionStorage.setItem('currentExcelHeaders', JSON.stringify(res.data.headers));
       navigate('/designer', { state: { excelData: res.data.data, excelHeaders: res.data.headers } });
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to upload file.');
