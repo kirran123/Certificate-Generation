@@ -209,28 +209,30 @@ export default function UserDashboard() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3 pb-3">
-          <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-semibold text-indigo-400 opacity-90 hidden lg:inline-block">
-              Sample Feedback Form below like to check and Use this type to get the certificate without error:
+          <div className="flex flex-col gap-1 max-w-md">
+            <span className="text-xs sm:text-sm font-bold text-indigo-400 leading-snug">
+              Sample Feedback Form below like to check and Use this type to get the certificate without error. Kindly follow this template for generate certificate without any errors:
             </span>
-            <a
-              href={SAMPLE_FORM_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              title="Sample Feedback Form below like to check and Use this type to get the certificate without error. Kindly follow this template for generate certificate without any errors"
-              className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs rounded-xl transition-all shadow-md active:scale-95 text-center"
-            >
-              <LinkIcon className="w-3.5 h-3.5" />
-              <span>Sample Feedback Form</span>
-            </a>
+            <div className="flex items-center gap-2 mt-1">
+              <a
+                href={SAMPLE_FORM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Sample Feedback Form below like to check and Use this type to get the certificate without error. Kindly follow this template for generate certificate without any errors"
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs rounded-lg transition-all shadow-md active:scale-95 text-center"
+              >
+                <LinkIcon className="w-3.5 h-3.5" />
+                <span>Sample Feedback Form</span>
+              </a>
+              <button
+                onClick={downloadSampleExcel}
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-indigo-600/10 border border-indigo-500/30 hover:bg-indigo-600 hover:text-white text-indigo-400 font-semibold text-xs rounded-lg transition-all shadow-sm active:scale-95 cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Sample Excel Template</span>
+              </button>
+            </div>
           </div>
-          <button
-            onClick={downloadSampleExcel}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600/10 border border-indigo-500/30 hover:bg-indigo-600 hover:text-white text-indigo-400 font-semibold text-xs rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer self-end"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>Sample Excel Template</span>
-          </button>
 
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-secondary)]" />
