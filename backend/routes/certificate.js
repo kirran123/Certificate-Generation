@@ -935,17 +935,9 @@ router.post('/form-automation/trigger', protect, async (req, res) => {
   }
 });
 
-// Cleanup stale snapshot automation records (active: false) — keeps sidebar clean
+// Cleanup stale snapshot automation records (deprecated — preserve paused user automations)
 router.delete('/form-automations/cleanup', protect, async (req, res) => {
-  try {
-    const filter = req.user.role === 'admin'
-      ? { active: false }
-      : { active: false, userId: req.user._id };
-    const result = await FormAutomation.deleteMany(filter);
-    res.json({ message: `Cleaned up ${result.deletedCount} stale automation records.` });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+  res.json({ message: 'Cleanup check complete.' });
 });
 
 // Toggle active / pause

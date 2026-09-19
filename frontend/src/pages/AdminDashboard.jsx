@@ -133,9 +133,12 @@ export default function AdminDashboard() {
   const handleToggleAutomation = async (id, active) => {
     try {
       const token = sessionStorage.getItem('token');
-      await axios.patch(`${API_BASE}/api/certificate/form-automation/${id}`, { active: !active }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const headers = { Authorization: `Bearer ${token}` };
+      await axios.patch(`${API_BASE}/api/certificate/form-automation/${id}`, { active: !active }, { headers });
+      if (!active) {
+        // Was paused, now resuming (play): trigger poller immediately
+        axios.post(`${API_BASE}/api/certificate/form-automation/trigger`, {}, { headers }).catch(() => {});
+      }
       loadTab('certificates', false);
     } catch (err) {
       console.error('Failed to toggle automation:', err.message);
@@ -143,7 +146,7 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteAutomation = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this automation/batch?')) return;
+    if (!window.confirm('Are you sure you want to delete this active automation? Google Sheet monitoring will stop immediately.')) return;
     try {
       const token = sessionStorage.getItem('token');
       await axios.delete(`${API_BASE}/api/certificate/form-automation/${id}`, {

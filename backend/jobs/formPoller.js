@@ -51,6 +51,13 @@ const pollOnce = async () => {
 
   for (const auto of automations) {
     try {
+      // Re-verify in DB that this automation is still active and not deleted
+      const freshAuto = await FormAutomation.findById(auto._id);
+      if (!freshAuto || !freshAuto.active) {
+        console.log(`[Poll] Skipping automation "${auto.batchId}" — status: ${!freshAuto ? 'deleted' : 'paused'}`);
+        continue;
+      }
+
       // Build CSV export URL from stored sheetId + gid
       const exportUrl = `https://docs.google.com/spreadsheets/d/${auto.sheetId}/export?format=csv&gid=${auto.gid}`;
       const response = await axios.get(exportUrl, { responseType: 'arraybuffer', timeout: 10000 });
@@ -71,6 +78,13 @@ const pollOnce = async () => {
       let newlyGenerated = 0;
 
       for (const row of rows) {
+        // Double-check DB status before processing each row in case user paused/deleted mid-run
+        const liveAutoCheck = await FormAutomation.findById(auto._id);
+        if (!liveAutoCheck || !liveAutoCheck.active) {
+          console.log(`[Poll] Stopping run for automation "${auto.batchId}" — status: ${!liveAutoCheck ? 'deleted' : 'paused'}`);
+          break;
+        }
+
         const name = getRowColumnValue(row, auto.nameColumn, 'name');
         const email = getRowColumnValue(row, auto.emailColumn, 'email').toLowerCase();
 
@@ -94,7 +108,8 @@ const pollOnce = async () => {
         const existing = await Certificate.findOne({
           $or: [
             { uniqueHash },
-            { automationId: auto._id, email: email.trim().toLowerCase() }
+            { automationId: auto._id, email: email.trim().toLowerCase() },
+            { batchId: auto.batchId, email: email.trim().toLowerCase() }
           ]
         });
 
@@ -102,7 +117,7 @@ const pollOnce = async () => {
           processedInRun.add(dedupKey);
           markEmailSent([dedupKey, uniqueHash]);
           if (existing.status === 'Sent' || existing.status === 'Pending') {
-            continue; // Already generated / sent for this automation
+            continue; // Already generated / sent for this automation -> SKIPPED & LEFT ALONE
           }
         }
 
