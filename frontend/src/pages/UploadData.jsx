@@ -88,7 +88,7 @@ export default function UploadData() {
 
   // ── Utilities ────────────────────────────────────────────────────────────
   const proceedToDesigner = () =>
-    navigate('/designer', { state: { excelData: data, excelHeaders: headers } });
+    navigate('/designer', { state: { excelData: data, excelHeaders: headers, sheetUrl } });
 
   const fmtDate = (d) => d ? new Date(d).toLocaleString() : 'Not yet';
 

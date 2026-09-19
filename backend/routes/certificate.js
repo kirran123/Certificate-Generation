@@ -248,6 +248,36 @@ router.post('/preview', protect, async (req, res) => {
   }
 });
 
+// Helper: Fetch live sheet data across multiple gids
+const fetchSheetRowsFromUrl = async (sheetUrl) => {
+  if (!sheetUrl) return [];
+  const idMatch = sheetUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
+  if (!idMatch) return [];
+  const docId = idMatch[1];
+  const gidMatch = sheetUrl.match(/[#&?]gid=([0-9]+)/);
+  const preferredGid = gidMatch ? gidMatch[1] : null;
+  const gidsToTry = preferredGid ? [preferredGid, '0', '1', '2'] : ['0', '1', '2'];
+
+  for (const gid of [...new Set(gidsToTry)]) {
+    try {
+      const exportUrl = `https://docs.google.com/spreadsheets/d/${docId}/export?format=csv&gid=${gid}`;
+      const response = await axios.get(exportUrl, {
+        responseType: 'arraybuffer',
+        timeout: 15000,
+        headers: { 'User-Agent': 'Mozilla/5.0' }
+      });
+      const workbook = xlsx.read(response.data, { type: 'buffer' });
+      const sheetName = workbook.SheetNames[0];
+      const ws = workbook.Sheets[sheetName];
+      const data = xlsx.utils.sheet_to_json(ws, { raw: false, defval: '' });
+      if (data && data.length > 0) return data;
+    } catch (e) {
+      // try next gid
+    }
+  }
+  return [];
+};
+
 // Generate Certificates 
 router.post('/generate', protect, async (req, res) => {
   try {
@@ -261,28 +291,10 @@ router.post('/generate', protect, async (req, res) => {
 
     let rowsToProcess = (rawData && Array.isArray(rawData) && rawData.length > 0) ? rawData : [];
 
-    // Fallback: If rawData is empty, but sheetUrl is provided, fetch live sheet data (same as Auto-Cert)
+    // Fallback: If rawData is empty or missing, fetch live sheet data across gids (same as Auto-Cert)
     if (rowsToProcess.length === 0 && sheetUrl) {
-      const docIdMatch = sheetUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
-      if (docIdMatch) {
-        const docId = docIdMatch[1];
-        const gidMatch = sheetUrl.match(/[#&?]gid=([0-9]+)/);
-        const gid = gidMatch ? gidMatch[1] : '0';
-        const exportUrl = `https://docs.google.com/spreadsheets/d/${docId}/export?format=csv&gid=${gid}`;
-        try {
-          const response = await axios.get(exportUrl, {
-            responseType: 'arraybuffer',
-            timeout: 15000,
-            headers: { 'User-Agent': 'Mozilla/5.0' }
-          });
-          const workbook = xlsx.read(response.data, { type: 'buffer' });
-          const sheetName = workbook.SheetNames[0];
-          rowsToProcess = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName], { raw: false, defval: '' });
-          console.log(`[/generate] Live sheet fetch succeeded! Loaded ${rowsToProcess.length} rows.`);
-        } catch (sheetErr) {
-          console.error('[/generate] Live sheet fetch failed:', sheetErr.message);
-        }
-      }
+      rowsToProcess = await fetchSheetRowsFromUrl(sheetUrl);
+      console.log(`[/generate] Live sheet fetch completed. Loaded ${rowsToProcess.length} rows.`);
     }
 
     if (!rowsToProcess || !Array.isArray(rowsToProcess) || rowsToProcess.length === 0) {
@@ -300,6 +312,7 @@ router.post('/generate', protect, async (req, res) => {
 
     let generatedCount = 0;
     let skippedCount = 0;
+    let lastGenerationError = null;
     const generatedIds = [];
 
     // Ensure we have a valid batch ID
@@ -309,21 +322,37 @@ router.post('/generate', protect, async (req, res) => {
     for (const row of rowsToProcess) {
       // Build mapped item data using 5-step getRowColumnValue extractor
       const itemData = { ...row };
-      Object.keys(mappings || {}).forEach(key => {
-        const sourceHeader = mappings[key];
-        let value = getRowColumnValue(row, sourceHeader, key);
 
-        // Normalize email
-        if (key === 'email' && typeof value === 'string') {
-          value = value.trim().toLowerCase();
-        }
+      // Map target keys using provided mappings
+      if (mappings && typeof mappings === 'object') {
+        Object.keys(mappings).forEach(targetKey => {
+          const sourceHeader = mappings[targetKey];
+          const val = getRowColumnValue(row, sourceHeader, targetKey);
+          if (val !== undefined && val !== null && String(val).trim() !== '') {
+            itemData[targetKey] = String(val).trim();
+          }
+        });
+      }
 
-        itemData[key] = value;
-      });
+      // Auto-extract name and email using multi-tier column helper
+      const rowHeaders = Object.keys(row);
+      const nameCol = mappings?.name || findBestNameColumn(rowHeaders);
+      const emailCol = mappings?.email || findBestEmailColumn(rowHeaders);
 
-      // Special fallback to guarantee name is never empty
+      const extractedName = getRowColumnValue(row, nameCol, 'name');
+      const extractedEmail = getRowColumnValue(row, emailCol, 'email');
+
+      if (extractedName) itemData.name = extractedName;
+      if (extractedEmail) itemData.email = extractedEmail.toLowerCase();
+
+      // Fallback name if missing
       if (!itemData.name) {
-        itemData.name = getRowColumnValue(row, mappings?.name, 'name') || row.name || 'Kirran S T';
+        itemData.name = getRowColumnValue(row, '', 'name') || row.name || '';
+      }
+
+      // Skip row if completely empty
+      if (!itemData.name && !itemData.email) {
+        continue;
       }
 
       // Deduplication check using shared helper
@@ -343,6 +372,7 @@ router.post('/generate', protect, async (req, res) => {
         const liveLayout = req.body.layoutConfig;
         const renderSettings = {
           ...template.toObject(),
+          imageUrl: req.body.imageUrl || template.imageUrl,
           layoutConfig: liveLayout || template.layoutConfig,
           showId: overrideShowId !== undefined ? overrideShowId : template.showId,
           showQr: overrideShowQr !== undefined ? overrideShowQr : template.showQr
@@ -373,7 +403,12 @@ router.post('/generate', protect, async (req, res) => {
         generatedCount++;
       } catch (err) {
         console.error('Failed to generate individual certificate:', err);
+        lastGenerationError = err.message;
       }
+    }
+
+    if (generatedCount === 0 && skippedCount === 0 && lastGenerationError) {
+      return res.status(500).json({ message: `Certificate generation failed: ${lastGenerationError}` });
     }
 
     console.log(`Success: ${generatedCount} generated, ${skippedCount} skipped.`);
