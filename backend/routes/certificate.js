@@ -251,19 +251,43 @@ router.post('/preview', protect, async (req, res) => {
 // Generate Certificates 
 router.post('/generate', protect, async (req, res) => {
   try {
-    const { templateId, mappings, rawData, showId: overrideShowId, showQr: overrideShowQr } = req.body;
+    let { templateId, mappings, rawData, sheetUrl, showId: overrideShowId, showQr: overrideShowQr } = req.body;
 
     console.log('--- GENERATION DIAGNOSTICS ---');
     console.log('Template ID:', templateId);
     console.log('Mappings:', JSON.stringify(mappings));
     console.log('RawData Count:', rawData ? rawData.length : 'NULL');
-    if (rawData && rawData.length > 0) {
-      console.log('First Row Sample:', JSON.stringify(rawData[0]));
+    console.log('SheetUrl:', sheetUrl || 'NONE');
+
+    let rowsToProcess = (rawData && Array.isArray(rawData) && rawData.length > 0) ? rawData : [];
+
+    // Fallback: If rawData is empty, but sheetUrl is provided, fetch live sheet data (same as Auto-Cert)
+    if (rowsToProcess.length === 0 && sheetUrl) {
+      const docIdMatch = sheetUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
+      if (docIdMatch) {
+        const docId = docIdMatch[1];
+        const gidMatch = sheetUrl.match(/[#&?]gid=([0-9]+)/);
+        const gid = gidMatch ? gidMatch[1] : '0';
+        const exportUrl = `https://docs.google.com/spreadsheets/d/${docId}/export?format=csv&gid=${gid}`;
+        try {
+          const response = await axios.get(exportUrl, {
+            responseType: 'arraybuffer',
+            timeout: 15000,
+            headers: { 'User-Agent': 'Mozilla/5.0' }
+          });
+          const workbook = xlsx.read(response.data, { type: 'buffer' });
+          const sheetName = workbook.SheetNames[0];
+          rowsToProcess = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName], { raw: false, defval: '' });
+          console.log(`[/generate] Live sheet fetch succeeded! Loaded ${rowsToProcess.length} rows.`);
+        } catch (sheetErr) {
+          console.error('[/generate] Live sheet fetch failed:', sheetErr.message);
+        }
+      }
     }
 
-    if (!rawData || !Array.isArray(rawData) || rawData.length === 0) {
-      console.log('ABORTING: No rawData provided.');
-      return res.status(400).json({ message: 'No data provided for generation (Excel file may be empty or lost during page refresh)' });
+    if (!rowsToProcess || !Array.isArray(rowsToProcess) || rowsToProcess.length === 0) {
+      console.log('ABORTING: No rawData or sheetUrl rows provided.');
+      return res.status(400).json({ message: 'No recipient data found for generation. Please ensure your Excel file or Google Sheet contains recipient data.' });
     }
 
     const template = await Template.findById(templateId);
@@ -282,7 +306,7 @@ router.post('/generate', protect, async (req, res) => {
     const timestamp = new Date().toISOString().slice(0, 16).replace('T', ' ');
     const batchId = req.body.batchId || `Batch ${timestamp}`;
 
-    for (const row of rawData) {
+    for (const row of rowsToProcess) {
       // Build mapped item data using 5-step getRowColumnValue extractor
       const itemData = { ...row };
       Object.keys(mappings || {}).forEach(key => {

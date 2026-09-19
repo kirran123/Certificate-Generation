@@ -458,13 +458,20 @@ export default function TemplateDesigner() {
   };
 
   const handleGenerateAndEmail = async (sendEmail = false) => {
+    const actualTemplateId = savedTemplateId || localStorage.getItem("lastSavedTemplateId") || templateIdFromUrl;
+
+    if (!actualTemplateId) {
+      alert("Template not saved yet. Please click 'Save Template' before generating certificates.");
+      return;
+    }
+
     const bestName = findBestNameColumn(excelHeaders);
     const bestEmail = findBestEmailColumn(excelHeaders);
 
     const activeMappings = {
       ...selection,
-      name: selection["name"] || bestName,
-      email: selection["email"] || bestEmail,
+      name: selection["name"] || autoNameCol || bestName,
+      email: selection["email"] || autoEmailCol || bestEmail,
     };
 
     const mappedName = activeMappings["name"];
@@ -492,9 +499,10 @@ export default function TemplateDesigner() {
       const genRes = await axios.post(
         `${API_BASE}/api/certificate/generate`,
         {
-          templateId: localStorage.getItem("lastSavedTemplateId"),
+          templateId: actualTemplateId,
           mappings: activeMappings,
           rawData: excelData,
+          sheetUrl: passedSheetUrl,
           layoutConfig: { fields, qrCode }, // Send live design
           showId,
           showQr,
