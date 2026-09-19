@@ -222,7 +222,7 @@ const pollOnce = async () => {
             name: cert.name,
             subject: emailSubject,
             htmlContent,
-            pdfBase64,
+            pdfBase64: base64Pdf,
             certId
           });
 
