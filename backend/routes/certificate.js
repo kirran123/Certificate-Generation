@@ -343,15 +343,26 @@ router.post('/generate', protect, async (req, res) => {
       const extractedEmail = getRowColumnValue(row, emailCol, 'email');
 
       if (extractedName) itemData.name = extractedName;
-      if (extractedEmail) itemData.email = extractedEmail.toLowerCase();
+      if (extractedEmail) itemData.email = String(extractedEmail).trim().toLowerCase();
 
-      // Fallback name if missing
-      if (!itemData.name) {
-        itemData.name = getRowColumnValue(row, '', 'name') || row.name || '';
+      // Guaranteed extraction fallback for name and email across any spreadsheet format:
+      if (!itemData.email) {
+        const foundEmail = Object.values(row).find(val => typeof val === 'string' && val.includes('@') && val.includes('.'));
+        if (foundEmail) itemData.email = String(foundEmail).trim().toLowerCase();
       }
 
-      // Skip row if completely empty
+      if (!itemData.name) {
+        const foundName = Object.values(row).find(val => {
+          if (!val || typeof val !== 'string') return false;
+          const s = val.trim();
+          return s.length > 0 && !s.includes('@') && !/^\d+$/.test(s);
+        });
+        if (foundName) itemData.name = String(foundName).trim();
+      }
+
+      // Skip row only if both name and email are absent
       if (!itemData.name && !itemData.email) {
+        console.log('[Generate] Skipping completely empty row:', JSON.stringify(row));
         continue;
       }
 
