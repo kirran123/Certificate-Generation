@@ -516,15 +516,18 @@ export default function TemplateDesigner() {
         { headers: { Authorization: `Bearer ${token}` } },
       );
 
-      const { generatedIds, generatedCount, skippedCount, batchId } = genRes.data;
-      setGenData({ count: generatedCount, skipped: skippedCount, batchId });
+      const { generatedIds, allBatchCertIds, generatedCount, skippedCount, batchId } = genRes.data;
+      const totalCerts = (allBatchCertIds && allBatchCertIds.length > 0) ? allBatchCertIds.length : generatedCount;
+      setGenData({ count: totalCerts, skipped: skippedCount, batchId });
 
-      if (sendEmail && generatedIds && generatedIds.length > 0) {
+      // Use allBatchCertIds for email (includes certs that already existed/were skipped)
+      const idsForEmail = (allBatchCertIds && allBatchCertIds.length > 0) ? allBatchCertIds : generatedIds;
+      if (sendEmail && idsForEmail && idsForEmail.length > 0) {
         setSaving("sending");
         await axios.post(
           `${API_BASE}/api/certificate/send-bulk`,
           {
-            certificateIds: generatedIds,
+            certificateIds: idsForEmail,
             subject: emailConfig.subject,
             message: emailConfig.message,
             senderName: emailConfig.senderName,

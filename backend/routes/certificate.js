@@ -17,7 +17,7 @@ const { protect, admin } = require('../middleware/auth');
 const { createCertificatePDF, calculateUniqueHash, getRelativePath } = require('../utils/pdfGenerator');
 const { sendEmailWithFailover } = require('../utils/brevoPool');
 const { markEmailSent } = require('../utils/sentLock');
-const { getRowColumnValue } = require('../utils/columnHelper');
+const { getRowColumnValue, findBestNameColumn, findBestEmailColumn, cleanHeaderName } = require('../utils/columnHelper');
 
 const router = express.Router();
 
@@ -283,26 +283,38 @@ router.post('/generate', protect, async (req, res) => {
   try {
     let { templateId, nameColumn, emailColumn, mappings, rawData, sheetUrl, showId: overrideShowId, showQr: overrideShowQr } = req.body;
 
-    console.log('--- GENERATION DIAGNOSTICS ---');
+    console.log('=== GENERATION START ===');
     console.log('Template ID:', templateId);
-    console.log('Name Column:', nameColumn);
-    console.log('Email Column:', emailColumn);
+    console.log('Name Column from frontend:', nameColumn);
+    console.log('Email Column from frontend:', emailColumn);
     console.log('SheetUrl:', sheetUrl || 'NONE');
+    console.log('rawData rows:', Array.isArray(rawData) ? rawData.length : 'NOT_ARRAY');
+    if (Array.isArray(rawData) && rawData.length > 0) {
+      console.log('rawData[0] keys:', Object.keys(rawData[0]));
+    }
 
     // 1. Fetch live rows from sheetUrl if provided (same as Auto-Cert), fallback to rawData
     let rowsToProcess = [];
     if (sheetUrl) {
-      rowsToProcess = await fetchSheetRowsFromUrl(sheetUrl);
-      console.log(`[/generate] Live sheet fetch completed. Loaded ${rowsToProcess.length} rows.`);
+      try {
+        rowsToProcess = await fetchSheetRowsFromUrl(sheetUrl);
+        console.log(`[/generate] Live sheet fetch: ${rowsToProcess.length} rows loaded.`);
+        if (rowsToProcess.length > 0) {
+          console.log('[/generate] Sheet row[0] keys:', Object.keys(rowsToProcess[0]));
+        }
+      } catch (fetchErr) {
+        console.error('[/generate] Sheet fetch error:', fetchErr.message);
+      }
     }
 
     if ((!rowsToProcess || rowsToProcess.length === 0) && rawData && Array.isArray(rawData)) {
       rowsToProcess = rawData;
+      console.log(`[/generate] Using rawData: ${rowsToProcess.length} rows.`);
     }
 
     if (!rowsToProcess || !Array.isArray(rowsToProcess) || rowsToProcess.length === 0) {
-      console.log('ABORTING: No rawData or sheetUrl rows provided.');
-      return res.status(400).json({ message: 'No recipient data found for generation. Please ensure your Excel file or Google Sheet contains recipient data.' });
+      console.log('ABORTING: No rows found (no rawData and sheet fetch returned 0 rows).');
+      return res.status(400).json({ message: 'No recipient data found. Please make sure your Excel/Sheet has data rows.' });
     }
 
     const template = await Template.findById(templateId);
@@ -320,13 +332,18 @@ router.post('/generate', protect, async (req, res) => {
 
     const batchId = req.body.batchId || `Batch ${new Date().toISOString().slice(0, 16).replace('T', ' ')}`;
 
-    for (const row of rowsToProcess) {
-      // Extract name & email EXACTLY as Auto-Cert (formPoller.js) does:
-      const nameCol = nameColumn || mappings?.name || findBestNameColumn(Object.keys(row));
-      const emailCol = emailColumn || mappings?.email || findBestEmailColumn(Object.keys(row));
+    // Resolve name & email columns ONCE from the first row's keys (same as formPoller)
+    const firstRowKeys = rowsToProcess.length > 0 ? Object.keys(rowsToProcess[0]) : [];
+    const resolvedNameCol = nameColumn || mappings?.name || findBestNameColumn(firstRowKeys);
+    const resolvedEmailCol = emailColumn || mappings?.email || findBestEmailColumn(firstRowKeys);
 
-      let name = getRowColumnValue(row, nameCol, 'name');
-      let email = getRowColumnValue(row, emailCol, 'email');
+    console.log('[/generate] Resolved nameCol:', resolvedNameCol);
+    console.log('[/generate] Resolved emailCol:', resolvedEmailCol);
+    console.log('[/generate] Available row keys:', firstRowKeys.slice(0, 10));
+
+    for (const [rowIndex, row] of rowsToProcess.entries()) {
+      let name = getRowColumnValue(row, resolvedNameCol, 'name');
+      let email = getRowColumnValue(row, resolvedEmailCol, 'email');
 
       if (email && typeof email === 'string') {
         email = email.trim().toLowerCase();
@@ -348,20 +365,24 @@ router.post('/generate', protect, async (req, res) => {
         if (foundName) name = String(foundName).trim();
       }
 
-      // Skip row only if both name and email are completely absent
+      if (rowIndex < 3) {
+        console.log(`[/generate] Row ${rowIndex}: name="${name}" email="${email}"`);
+      }
+
+      // Skip rows with no name AND no email
       if (!name && !email) {
-        console.log('[Generate] Skipping empty row:', JSON.stringify(row));
+        console.log(`[/generate] Row ${rowIndex}: Skipping — no name or email found.`);
         continue;
       }
 
-      // Build itemData for canvas rendering and DB storage
+      // Build itemData — inject extracted name & email so pdfGenerator can find them
       const itemData = {
         ...row,
         name,
         email
       };
 
-      // Map any custom field mappings
+      // Apply any extra custom column mappings
       if (mappings && typeof mappings === 'object') {
         Object.keys(mappings).forEach(targetKey => {
           const sourceHeader = mappings[targetKey];
@@ -372,13 +393,21 @@ router.post('/generate', protect, async (req, res) => {
         });
       }
 
-      // Deduplication check
+      // Deduplication — only skip if cert with this hash already has a PDF on disk
       const uniqueHash = calculateUniqueHash(templateId, name, email, batchId);
-
       const existing = await Certificate.findOne({ uniqueHash, templateId });
       if (existing) {
-        skippedCount++;
-        continue;
+        const existingPdfPath = path.join(__dirname, '..', existing.pdfUrl || '');
+        if (existing.pdfUrl && fs.existsSync(existingPdfPath)) {
+          // Certificate already generated and PDF exists — skip
+          generatedIds.push(existing.certificateId);
+          skippedCount++;
+          continue;
+        } else {
+          // PDF is missing — delete stale DB record and regenerate
+          console.log(`[/generate] Stale cert found for ${name} (no PDF). Regenerating.`);
+          await Certificate.deleteOne({ _id: existing._id });
+        }
       }
 
       const certId = await generateUniqueId();
@@ -416,26 +445,28 @@ router.post('/generate', protect, async (req, res) => {
 
         generatedIds.push(certId);
         generatedCount++;
+        console.log(`[/generate] ✅ Generated cert for "${name}" (${certId})`);
       } catch (err) {
-        console.error('Failed to generate individual certificate:', err);
+        console.error(`[/generate] ❌ Failed for row ${rowIndex} ("${name}"): ${err.message}`);
         lastGenerationError = err.message;
       }
     }
+
+    console.log(`=== GENERATION DONE: ${generatedCount} generated, ${skippedCount} skipped ===`);
 
     if (generatedCount === 0 && skippedCount === 0 && lastGenerationError) {
       return res.status(500).json({ message: `Certificate generation failed: ${lastGenerationError}` });
     }
 
-    // Return all certificate IDs in this batch (both newly created and existing) for bulk sending
+    // Return all certificate IDs in this batch for bulk sending
     const allBatchCerts = await Certificate.find({ templateId: template._id, batchId: batchId });
     const allBatchCertIds = allBatchCerts.map(c => c.certificateId);
 
-    console.log(`Success: ${generatedCount} generated, ${skippedCount} skipped, total batch certs: ${allBatchCertIds.length}.`);
     res.json({
-      message: `Success: ${generatedCount} generated.`,
-      generatedCount: generatedCount > 0 ? generatedCount : (allBatchCertIds.length > 0 ? allBatchCertIds.length : 0),
+      message: `Success: ${generatedCount} generated, ${skippedCount} already existed.`,
+      generatedCount,
       skippedCount,
-      generatedIds: generatedIds.length > 0 ? generatedIds : allBatchCertIds,
+      generatedIds,
       allBatchCertIds,
       batchId
     });
