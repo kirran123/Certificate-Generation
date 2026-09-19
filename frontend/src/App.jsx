@@ -26,7 +26,7 @@ function ProtectedRoute({ children, requireAdmin }) {
   }
 
   if (!user && !token) return <Navigate to="/login" replace />;
-  if (requireAdmin && user && user.role !== 'admin') {
+  if (requireAdmin && user && user.role?.toLowerCase() !== 'admin') {
     return <Navigate to="/" replace />;
   }
   
@@ -43,14 +43,16 @@ function App() {
     </div>
   </div>;
 
+  const isAdmin = user?.role?.toLowerCase() === 'admin';
+
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
+        <Route path="/login" element={user ? <Navigate to={isAdmin ? '/admin/dashboard' : '/'} /> : <Login />} />
         
         {/* Routes */}
-        <Route path="/" element={<ProtectedRoute>{user?.role === 'admin' ? <AdminDashboard /> : <UserDashboard />}</ProtectedRoute>} />
-        <Route path="/dashboard" element={<ProtectedRoute>{user?.role === 'admin' ? <AdminDashboard /> : <UserDashboard />}</ProtectedRoute>} />
+        <Route path="/" element={<ProtectedRoute>{isAdmin ? <AdminDashboard /> : <UserDashboard />}</ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute>{isAdmin ? <AdminDashboard /> : <UserDashboard />}</ProtectedRoute>} />
         <Route path="/admin/dashboard" element={<ProtectedRoute requireAdmin={true}><AdminDashboard /></ProtectedRoute>} />
         <Route path="/upload" element={<ProtectedRoute><UploadData /></ProtectedRoute>} />
         <Route path="/designer" element={<ProtectedRoute><TemplateDesigner /></ProtectedRoute>} />

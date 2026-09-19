@@ -181,7 +181,8 @@ export default function TemplateDesigner() {
   useEffect(() => {
     if (autoSuccess) {
       const timer = setTimeout(() => {
-        const targetPath = user?.role === 'admin' ? '/admin/dashboard?tab=certificates' : '/dashboard';
+        const isAdmin = user?.role?.toLowerCase() === 'admin';
+        const targetPath = isAdmin ? '/admin/dashboard?tab=certificates' : '/dashboard';
         navigate(targetPath);
       }, 2000);
       return () => clearTimeout(timer);
@@ -1155,7 +1156,11 @@ export default function TemplateDesigner() {
                   </div>
 
                   <button
-                    onClick={() => navigate("/?tab=managed")}
+                    onClick={() => {
+                      const isAdmin = user?.role?.toLowerCase() === 'admin';
+                      const targetPath = isAdmin ? '/admin/dashboard?tab=certificates' : '/dashboard?tab=managed';
+                      navigate(targetPath);
+                    }}
                     className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-6 rounded-[2rem] text-xs font-black uppercase tracking-[0.3em] transition-all shadow-2xl shadow-indigo-600/30 active:scale-95 flex items-center justify-center space-x-4 group"
                   >
                     <span>Access Operational Dashboard</span>
