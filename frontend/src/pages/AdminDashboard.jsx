@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
-import { Users, FileText, CheckCircle, XCircle, Calendar, Mail, Search, Award, BarChart2, ChevronDown, ChevronUp, ShieldCheck, TrendingUp, Zap, MessageSquare, Trash2, PauseCircle, PlayCircle, RefreshCw, Clock, CheckCircle2, AlertTriangle, Heart, Lightbulb, PenTool, List, Download } from 'lucide-react';
+import { Users, FileText, CheckCircle, XCircle, Calendar, Mail, Search, Award, BarChart2, ChevronDown, ChevronUp, ShieldCheck, TrendingUp, Zap, MessageSquare, Trash2, PauseCircle, PlayCircle, RefreshCw, Clock, CheckCircle2, AlertTriangle, Heart, Lightbulb, PenTool, List, Download, Link as LinkIcon } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 import { API_BASE } from '../apiConfig';
-import { downloadSampleExcel } from '../utils/sampleExcelGenerator';
+import { downloadSampleExcel, SAMPLE_FORM_URL } from '../utils/sampleExcelGenerator';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
 
@@ -353,13 +353,24 @@ export default function AdminDashboard() {
           <h1 className="text-2xl sm:text-3xl font-black text-[var(--text-primary)] tracking-tight mobile-title">Control Center</h1>
           <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1">Monitor users, certificates, and email delivery.</p>
         </div>
-        <button
-          onClick={downloadSampleExcel}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600/10 border border-indigo-500/30 hover:bg-indigo-600 hover:text-white text-indigo-400 font-semibold text-xs rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer self-start sm:self-auto"
-        >
-          <Download className="w-3.5 h-3.5" />
-          <span>Download Sample Excel</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-3 self-start sm:self-auto">
+          <a
+            href={SAMPLE_FORM_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs rounded-xl transition-all shadow-md active:scale-95 text-center"
+          >
+            <LinkIcon className="w-3.5 h-3.5" />
+            <span>Sample Feedback Form</span>
+          </a>
+          <button
+            onClick={downloadSampleExcel}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600/10 border border-indigo-500/30 hover:bg-indigo-600 hover:text-white text-indigo-400 font-semibold text-xs rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Download Sample Excel</span>
+          </button>
+        </div>
       </div>
 
       {/* ── Stat Cards ─────────────────────────────────────────────────────── */}

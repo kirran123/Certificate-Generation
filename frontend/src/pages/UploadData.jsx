@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { API_BASE } from '../apiConfig';
 
-import { downloadSampleExcel } from '../utils/sampleExcelGenerator';
+import { downloadSampleExcel, SAMPLE_FORM_URL } from '../utils/sampleExcelGenerator';
 import { Download } from 'lucide-react';
 
 export default function UploadData() {
@@ -109,6 +109,42 @@ export default function UploadData() {
           <Download className="w-4 h-4" />
           <span>Download Sample Excel</span>
         </button>
+      </div>
+
+      {/* ── Sample Form & Zero-Error Template Banner ───────────────────── */}
+      <div className="rounded-3xl border border-indigo-500/20 bg-indigo-500/5 p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-[11px] font-bold text-indigo-400 uppercase tracking-wider">
+            <span>✨ Zero-Error Template Setup</span>
+          </div>
+          <h3 className="text-base font-bold text-[var(--text-primary)]">Sample Feedback Form & Standard Headers</h3>
+          <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+            Kindly follow this template format to generate certificates without any errors: <br/>
+            <span className="font-mono text-indigo-400 bg-black/30 px-2 py-0.5 rounded text-[11px] inline-block mt-1 mr-1">Name (Eg: Kirran S T)</span>
+            <span className="font-mono text-indigo-400 bg-black/30 px-2 py-0.5 rounded text-[11px] inline-block mt-1 mr-1">Email (Eg: kirranvijay@gmail.com)</span>
+            <span className="font-mono text-indigo-400 bg-black/30 px-2 py-0.5 rounded text-[11px] inline-block mt-1 mr-1">Department (Eg: B.Tech IT)</span>
+            <span className="font-mono text-indigo-400 bg-black/30 px-2 py-0.5 rounded text-[11px] inline-block mt-1 mr-1">Year (Eg: IV Year)</span>
+            <span className="font-mono text-indigo-400 bg-black/30 px-2 py-0.5 rounded text-[11px] inline-block mt-1">College (Eg: Ramco Institute Of Technology)</span>
+          </p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-3 shrink-0">
+          <a
+            href={SAMPLE_FORM_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs rounded-xl transition-all shadow-md active:scale-95 text-center"
+          >
+            <LinkIcon className="w-3.5 h-3.5" />
+            <span>Open Sample Feedback Form</span>
+          </a>
+          <button
+            onClick={downloadSampleExcel}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white/5 border border-white/10 hover:bg-white/10 text-[var(--text-primary)] font-semibold text-xs rounded-xl transition-all active:scale-95 cursor-pointer"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Download Sample Excel</span>
+          </button>
+        </div>
       </div>
 
 
