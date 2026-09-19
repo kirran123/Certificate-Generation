@@ -11,6 +11,7 @@ const certificateSchema = new mongoose.Schema({
   status: { type: String, enum: ['Pending', 'Sent', 'Failed'], default: 'Pending' },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   batchId: { type: String },
+  automationId: { type: mongoose.Schema.Types.ObjectId, ref: 'FormAutomation' },
   isAutomation: { type: Boolean, default: false },
   uniqueHash: { type: String },
   metadata: { type: Map, of: String }

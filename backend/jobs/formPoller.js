@@ -70,17 +70,13 @@ const pollOnce = async () => {
 
       let newlyGenerated = 0;
 
-      const now = new Date();
-      const runTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-      const currentPollBatchId = `${auto.batchId} [Run ${runTime}]`;
-
       for (const row of rows) {
         const name = getRowColumnValue(row, auto.nameColumn, 'name');
         const email = getRowColumnValue(row, auto.emailColumn, 'email').toLowerCase();
 
         if (!name || !email) continue; // skip incomplete rows
 
-        const dedupKey = `${template._id}_${email}`;
+        const dedupKey = `${template._id}_${auto.batchId}_${email}`;
 
         // 1. Check in-memory run cache
         if (processedInRun.has(dedupKey)) {
@@ -93,21 +89,20 @@ const pollOnce = async () => {
           continue;
         }
 
-        // 3. Dedup check using shared hasher & DB lookup
+        // 3. Dedup check specific to this automation and hash
         const uniqueHash = calculateUniqueHash(template._id, name, email, auto.batchId);
-        const queryConditions = [{ uniqueHash }];
-        if (email && email.trim()) {
-          queryConditions.push({ templateId: template._id, email: email.trim().toLowerCase() });
-        }
         const existing = await Certificate.findOne({
-          $or: queryConditions
+          $or: [
+            { uniqueHash },
+            { automationId: auto._id, email: email.trim().toLowerCase() }
+          ]
         });
 
         if (existing) {
           processedInRun.add(dedupKey);
           markEmailSent([dedupKey, uniqueHash]);
           if (existing.status === 'Sent' || existing.status === 'Pending') {
-            continue; // Already generated / sent
+            continue; // Already generated / sent for this automation
           }
         }
 
@@ -145,7 +140,8 @@ const pollOnce = async () => {
             pdfUrl: `/uploads/certificates/${pdfFileName}`,
             status: 'Pending',
             createdBy: auto.userId,
-            batchId: currentPollBatchId,
+            batchId: auto.batchId,
+            automationId: auto._id,
             isAutomation: true,
             uniqueHash,
             metadata: row
@@ -153,6 +149,8 @@ const pollOnce = async () => {
         } else {
           cert.pdfUrl = `/uploads/certificates/${pdfFileName}`;
           cert.status = 'Pending';
+          cert.automationId = auto._id;
+          cert.batchId = auto.batchId;
           await cert.save();
         }
 
@@ -222,4 +220,4 @@ const startFormPoller = () => {
   setInterval(pollOnce, POLL_INTERVAL_MS);
 };
 
-module.exports = { startFormPoller };
+module.exports = { startFormPoller, pollOnce };

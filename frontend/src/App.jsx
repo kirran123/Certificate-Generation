@@ -50,7 +50,7 @@ function App() {
         
         {/* Routes */}
         <Route path="/" element={<ProtectedRoute>{user?.role === 'admin' ? <AdminDashboard /> : <UserDashboard />}</ProtectedRoute>} />
-        <Route path="/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute>{user?.role === 'admin' ? <AdminDashboard /> : <UserDashboard />}</ProtectedRoute>} />
         <Route path="/admin/dashboard" element={<ProtectedRoute requireAdmin={true}><AdminDashboard /></ProtectedRoute>} />
         <Route path="/upload" element={<ProtectedRoute><UploadData /></ProtectedRoute>} />
         <Route path="/designer" element={<ProtectedRoute><TemplateDesigner /></ProtectedRoute>} />

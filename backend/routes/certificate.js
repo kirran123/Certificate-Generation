@@ -906,9 +906,12 @@ router.get('/form-automations', protect, async (req, res) => {
     // For each automation, get the real sent count from the Certificate collection
     const enriched = await Promise.all(list.map(async (auto) => {
       const obj = auto.toObject();
-      // Count certs whose batchId starts with this automation's batchId
+      // Count certs linked by automationId or matching batchId regex
       const sentCount = await Certificate.countDocuments({
-        batchId: { $regex: `^${obj.batchId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, $options: 'i' },
+        $or: [
+          { automationId: obj._id },
+          { batchId: { $regex: `^${obj.batchId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, $options: 'i' } }
+        ],
         status: 'Sent'
       });
       obj.certCount = sentCount;
@@ -916,6 +919,17 @@ router.get('/form-automations', protect, async (req, res) => {
     }));
 
     res.json(enriched);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Trigger immediate form poller run
+router.post('/form-automation/trigger', protect, async (req, res) => {
+  try {
+    const { pollOnce } = require('../jobs/formPoller');
+    pollOnce().catch(err => console.error('[Trigger Error]', err));
+    res.json({ message: 'Poller triggered successfully.' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

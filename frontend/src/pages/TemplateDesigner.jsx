@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useContext } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { API_BASE } from "../apiConfig";
+import { AuthContext } from "../context/AuthContext";
 import { findBestNameColumn, findBestEmailColumn, getRowColumnValue, cleanHeaderName } from "../utils/columnHelper";
 import { Rnd } from "react-rnd";
 import {
@@ -65,6 +66,7 @@ function ManualFieldInput({ onAdd }) {
 }
 
 export default function TemplateDesigner() {
+  const { user } = useContext(AuthContext);
   const { state } = useLocation();
   const navigate = useNavigate();
 
@@ -179,11 +181,12 @@ export default function TemplateDesigner() {
   useEffect(() => {
     if (autoSuccess) {
       const timer = setTimeout(() => {
-        navigate('/dashboard');
+        const targetPath = user?.role === 'admin' ? '/admin/dashboard?tab=certificates' : '/dashboard';
+        navigate(targetPath);
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [autoSuccess, navigate]);
+  }, [autoSuccess, navigate, user]);
 
   const hexToRgb = (hex) => {
     const h = hex.replace("#", "");
@@ -346,7 +349,7 @@ export default function TemplateDesigner() {
     setAutoActivating(true);
     try {
       const token = sessionStorage.getItem('token');
-      await axios.post(`${API_BASE}/api/certificate/form-automation`, {
+      const res = await axios.post(`${API_BASE}/api/certificate/form-automation`, {
         sheetUrl: passedSheetUrl,
         templateId: actualTemplateId,
         nameColumn: finalNameCol,
@@ -361,6 +364,17 @@ export default function TemplateDesigner() {
         emailSubject: emailConfig.subject,
         emailMessage: emailConfig.message
       }, { headers: { Authorization: `Bearer ${token}` } });
+
+      // Trigger immediate instant polling execution on backend
+      try {
+        await axios.post(`${API_BASE}/api/certificate/form-automation/trigger`, 
+          { automationId: res.data?.automation?._id },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      } catch (triggerErr) {
+        console.warn('Instant trigger error, regular 10s poller will pick it up:', triggerErr.message);
+      }
+
       setAutoSuccess(true);
       setSaving("auto_success");
     } catch (err) {
