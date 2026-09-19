@@ -40,7 +40,7 @@ const pollOnce = async () => {
 
   let automations;
   try {
-    automations = await FormAutomation.find({ active: true }).populate('templateId');
+    automations = await FormAutomation.find({ active: true }).populate('templateId').lean();
   } catch (e) {
     console.error('[Poll] DB error:', e.message);
     isPollerExecuting = false;
@@ -51,8 +51,8 @@ const pollOnce = async () => {
 
   for (const auto of automations) {
     try {
-      // Re-verify in DB that this automation is still active and not deleted
-      const freshAuto = await FormAutomation.findById(auto._id);
+      // Re-verify in DB once per automation (not per row) to check if paused/deleted
+      const freshAuto = await FormAutomation.findById(auto._id).lean();
       if (!freshAuto || !freshAuto.active) {
         console.log(`[Poll] Skipping automation "${auto.batchId}" — status: ${!freshAuto ? 'deleted' : 'paused'}`);
         continue;
@@ -101,13 +101,6 @@ const pollOnce = async () => {
       let newlyGenerated = 0;
 
       for (const row of rows) {
-        // Double-check DB status before processing each row in case user paused/deleted mid-run
-        const liveAutoCheck = await FormAutomation.findById(auto._id);
-        if (!liveAutoCheck || !liveAutoCheck.active) {
-          console.log(`[Poll] Stopping run for automation "${auto.batchId}" — status: ${!liveAutoCheck ? 'deleted' : 'paused'}`);
-          break;
-        }
-
         const name = getRowColumnValue(row, auto.nameColumn, 'name');
         const email = getRowColumnValue(row, auto.emailColumn, 'email').toLowerCase();
 

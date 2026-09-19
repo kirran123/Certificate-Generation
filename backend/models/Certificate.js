@@ -21,5 +21,7 @@ certificateSchema.index({ createdBy: 1, isArchived: 1 });
 certificateSchema.index({ batchId: 1 });
 certificateSchema.index({ status: 1 });
 certificateSchema.index({ email: 1 });
+certificateSchema.index({ uniqueHash: 1 });
+certificateSchema.index({ isArchived: 1 });
 
 module.exports = mongoose.model('Certificate', certificateSchema);

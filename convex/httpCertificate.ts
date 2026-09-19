@@ -485,155 +485,155 @@ const resendBatch = httpAction(async (ctx, req) => {
   } catch (e: any) {
     return errorResponse(e.message);
   }
-// ── Resend single ──────────────────────────────────────────────────────────
-const resendSingle = httpAction(async (ctx, req) => {
-  try {
-    await requireAuth(ctx, req);
-    const url = new URL(req.url);
-    const certId = decodeURIComponent(url.pathname.split("/resend-single/")[1]);
-    const cert = await ctx.runQuery(internal.certificates.findByCertId, { certificateId: certId });
-    if (!cert) return errorResponse("Certificate not found", 404);
-    if (!cert.email) return errorResponse("No recipient email configured for this certificate", 400);
+  // ── Resend single ──────────────────────────────────────────────────────────
+  const resendSingle = httpAction(async (ctx, req) => {
+    try {
+      await requireAuth(ctx, req);
+      const url = new URL(req.url);
+      const certId = decodeURIComponent(url.pathname.split("/resend-single/")[1]);
+      const cert = await ctx.runQuery(internal.certificates.findByCertId, { certificateId: certId });
+      if (!cert) return errorResponse("Certificate not found", 404);
+      if (!cert.email) return errorResponse("No recipient email configured for this certificate", 400);
 
-    const template = await ctx.runQuery(internal.templates.findById, { id: cert.templateId });
-    if (!template) return errorResponse("Template not found for this certificate.", 404);
+      const template = await ctx.runQuery(internal.templates.findById, { id: cert.templateId });
+      if (!template) return errorResponse("Template not found for this certificate.", 404);
 
-    const templateBase64 = await getTemplateBytesBase64(ctx, template);
-    const itemData = { name: cert.name, email: cert.email, course: cert.course, certificateId: cert.certificateId, ...(cert.metadata || {}) };
-    const pdfBase64 = await ctx.runAction(internal.nodeActions.generatePdf, {
-      templateBase64,
-      layoutConfig: template.layoutConfig,
-      qrCode: template.qrCode,
-      showId: template.showId,
-      showQr: template.showQr,
-      data: itemData,
-      certId: cert.certificateId,
-      frontendUrl: FRONTEND_URL,
-    });
+      const templateBase64 = await getTemplateBytesBase64(ctx, template);
+      const itemData = { name: cert.name, email: cert.email, course: cert.course, certificateId: cert.certificateId, ...(cert.metadata || {}) };
+      const pdfBase64 = await ctx.runAction(internal.nodeActions.generatePdf, {
+        templateBase64,
+        layoutConfig: template.layoutConfig,
+        qrCode: template.qrCode,
+        showId: template.showId,
+        showQr: template.showQr,
+        data: itemData,
+        certId: cert.certificateId,
+        frontendUrl: FRONTEND_URL,
+      });
 
-    const html = buildCertEmailHtml(cert.name, cert.certificateId, "Congratulations on your achievement! Please find your official certificate attached to this email.", "DigiCertify");
+      const html = buildCertEmailHtml(cert.name, cert.certificateId, "Congratulations on your achievement! Please find your official certificate attached to this email.", "DigiCertify");
 
-    await ctx.runAction(internal.nodeActions.sendEmail, {
-      to: cert.email,
-      name: cert.name,
-      subject: "Your Certificate of Achievement",
-      htmlContent: html,
-      pdfBase64,
-      certId: cert.certificateId,
-    });
+      await ctx.runAction(internal.nodeActions.sendEmail, {
+        to: cert.email,
+        name: cert.name,
+        subject: "Your Certificate of Achievement",
+        htmlContent: html,
+        pdfBase64,
+        certId: cert.certificateId,
+      });
 
-    await ctx.runMutation(internal.certificates.updateStatus, { id: cert._id, status: "Sent" });
-    await ctx.runMutation(internal.emailLogs.create, { certificateId: cert.certificateId, recipient: cert.email, status: "Sent" });
+      await ctx.runMutation(internal.certificates.updateStatus, { id: cert._id, status: "Sent" });
+      await ctx.runMutation(internal.emailLogs.create, { certificateId: cert.certificateId, recipient: cert.email, status: "Sent" });
 
-    return jsonResponse({ message: `Successfully resent email to ${cert.email}` });
-  } catch (e: any) {
-    return errorResponse(e.message);
-  }
-});
-
-// ── Form Automations ──────────────────────────────────────────────────────
-const createAutomation = httpAction(async (ctx, req) => {
-  try {
-    const user = await requireAuth(ctx, req);
-    const { sheetUrl, templateId, nameColumn, emailColumn, batchId, emailSubject, emailMessage } = await req.json();
-    if (!sheetUrl || !templateId || !nameColumn || !emailColumn) {
-      return errorResponse("sheetUrl, templateId, nameColumn and emailColumn are required.", 400);
+      return jsonResponse({ message: `Successfully resent email to ${cert.email}` });
+    } catch (e: any) {
+      return errorResponse(e.message);
     }
-    const idMatch = sheetUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
-    if (!idMatch) return errorResponse("Invalid Google Sheets URL.", 400);
-    const sheetId = idMatch[1];
-    const gidMatch = sheetUrl.match(/[#&]gid=([0-9]+)/);
-    const gid = gidMatch ? gidMatch[1] : "0";
-    const finalBatchId = batchId || `Form Auto – ${new Date().toLocaleDateString("en-GB")}`;
-    const automation = await ctx.runMutation(internal.formAutomations.create, {
-      userId: user._id, templateId, sheetUrl, sheetId, gid,
-      nameColumn, emailColumn, batchId: finalBatchId,
-      emailSubject: emailSubject || "Your Certificate of Achievement",
-      emailMessage: emailMessage || "Congratulations! Your certificate is attached.",
-    });
-    return jsonResponse({ message: "Automation created. Poller will check every minute.", automation }, 201);
-  } catch (e: any) {
-    return errorResponse(e.message);
-  }
-});
+  });
 
-const listAutomations = httpAction(async (ctx, req) => {
-  try {
-    const user = await requireAuth(ctx, req);
-    const list = await ctx.runQuery(internal.formAutomations.listForUser, { userId: user._id, isAdmin: user.role === "admin" });
-    const enriched = await Promise.all(
-      list.map(async (auto: any) => {
-        const sentCount = await ctx.runQuery(internal.certificates.countByBatchAndStatus, { batchIdPrefix: auto.batchId });
-        return { ...auto, certCount: sentCount };
-      })
-    );
-    return jsonResponse(enriched);
-  } catch (e: any) {
-    return errorResponse(e.message, e.status || 500);
-  }
-});
+  // ── Form Automations ──────────────────────────────────────────────────────
+  const createAutomation = httpAction(async (ctx, req) => {
+    try {
+      const user = await requireAuth(ctx, req);
+      const { sheetUrl, templateId, nameColumn, emailColumn, batchId, emailSubject, emailMessage } = await req.json();
+      if (!sheetUrl || !templateId || !nameColumn || !emailColumn) {
+        return errorResponse("sheetUrl, templateId, nameColumn and emailColumn are required.", 400);
+      }
+      const idMatch = sheetUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
+      if (!idMatch) return errorResponse("Invalid Google Sheets URL.", 400);
+      const sheetId = idMatch[1];
+      const gidMatch = sheetUrl.match(/[#&]gid=([0-9]+)/);
+      const gid = gidMatch ? gidMatch[1] : "0";
+      const finalBatchId = batchId || `Form Auto – ${new Date().toLocaleDateString("en-GB")}`;
+      const automation = await ctx.runMutation(internal.formAutomations.create, {
+        userId: user._id, templateId, sheetUrl, sheetId, gid,
+        nameColumn, emailColumn, batchId: finalBatchId,
+        emailSubject: emailSubject || "Your Certificate of Achievement",
+        emailMessage: emailMessage || "Congratulations! Your certificate is attached.",
+      });
+      return jsonResponse({ message: "Automation created. Poller will check every minute.", automation }, 201);
+    } catch (e: any) {
+      return errorResponse(e.message);
+    }
+  });
 
-const toggleAutomation = httpAction(async (ctx, req) => {
-  try {
-    const user = await requireAuth(ctx, req);
-    const url = new URL(req.url);
-    const id = url.pathname.split("/").pop() as any;
-    const { active } = await req.json();
-    const auto = await ctx.runQuery(internal.formAutomations.findById, { id });
-    if (!auto) return errorResponse("Automation not found.", 404);
-    if (user.role !== "admin" && auto.userId !== user._id) return errorResponse("Forbidden", 403);
-    const updated = await ctx.runMutation(internal.formAutomations.toggle, { id, active: active !== undefined ? active : !auto.active });
-    return jsonResponse({ message: `Automation ${updated?.active ? "resumed" : "paused"}.`, automation: updated });
-  } catch (e: any) {
-    return errorResponse(e.message);
-  }
-});
+  const listAutomations = httpAction(async (ctx, req) => {
+    try {
+      const user = await requireAuth(ctx, req);
+      const list = await ctx.runQuery(internal.formAutomations.listForUser, { userId: user._id, isAdmin: user.role === "admin" });
+      const enriched = await Promise.all(
+        list.map(async (auto: any) => {
+          const sentCount = await ctx.runQuery(internal.certificates.countByBatchAndStatus, { batchIdPrefix: auto.batchId });
+          return { ...auto, certCount: sentCount };
+        })
+      );
+      return jsonResponse(enriched);
+    } catch (e: any) {
+      return errorResponse(e.message, e.status || 500);
+    }
+  });
 
-const deleteAutomation = httpAction(async (ctx, req) => {
-  try {
-    const user = await requireAuth(ctx, req);
-    const url = new URL(req.url);
-    const id = url.pathname.split("/").pop() as any;
-    const auto = await ctx.runQuery(internal.formAutomations.findById, { id });
-    if (!auto) return errorResponse("Automation not found.", 404);
-    if (user.role !== "admin" && auto.userId !== user._id) return errorResponse("Forbidden", 403);
-    await ctx.runMutation(internal.formAutomations.remove, { id });
-    return jsonResponse({ message: "Automation deleted." });
-  } catch (e: any) {
-    return errorResponse(e.message);
-  }
-});
+  const toggleAutomation = httpAction(async (ctx, req) => {
+    try {
+      const user = await requireAuth(ctx, req);
+      const url = new URL(req.url);
+      const id = url.pathname.split("/").pop() as any;
+      const { active } = await req.json();
+      const auto = await ctx.runQuery(internal.formAutomations.findById, { id });
+      if (!auto) return errorResponse("Automation not found.", 404);
+      if (user.role !== "admin" && auto.userId !== user._id) return errorResponse("Forbidden", 403);
+      const updated = await ctx.runMutation(internal.formAutomations.toggle, { id, active: active !== undefined ? active : !auto.active });
+      return jsonResponse({ message: `Automation ${updated?.active ? "resumed" : "paused"}.`, automation: updated });
+    } catch (e: any) {
+      return errorResponse(e.message);
+    }
+  });
 
-const myCertificatesHandler = httpAction(async (ctx, req) => {
-  try {
-    const user = await requireAuth(ctx, req);
-    const certs = await ctx.runQuery(internal.certificates.listMyCertificates, {
-      userId: user._id,
-      email: user.email,
-    });
-    return jsonResponse(certs);
-  } catch (e: any) {
-    return errorResponse(e.message, e.status || 500);
-  }
-});
+  const deleteAutomation = httpAction(async (ctx, req) => {
+    try {
+      const user = await requireAuth(ctx, req);
+      const url = new URL(req.url);
+      const id = url.pathname.split("/").pop() as any;
+      const auto = await ctx.runQuery(internal.formAutomations.findById, { id });
+      if (!auto) return errorResponse("Automation not found.", 404);
+      if (user.role !== "admin" && auto.userId !== user._id) return errorResponse("Forbidden", 403);
+      await ctx.runMutation(internal.formAutomations.remove, { id });
+      return jsonResponse({ message: "Automation deleted." });
+    } catch (e: any) {
+      return errorResponse(e.message);
+    }
+  });
 
-export {
-  uploadData,
-  uploadSheet,
-  preview,
-  generate,
-  sendBulk,
-  downloadCert,
-  downloadBulk,
-  myGenerations,
-  updateBatchEmails,
-  deleteCert,
-  deleteBatchSecure,
-  resendBatch,
-  resendSingle,
-  createAutomation,
-  listAutomations,
-  toggleAutomation,
-  deleteAutomation,
-  myCertificatesHandler,
-};
+  const myCertificatesHandler = httpAction(async (ctx, req) => {
+    try {
+      const user = await requireAuth(ctx, req);
+      const certs = await ctx.runQuery(internal.certificates.listMyCertificates, {
+        userId: user._id,
+        email: user.email,
+      });
+      return jsonResponse(certs);
+    } catch (e: any) {
+      return errorResponse(e.message, e.status || 500);
+    }
+  });
+
+  export {
+    uploadData,
+    uploadSheet,
+    preview,
+    generate,
+    sendBulk,
+    downloadCert,
+    downloadBulk,
+    myGenerations,
+    updateBatchEmails,
+    deleteCert,
+    deleteBatchSecure,
+    resendBatch,
+    resendSingle,
+    createAutomation,
+    listAutomations,
+    toggleAutomation,
+    deleteAutomation,
+    myCertificatesHandler,
+  };

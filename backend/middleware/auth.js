@@ -9,17 +9,34 @@ const protect = async (req, res, next) => {
     token = req.query.token;
   }
 
-  if (token) {
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = await User.findById(decoded.id).select('-password');
-      if (!req.user) return res.status(401).json({ message: 'Not authorized, user not found' });
-      next();
-    } catch (error) {
-      res.status(401).json({ message: 'Not authorized, token failed' });
+  if (!token) {
+    return res.status(401).json({ message: 'Not authorized, no token' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // ── Fast path: JWT contains name/email/role (new tokens) ──────────────
+    // Avoids a DB read on every authenticated request.
+    if (decoded.name && decoded.email && decoded.role) {
+      req.user = {
+        _id: decoded.id,
+        name: decoded.name,
+        email: decoded.email,
+        role: decoded.role,
+      };
+      return next();
     }
-  } else {
-    res.status(401).json({ message: 'Not authorized, no token' });
+
+    // ── Fallback: old tokens that only have `id` — hit DB once ────────────
+    // This branch is only reached for existing sessions with old JWTs.
+    // After users re-login, all tokens will take the fast path.
+    const user = await User.findById(decoded.id).select('-password');
+    if (!user) return res.status(401).json({ message: 'Not authorized, user not found' });
+    req.user = user;
+    next();
+  } catch (error) {
+    res.status(401).json({ message: 'Not authorized, token failed' });
   }
 };
 

@@ -7,18 +7,20 @@ const router = express.Router();
 // Get certificates for logged-in user (both received and generated)
 router.get('/my-certificates', protect, async (req, res) => {
   try {
-    const email = req.user.email;
+    // Email is always stored lowercase — use exact match so the { email: 1 } index is used
+    const email = (req.user.email || '').trim().toLowerCase();
     console.log(`[Dashboard] Fetching certificates for: ${email}`);
     
     const certs = await Certificate.find({ 
       isArchived: { $ne: true },
       $or: [
-        { email: { $regex: new RegExp(`^${email}$`, 'i') } },
+        { email },
         { createdBy: req.user._id }
       ]
     })
     .populate('templateId', 'name')
-    .sort({ createdAt: -1 });
+    .sort({ createdAt: -1 })
+    .lean();
     
     console.log(`[Dashboard] Found ${certs.length} relevant certificates for ${email}`);
     res.json(certs);

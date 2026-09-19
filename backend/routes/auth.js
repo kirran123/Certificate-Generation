@@ -4,8 +4,12 @@ const User = require('../models/User');
 
 const router = express.Router();
 
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+const generateToken = (user) => {
+  return jwt.sign(
+    { id: user._id, name: user.name, email: user.email, role: user.role },
+    process.env.JWT_SECRET,
+    { expiresIn: '30d' }
+  );
 };
 
 // @route POST /api/auth/signup
@@ -35,7 +39,7 @@ router.post('/signup', async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
-      token: generateToken(user._id)
+      token: generateToken(user)
     });
   } catch (error) {
     console.error('Signup error:', error);
@@ -61,7 +65,7 @@ router.post('/login', async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        token: generateToken(user._id)
+        token: generateToken(user)
       });
     } else {
       res.status(401).json({ message: 'Invalid email or password' });

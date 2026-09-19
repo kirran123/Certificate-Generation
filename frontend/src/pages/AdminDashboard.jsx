@@ -109,7 +109,9 @@ export default function AdminDashboard() {
     const token = sessionStorage.getItem('token');
     const headers = { Authorization: `Bearer ${token}` };
     try {
-      const tasks = [fetchOverviewStats(headers), fetchBrevoStatus(headers)];
+      // Always refresh overview stats; only fetch Brevo status on initial load
+      const tasks = [fetchOverviewStats(headers)];
+      if (showLoading) tasks.push(fetchBrevoStatus(headers)); // only on first mount
 
       if (tab === 'certificates') {
         tasks.push(
@@ -229,12 +231,12 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     loadTab(activeTab, true);
-    // Smart polling: poll every 30s only when tab is visible (pauses in background to prevent Convex limit hits)
+    // Smart polling: poll every 5 min only when tab is visible (reduces Firebase/DB reads significantly)
     const interval = setInterval(() => {
       if (document.visibilityState === 'visible') {
         loadTab(activeTab, false);
       }
-    }, 30000);
+    }, 300000); // 5 minutes — was 30s (10× read reduction)
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {

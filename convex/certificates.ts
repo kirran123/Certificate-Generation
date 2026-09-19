@@ -29,12 +29,12 @@ export const listForUser = internalQuery({
         const templateDoc = c.templateId ? await ctx.db.get(c.templateId) : null;
         const template = templateDoc
           ? {
-              _id: templateDoc._id,
-              _creationTime: templateDoc._creationTime,
-              name: templateDoc.name,
-              imageUrl: templateDoc.imageUrl,
-              imageStorageId: templateDoc.imageStorageId,
-            }
+            _id: templateDoc._id,
+            _creationTime: templateDoc._creationTime,
+            name: templateDoc.name,
+            imageUrl: templateDoc.imageUrl,
+            imageStorageId: templateDoc.imageStorageId,
+          }
           : null;
         const creator = c.createdBy ? await ctx.db.get(c.createdBy) : null;
         return { ...c, templateId: template, createdBy: creator };
@@ -57,12 +57,12 @@ export const listAll = internalQuery({
         const templateDoc = c.templateId ? await ctx.db.get(c.templateId) : null;
         const template = templateDoc
           ? {
-              _id: templateDoc._id,
-              _creationTime: templateDoc._creationTime,
-              name: templateDoc.name,
-              imageUrl: templateDoc.imageUrl,
-              imageStorageId: templateDoc.imageStorageId,
-            }
+            _id: templateDoc._id,
+            _creationTime: templateDoc._creationTime,
+            name: templateDoc.name,
+            imageUrl: templateDoc.imageUrl,
+            imageStorageId: templateDoc.imageStorageId,
+          }
           : null;
         const creator = c.createdBy ? await ctx.db.get(c.createdBy) : null;
         return { ...c, templateId: template, createdBy: creator };
@@ -94,12 +94,12 @@ export const listMyCertificates = internalQuery({
         const templateDoc = c.templateId ? await ctx.db.get(c.templateId) : null;
         const template = templateDoc
           ? {
-              _id: templateDoc._id,
-              _creationTime: templateDoc._creationTime,
-              name: templateDoc.name,
-              imageUrl: templateDoc.imageUrl,
-              imageStorageId: templateDoc.imageStorageId,
-            }
+            _id: templateDoc._id,
+            _creationTime: templateDoc._creationTime,
+            name: templateDoc.name,
+            imageUrl: templateDoc.imageUrl,
+            imageStorageId: templateDoc.imageStorageId,
+          }
           : null;
         const creator = c.createdBy ? await ctx.db.get(c.createdBy) : null;
         return { ...c, templateId: template, createdBy: creator };

@@ -949,15 +949,10 @@ router.get('/my-generations', protect, async (req, res) => {
   try {
     console.log(`[Dashboard] Fetching generations for user: ${req.user.email} (${req.user._id})`);
 
-    // Convert to string to ensure comparison works if stored as string, 
-    // but Mongoose usually handles ObjectId automatically.
     const certs = await Certificate.find({
+      createdBy: req.user._id,
       isArchived: { $ne: true },
-      $or: [
-        { createdBy: req.user._id },
-        { createdBy: { $exists: false } }
-      ]
-    }).populate('templateId', 'name').populate('createdBy', 'name email').lean();
+    }).populate('templateId', 'name').lean();
 
     console.log(`[Dashboard] Found ${certs.length} certificates for user ${req.user.email}`);
     res.json(certs);
@@ -1017,21 +1012,38 @@ router.get('/form-automations', protect, async (req, res) => {
     const filter = req.user.role === 'admin' ? {} : { userId: req.user._id };
     const list = await FormAutomation.find(filter)
       .populate('templateId', 'name')
-      .populate('userId', 'name email');
+      .populate('userId', 'name email')
+      .lean();
 
-    // For each automation, get the real sent count from the Certificate collection
-    const enriched = await Promise.all(list.map(async (auto) => {
-      const obj = auto.toObject();
-      // Count certs linked by automationId or matching batchId regex
-      const sentCount = await Certificate.countDocuments({
-        $or: [
-          { automationId: obj._id },
-          { batchId: { $regex: `^${obj.batchId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, $options: 'i' } }
-        ],
-        status: 'Sent'
-      });
-      obj.certCount = sentCount;
-      return obj;
+    if (list.length === 0) return res.json([]);
+
+    // ── Single aggregation instead of N × countDocuments ──────────────────
+    // Build a list of all batchId prefixes we need to count for
+    const batchIds = list.map(a => a.batchId);
+    const sentCounts = await Certificate.aggregate([
+      {
+        $match: {
+          status: 'Sent',
+          batchId: { $in: batchIds }
+        }
+      },
+      {
+        $group: {
+          _id: '$batchId',
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    // Build a lookup map: batchId → count
+    const countMap = {};
+    for (const row of sentCounts) {
+      countMap[row._id] = row.count;
+    }
+
+    const enriched = list.map(auto => ({
+      ...auto,
+      certCount: countMap[auto.batchId] || 0
     }));
 
     res.json(enriched);
